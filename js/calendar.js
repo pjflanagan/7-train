@@ -9,18 +9,17 @@
      * Initializes calendar event handlers.
      */
     init: function() {
-      // Clear calendar button
-      $('#clear-week-btn').on('click', () => {
-        if (confirm('Are you sure you want to clear all workouts from the calendar?')) {
-          WorkoutApp.Storage.clearCalendar();
-          WorkoutApp.Storage.saveDayNotes({});
-          this.render();
-          WorkoutApp.WorkoutTypes.render();
-          
-          // Clear notes inputs in DOM
-          $('.day-notes-input').val('');
-          // Close settings modal
-          $('#settings-modal-overlay').removeClass('active');
+      // Clear week 1 button
+      $('#clear-week-1-btn').on('click', () => {
+        if (confirm('Are you sure you want to clear all workouts and notes for this week?')) {
+          this.clearWeek(1);
+        }
+      });
+
+      // Clear week 2 button
+      $('#clear-week-2-btn').on('click', () => {
+        if (confirm('Are you sure you want to clear all workouts and notes for next week?')) {
+          this.clearWeek(2);
         }
       });
 
@@ -459,6 +458,30 @@
         const noteKey = `${day}-${week}`;
         $(this).val(notes[noteKey] || '');
       });
+    },
+
+    /**
+     * Clears all calendar items and notes for a specific week.
+     */
+    clearWeek: function(targetWeek) {
+      // 1. Filter out calendar items for the target week
+      let items = WorkoutApp.Storage.getCalendarItems();
+      items = items.filter(item => (item.week || 1) !== targetWeek);
+      WorkoutApp.Storage.saveCalendarItems(items);
+
+      // 2. Clear day notes for the target week
+      const notes = WorkoutApp.Storage.getDayNotes();
+      DAYS.forEach(day => {
+        delete notes[`${day}-${targetWeek}`];
+      });
+      WorkoutApp.Storage.saveDayNotes(notes);
+
+      // 3. Render calendar and metrics
+      this.render();
+      WorkoutApp.WorkoutTypes.render();
+
+      // 4. Reset textareas for this week in the DOM
+      $(`.day-notes-input[data-week="${targetWeek}"]`).val('');
     }
   };
 })();

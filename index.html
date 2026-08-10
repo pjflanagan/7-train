@@ -61,6 +61,10 @@
       <div class="calendar-week-section" data-week="1">
         <div class="week-section-header">
           <h2 class="week-section-title">This Week</h2>
+          <button id="clear-week-1-btn" class="btn-capsule" title="Clear all workouts and notes for this week" style="margin-left: auto;">
+            <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">delete_sweep</span>
+            Clear Week
+          </button>
           <div class="week-progress-tracker" style="display: none;">
             <span class="week-progress-stats">0 of 0 goals met</span>
             <div class="week-progress-bar-bg">
@@ -176,9 +180,13 @@
       <div class="calendar-week-section" data-week="2">
         <div class="week-section-header">
           <h2 class="week-section-title">Next Week</h2>
-          <button id="copy-week-btn" class="btn-capsule" title="Copy current week's plan to next week" style="margin-left: auto;">
+          <button id="copy-week-btn" class="btn-capsule" title="Copy current week's plan to next week" style="margin-left: auto; margin-right: 0.5rem;">
             <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">content_copy</span>
             Copy Current Week
+          </button>
+          <button id="clear-week-2-btn" class="btn-capsule" title="Clear all workouts and notes for next week">
+            <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">delete_sweep</span>
+            Clear Week
           </button>
           <div class="week-progress-tracker" style="display: none;">
             <span class="week-progress-stats">0 of 0 goals met</span>
@@ -389,17 +397,6 @@
       <div class="settings-modal-body" style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem;">
         <p class="settings-desc" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">Manage your workout planning session data and clear scheduled exercises.</p>
         
-        <div class="settings-action-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-          <div class="settings-action-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Clear Calendar</h4>
-            <p style="font-size: 0.75rem; color: var(--text-muted);">Delete all scheduled workouts and notes.</p>
-          </div>
-          <button id="clear-week-btn" class="btn btn-secondary" title="Clear all workouts from the calendar" style="flex-shrink: 0;">
-            <span class="material-icons" style="font-size: 16px;">cleaning_services</span>
-            Clear
-          </button>
-        </div>
-
         <div class="settings-action-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
           <div class="settings-action-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
             <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Reset Application</h4>
