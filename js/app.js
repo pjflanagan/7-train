@@ -33,5 +33,10 @@ $(document).ready(function() {
   WorkoutApp.WorkoutTypes.render();
   WorkoutApp.Calendar.render();
   
+  // 4. Initialize 7-day weather forecast inside calendar column headers
+  if (WorkoutApp.Weather) {
+    WorkoutApp.Weather.init();
+  }
+  
   console.log('Workout Week App fully initialized! 🏋️‍♂️');
 });

@@ -180,3 +180,81 @@ body {
   background-color: rgba(239, 68, 68, 0.25);
   border-color: var(--accent-error);
 }
+
+/* --- Live Weather Capsule --- */
+.header-weather-capsule {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--border-radius-md);
+  margin-right: 0.5rem;
+  transition: var(--transition-smooth);
+}
+
+.header-weather-capsule:hover {
+  border-color: var(--border-focus);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.weather-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0 0.5rem;
+}
+
+.rotating {
+  animation: spin-animation 1.5s linear infinite;
+  font-size: 16px;
+}
+
+@keyframes spin-animation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.weather-icon {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.weather-temp {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: white;
+}
+
+.weather-desc {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.weather-location {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  border-left: 1px solid var(--border-color);
+  padding-left: 0.65rem;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
+.weather-err {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}

@@ -61,6 +61,39 @@
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-dim);
+  display: block;
+  margin-top: 0.2rem;
+}
+
+/* Daily Weather Pill inside Column Header */
+.daily-weather-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 0.15rem 0.45rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: var(--transition-smooth);
+}
+
+.daily-weather-sub:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.daily-weather-icon {
+  font-size: 11px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+.daily-weather-temp {
+  color: white;
 }
 
 /* Dropzone items list container */

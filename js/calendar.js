@@ -43,12 +43,12 @@
         const dayItems = items.filter(item => item.day === day);
 
         if (dayItems.length === 0) {
-          $dayContainer.html(`
-            <div class="empty-day-placeholder">
-              <span class="material-icons">add</span>
-              <p class="placeholder-text">Drop workouts here</p>
-            </div>
-          `);
+          // $dayContainer.html(`
+          //   <div class="empty-day-placeholder">
+          //     <span class="material-icons">add</span>
+          //     <p class="placeholder-text">Drop workouts here</p>
+          //   </div>
+          // `);
         } else {
           dayItems.forEach(item => {
             const type = types.find(t => t.id === item.typeId);
