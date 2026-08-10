@@ -24,9 +24,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <button id="advance-week-btn" class="btn btn-secondary" title="Advance to the next week">
-        <span class="material-icons">skip_next</span>
-        Advance Week
+      <button id="links-btn" class="btn btn-secondary" title="Helpful links">
+        <span class="material-icons">link</span>
       </button>
       <button id="settings-btn" class="btn btn-secondary" title="Open settings">
         <span class="material-icons">settings</span>
@@ -177,6 +176,10 @@
       <div class="calendar-week-section" data-week="2">
         <div class="week-section-header">
           <h2 class="week-section-title">Next Week</h2>
+          <button id="copy-week-btn" class="btn-capsule" title="Copy current week's plan to next week" style="margin-left: auto;">
+            <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">content_copy</span>
+            Copy Current Week
+          </button>
           <div class="week-progress-tracker" style="display: none;">
             <span class="week-progress-stats">0 of 0 goals met</span>
             <div class="week-progress-bar-bg">
@@ -411,6 +414,53 @@
 
       <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end;">
         <button type="button" class="btn btn-secondary cancel-settings-modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Helpful Links -->
+  <div class="modal-overlay" id="links-modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      
+      <div class="modal-header-row">
+        <h3>Helpful Links</h3>
+        <button type="button" class="remove-scheduled-btn cancel-links-modal" title="Close modal">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="links-modal-body" style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <p class="links-desc" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">Access and manage your gym schedules, pool hours, or other fitness links.</p>
+        
+        <!-- Links List Container -->
+        <div id="links-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 200px; overflow-y: auto; padding-right: 0.25rem;">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <!-- Add Link Form -->
+        <form id="add-link-form" style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+          <h4 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 0.25rem;">Add New Link</h4>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="link-title">Link Title</label>
+            <input type="text" id="link-title" class="form-input" placeholder="e.g. Gym Pool Schedule" required />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="link-url">URL</label>
+            <input type="url" id="link-url" class="form-input" placeholder="e.g. https://mygym.com/pool" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="align-self: flex-end; width: auto; gap: 0.4rem;">
+            <span class="material-icons" style="font-size: 16px;">add</span>
+            Add Link
+          </button>
+        </form>
+      </div>
+
+      <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary cancel-links-modal">Close</button>
       </div>
 
     </div>

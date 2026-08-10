@@ -322,6 +322,30 @@
   border-radius: 20px;
 }
 
+.btn-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-capsule:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-focus);
+  color: var(--text-main);
+}
+
 .week-progress-stats {
   font-size: 0.65rem;
   color: var(--text-muted);

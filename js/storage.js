@@ -5,8 +5,17 @@
   const STORAGE_KEYS = {
     WORKOUT_TYPES: 'workout_week_types',
     CALENDAR_ITEMS: 'workout_week_calendar',
-    DAY_NOTES: 'workout_week_notes'
+    DAY_NOTES: 'workout_week_notes',
+    LINKS: 'workout_week_links'
   };
+
+  const DEFAULT_LINKS = [
+    {
+      id: 'link-1',
+      title: 'Gym Pool Schedule',
+      url: 'https://www.google.com'
+    }
+  ];
 
   const DEFAULT_WORKOUT_TYPES = [
     {
@@ -141,6 +150,25 @@
     },
 
     /**
+     * Retrieves helpful links. Initializes with defaults if empty.
+     */
+    getLinks: function() {
+      const data = localStorage.getItem(STORAGE_KEYS.LINKS);
+      if (!data) {
+        this.saveLinks(DEFAULT_LINKS);
+        return JSON.parse(JSON.stringify(DEFAULT_LINKS));
+      }
+      return JSON.parse(data);
+    },
+
+    /**
+     * Saves helpful links to localStorage.
+     */
+    saveLinks: function(links) {
+      localStorage.setItem(STORAGE_KEYS.LINKS, JSON.stringify(links));
+    },
+
+    /**
      * Clears all session progress (calendar items) but keeps workout goals.
      */
     clearCalendar: function() {
@@ -154,6 +182,7 @@
       localStorage.removeItem(STORAGE_KEYS.WORKOUT_TYPES);
       localStorage.removeItem(STORAGE_KEYS.CALENDAR_ITEMS);
       localStorage.removeItem(STORAGE_KEYS.DAY_NOTES);
+      localStorage.removeItem(STORAGE_KEYS.LINKS);
     }
   };
 })();

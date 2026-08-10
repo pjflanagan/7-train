@@ -38,19 +38,19 @@
         const day = $(this).data('day');
         const week = $(this).data('week');
         const text = $(this).val();
-        
+
         const notes = WorkoutApp.Storage.getDayNotes();
         notes[`${day}-${week}`] = text;
         WorkoutApp.Storage.saveDayNotes(notes);
-      });
+        });
 
-      // Hook up advance button
-      $('#advance-week-btn').on('click', () => {
-        if (confirm('Are you sure you want to advance to the next week? This week\'s workouts will be cleared, and next week\'s workouts and notes will move to this week.')) {
-          this.advanceToNextWeek();
+        // Hook up copy week button
+        $('#copy-week-btn').on('click', () => {
+        if (confirm("Are you sure you want to copy this week's workouts and notes to next week? This will overwrite next week's plan.")) {
+          this.copyWeek1ToWeek2();
         }
-      });
-    },
+        });
+        },
 
     /**
      * Renders the columns of the calendar with their scheduled cards and loads notes.
@@ -410,33 +410,46 @@
     },
 
     /**
-     * Advances to the next week (Shift week 2 items & notes to week 1).
+     * Copies Week 1 calendar items and notes over to Week 2.
      */
-    advanceToNextWeek: function() {
-      // 1. Shift calendar items
+    copyWeek1ToWeek2: function() {
+      // 1. Get current calendar items
       const items = WorkoutApp.Storage.getCalendarItems();
-      const updatedItems = items
-        .filter(item => (item.week || 1) !== 1) // Remove week 1 items
-        .map(item => {
-          return {
-            ...item,
-            week: 1 // Promote week 2 items to week 1
-          };
-        });
+      
+      // 2. Filter out current Week 2 items
+      const nonWeek2Items = items.filter(item => (item.week || 1) !== 2);
+      
+      // 3. Get all Week 1 items
+      const week1Items = items.filter(item => (item.week || 1) === 1);
+      
+      // 4. Map Week 1 items to new Week 2 items (with new unique IDs)
+      const newWeek2Items = week1Items.map(item => {
+        return {
+          id: 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+          typeId: item.typeId,
+          day: item.day,
+          week: 2,
+          value: item.value
+        };
+      });
+      
+      // 5. Save updated items
+      const updatedItems = [...nonWeek2Items, ...newWeek2Items];
       WorkoutApp.Storage.saveCalendarItems(updatedItems);
-
-      // 2. Shift day notes
+      
+      // 6. Copy notes: read Week 1 notes and write to Week 2 notes
       const notes = WorkoutApp.Storage.getDayNotes();
-      const updatedNotes = {};
       DAYS.forEach(day => {
-        const nextWeekNote = notes[`${day}-2`];
-        if (nextWeekNote) {
-          updatedNotes[`${day}-1`] = nextWeekNote;
+        const week1Note = notes[`${day}-1`];
+        if (week1Note !== undefined && week1Note !== null) {
+          notes[`${day}-2`] = week1Note;
+        } else {
+          delete notes[`${day}-2`];
         }
       });
-      WorkoutApp.Storage.saveDayNotes(updatedNotes);
-
-      // 3. Render calendar & update notes inputs in DOM
+      WorkoutApp.Storage.saveDayNotes(notes);
+      
+      // 7. Render calendar & update notes inputs in DOM
       this.render();
       WorkoutApp.WorkoutTypes.render();
 
@@ -444,7 +457,7 @@
         const day = $(this).data('day');
         const week = $(this).data('week');
         const noteKey = `${day}-${week}`;
-        $(this).val(updatedNotes[noteKey] || '');
+        $(this).val(notes[noteKey] || '');
       });
     }
   };
