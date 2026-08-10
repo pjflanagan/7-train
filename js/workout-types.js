@@ -145,13 +145,14 @@
         const $card = $(`
           <div class="goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}">
             <div class="goal-drag-handle draggable-workout" data-id="${type.id}">
-              <span class="material-icons drag-icon" title="Drag to planner">pan_tool</span>
+              <span class="material-icons drag-icon" title="Drag to planner">drag_indicator</span>
               <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
                 <span class="material-icons">${type.icon}</span>
               </div>
               <div class="goal-details">
                 <div class="goal-title-row">
                   <span class="goal-name">${type.name}</span>
+                  ${isDone ? '<span class="done-badge"><span class="material-icons">check_circle</span>Crushed</span>' : ''}
                 </div>
                 <div class="goal-meta">Target: ${type.target} ${type.unit}</div>
               </div>

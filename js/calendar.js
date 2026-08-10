@@ -68,7 +68,6 @@
               <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
                 <div class="scheduled-card-header" style="${isTimesMetric ? 'margin-bottom: 0;' : ''}">
                   <div class="scheduled-info">
-                    <span class="material-icons card-drag-icon" title="Drag to reschedule">pan_tool</span>
                     <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
                     <span class="card-type-name">${type.name}</span>
                   </div>

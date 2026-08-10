@@ -40,16 +40,109 @@
   transition: var(--transition-smooth);
 }
 
-.card-drag-icon {
-  font-size: 12px;
-  color: var(--text-dim);
-  cursor: grab;
-  transition: var(--transition-smooth);
-  flex-shrink: 0;
+/* Column Header */
+.column-header {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.scheduled-card:hover .card-drag-icon {
-  color: var(--text-muted);
+.day-name {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: white;
+}
+
+.day-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* Dropzone items list container */
+.calendar-day-items {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Droppable Hover styles */
+.day-droppable-active {
+  border-color: rgba(59, 130, 246, 0.4);
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.day-droppable-hover {
+  border-color: var(--accent-primary);
+  background-color: rgba(59, 130, 246, 0.08);
+  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Empty day placeholder */
+.empty-day-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.empty-day-placeholder .material-icons {
+  font-size: 20px;
+  margin-bottom: 0.25rem;
+  color: var(--text-dim);
+}
+
+.placeholder-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* --- Scheduled Cards --- */
+.scheduled-card {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.45rem;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: grab; /* Shows hand cursor on hover */
+}
+
+.scheduled-card:hover {
+  border-color: var(--border-focus);
+}
+
+.scheduled-card:active {
+  cursor: grabbing; /* Shows clenched hand when actively dragging */
+}
+
+.scheduled-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  gap: 0.25rem;
+}
+
+.scheduled-info {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
 }
 
 .card-type-icon {
