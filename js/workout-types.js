@@ -271,7 +271,7 @@
             ` : ''}
 
             <div class="goal-actions">
-              <button class="goal-action-btn edit-goal-btn" title="Edit Workout Goal">
+              <button class="goal-action-btn edit-goal-btn" title="Edit workout goal">
                 <span class="material-icons">edit</span>
               </button>
               <button class="goal-action-btn delete-goal-btn" title="Delete Workout Goal">
@@ -453,7 +453,7 @@
       $('#workout-type-tag-input').val('');
       this.renderModalTags();
 
-      $('#workout-modal-title').text('Edit Workout Goal');
+      $('#workout-modal-title').text('Edit workout goal');
       $('#workout-type-id').val(type.id);
       $('#workout-name').val(type.name);
       $('#workout-metric').val(type.metric);
