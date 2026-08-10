@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout Week | Simple Weekly Fitness Planner</title>
+  
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo-badge">
+        <span class="material-icons">calendar_month</span>
+      </div>
+      <div class="brand-titles">
+        <h1>WORKOUT WEEK</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="clear-week-btn" class="btn btn-secondary" title="Clear all workouts from the calendar">
+        <span class="material-icons">cleaning_services</span>
+        Clear Week
+      </button>
+      <button id="reset-app-btn" class="btn btn-danger" title="Reset everything back to defaults">
+        <span class="material-icons">restart_alt</span>
+        Reset App
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Container -->
+  <main class="app-container">
+    
+    <!-- Sidebar: Goal library and metrics -->
+    <aside class="app-sidebar">
+      
+      <div class="sidebar-section-header">
+        <h2>Weekly Goals</h2>
+        <button id="add-goal-btn" class="btn btn-primary" title="Create a new workout goal">
+          <span class="material-icons">add</span>
+          Add Goal
+        </button>
+      </div>
+
+      <!-- Weekly Aggregate Progress Stats Card -->
+      <div class="sidebar-stats-card" style="display: none;">
+        <div class="stats-row">
+          <div>
+            <div class="stats-title">Week Completion</div>
+            <div class="stats-meta" id="overall-progress-stats">0 of 0 goals met</div>
+          </div>
+          <div class="stats-percentage" id="overall-progress-percentage">0%</div>
+        </div>
+        <div class="overall-progress-bar-bg">
+          <div class="overall-progress-bar-fill" id="overall-progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Workout Goals Cards List -->
+      <div id="goals-list">
+        <!-- Will be populated dynamically via workout-types.js -->
+      </div>
+
+    </aside>
+
+    <!-- Calendar View Area -->
+    <section class="app-calendar">
+
+      <div class="calendar-grid">
+        
+        <!-- Monday Column -->
+        <div class="calendar-column" data-day="monday">
+          <div class="column-header">
+            <span class="day-name">Monday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Tuesday Column -->
+        <div class="calendar-column" data-day="tuesday">
+          <div class="column-header">
+            <span class="day-name">Tuesday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Wednesday Column -->
+        <div class="calendar-column" data-day="wednesday">
+          <div class="column-header">
+            <span class="day-name">Wednesday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Thursday Column -->
+        <div class="calendar-column" data-day="thursday">
+          <div class="column-header">
+            <span class="day-name">Thursday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Friday Column -->
+        <div class="calendar-column" data-day="friday">
+          <div class="column-header">
+            <span class="day-name">Friday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Saturday Column -->
+        <div class="calendar-column" data-day="saturday">
+          <div class="column-header">
+            <span class="day-name">Saturday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+        <!-- Sunday Column -->
+        <div class="calendar-column" data-day="sunday">
+          <div class="column-header">
+            <span class="day-name">Sunday</span>
+          </div>
+          <div class="calendar-day-items">
+            <!-- Items populated dynamically via calendar.js -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Overlay: Add/Edit Workout Goal -->
+  <div class="modal-overlay" id="workout-modal-overlay">
+    <div class="modal-content">
+      
+      <div class="modal-header-row">
+        <h3 id="workout-modal-title">Add Workout Goal</h3>
+        <button type="button" class="remove-scheduled-btn" id="cancel-workout-modal" title="Close modal">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <form id="workout-type-form">
+        <!-- Hidden input for ID (only present when editing) -->
+        <input type="hidden" id="workout-type-id" name="id" value="">
+
+        <!-- Goal Name -->
+        <div class="form-group">
+          <label for="workout-name" class="form-label">Goal Name</label>
+          <input type="text" id="workout-name" class="form-input" placeholder="e.g. Morning Run, Weightlifting" required autocomplete="off">
+        </div>
+
+        <!-- Metric & Custom Unit Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="workout-metric" class="form-label">How to Measure</label>
+            <select id="workout-metric" class="form-input" style="-webkit-appearance: none;">
+              <option value="times">Number of Times</option>
+              <option value="distance">Distance</option>
+              <option value="duration">Duration</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="workout-unit" class="form-label">Unit of Measure</label>
+            <input type="text" id="workout-unit" class="form-input" placeholder="e.g. miles, mins, times" required autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Goal Target -->
+        <div class="form-group">
+          <label for="workout-target" class="form-label">Weekly Target Goal</label>
+          <input type="number" id="workout-target" class="form-input" min="0.1" step="any" placeholder="e.g. 10, 3, 120" required autocomplete="off">
+        </div>
+
+        <!-- Custom Icon Grid selection -->
+        <div class="form-group">
+          <label class="form-label">Select Icon</label>
+          <input type="hidden" id="workout-icon" value="directions_run">
+          <div class="icon-grid-container">
+            <!-- Icons grid dynamically loaded in workout-types.js -->
+          </div>
+        </div>
+
+        <!-- Custom Color Picker selection -->
+        <div class="form-group">
+          <label class="form-label">Color Code</label>
+          <div class="color-presets-container">
+            <!-- Color presets loaded in workout-types.js -->
+          </div>
+          <div class="color-input-wrapper">
+            <input type="color" id="workout-color-picker" value="#ff4d4d">
+            <span>Or select a custom color code</span>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancel-workout-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Goal</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- --- Core Libraries (jQuery & jQuery UI) --- -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+  
+  <!-- Touch Punch: Bridges mouse drag events to mobile/touch drag events -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+  <!-- --- Application Modules --- -->
+  <script src="js/storage.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/workout-types.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

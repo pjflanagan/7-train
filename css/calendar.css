@@ -1,0 +1,149 @@
+/* Workout Week - Calendar Component Styles */
+
+/* --- Calendar Section Style --- */
+.app-calendar {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.calendar-header h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.calendar-column {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.card-drag-icon {
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: grab;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.scheduled-card:hover .card-drag-icon {
+  color: var(--text-muted);
+}
+
+.card-type-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.card-type-name {
+  font-size: 0.725rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-main);
+}
+
+.remove-scheduled-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+}
+
+.remove-scheduled-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--accent-error);
+}
+
+.remove-scheduled-btn .material-icons {
+  font-size: 12px;
+}
+
+/* Inputs on scheduled cards */
+.scheduled-card-body {
+  display: flex;
+  align-items: center;
+}
+
+.dragging-card {
+  opacity: 0.35 !important;
+  transform: scale(0.96);
+  box-shadow: none !important;
+}
+
+.value-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 0.15rem 0.35rem;
+  transition: var(--transition-smooth);
+}
+
+.value-input-group:focus-within {
+  border-color: var(--border-focus);
+}
+
+.scheduled-value-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  outline: none;
+}
+
+/* Hide chrome spinners in numeric inputs */
+.scheduled-value-input::-webkit-outer-spin-button,
+.scheduled-value-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.scheduled-value-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.unit-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
