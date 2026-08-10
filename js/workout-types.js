@@ -151,13 +151,14 @@
         const $card = $(`
           <div class="goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}">
             <div class="goal-drag-handle draggable-workout" data-id="${type.id}">
-              <span class="material-icons drag-icon" title="Drag to planner">drag_indicator</span>
+              <span class="material-icons drag-icon" title="Drag to planner (or drag indicator to reorder)">drag_indicator</span>
               <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
                 <span class="material-icons">${type.icon}</span>
               </div>
               <div class="goal-details">
-                <div class="goal-title-row">
+                <div class="goal-title-row" style="display: flex; align-items: center; gap: 0.4rem;">
                   <span class="goal-name">${type.name}</span>
+                  ${type.optional ? '<span class="optional-badge" style="font-size: 0.575rem; font-weight: 700; background: rgba(255,255,255,0.08); color: var(--text-muted); padding: 0.1rem 0.3rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.025em; flex-shrink: 0;">Optional</span>' : ''}
                 </div>
                 <div class="goal-meta">Target: ${type.target} ${type.unit}</div>
               </div>
@@ -193,6 +194,7 @@
 
       // Re-initialize drag-and-drop handles for goals
       this.initDraggable();
+      this.initSortableGoals();
     },
 
     /**
@@ -200,6 +202,13 @@
      */
     initDraggable: function() {
       $('.draggable-workout').draggable({
+        connectToSortable: '.calendar-day-items',
+        start: function(event, ui) {
+          $('body').addClass('is-dragging');
+        },
+        stop: function(event, ui) {
+          $('body').removeClass('is-dragging');
+        },
         helper: function(event) {
           const typeId = $(this).data('id');
           const types = WorkoutApp.Storage.getWorkoutTypes();
@@ -220,6 +229,60 @@
     },
 
     /**
+     * Initializes the jQuery UI Sortable plugin on the sidebar goals list.
+     */
+    initSortableGoals: function() {
+      const self = this;
+      $('#goals-list').sortable({
+        items: '.goal-card',
+        handle: '.drag-icon', // Use the drag indicator icon to reorder
+        placeholder: 'goal-card-placeholder',
+        start: function(event, ui) {
+          ui.placeholder.height(ui.item.height());
+          ui.placeholder.css({
+            'margin-bottom': '0.75rem',
+            'border-radius': 'var(--border-radius-md)',
+            'background-color': 'rgba(255, 255, 255, 0.02)',
+            'border': '1px dashed var(--border-color)',
+            'box-sizing': 'border-box'
+          });
+        },
+        stop: function(event, ui) {
+          self.saveGoalsOrderFromDOM();
+        }
+      });
+    },
+
+    /**
+     * Reconstructs and saves goals based on their current visual order in the sidebar.
+     */
+    saveGoalsOrderFromDOM: function() {
+      const types = WorkoutApp.Storage.getWorkoutTypes();
+      const newTypes = [];
+
+      $('#goals-list .goal-card').each(function() {
+        const typeId = $(this).data('id');
+        const type = types.find(t => t.id === typeId);
+        if (type) {
+          newTypes.push(type);
+        }
+      });
+
+      // Maintain any missing types
+      types.forEach(type => {
+        if (!newTypes.some(nt => nt.id === type.id)) {
+          newTypes.push(type);
+        }
+      });
+
+      WorkoutApp.Storage.saveWorkoutTypes(newTypes);
+      
+      // Re-render sidebar and calendar
+      this.render();
+      WorkoutApp.Calendar.render();
+    },
+
+    /**
      * Opens modal for adding a new workout type.
      */
     openAddModal: function() {
@@ -229,6 +292,7 @@
       $('#workout-modal-title').text('Add Workout Goal');
       $('#workout-type-form')[0].reset();
       $('#workout-type-id').val('');
+      $('#workout-optional').prop('checked', false);
       
       // Default selections
       $('.icon-grid-item[data-icon="directions_run"]').addClass('active');
@@ -259,6 +323,7 @@
       $('#workout-metric').val(type.metric);
       $('#workout-unit').val(type.unit);
       $('#workout-target').val(type.target);
+      $('#workout-optional').prop('checked', !!type.optional);
       
       // Setup icon selection
       $('.icon-grid-item').removeClass('active');
@@ -292,9 +357,10 @@
       const unit = $('#workout-unit').val().trim() || 'times';
       const target = Number($('#workout-target').val()) || 1;
       const color = $('#workout-color-picker').val();
+      const optional = $('#workout-optional').is(':checked');
 
       const types = WorkoutApp.Storage.getWorkoutTypes();
-      const newType = { id, name, icon, metric, unit, target, color };
+      const newType = { id, name, icon, metric, unit, target, color, optional };
 
       if (currentEditingTypeId) {
         // Update existing

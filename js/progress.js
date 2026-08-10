@@ -61,20 +61,45 @@
 
       let completed = 0;
       let sumPercent = 0;
+      let requiredCount = 0;
+
       keys.forEach(key => {
         const p = progressMap[key];
+        if (p.type && p.type.optional) {
+          return; // Exclude optional goals from overall calculation
+        }
+        requiredCount++;
         if (p.isDone) {
           completed++;
         }
         sumPercent += p.percent;
       });
 
-      const total = keys.length;
-      const percent = Math.round(sumPercent / total);
+      if (requiredCount === 0) {
+        // Fallback to including all goals if there are no required goals
+        let completedFallback = 0;
+        let sumPercentFallback = 0;
+        keys.forEach(key => {
+          const p = progressMap[key];
+          if (p.isDone) {
+            completedFallback++;
+          }
+          sumPercentFallback += p.percent;
+        });
+        const totalFallback = keys.length;
+        const percentFallback = totalFallback > 0 ? Math.round(sumPercentFallback / totalFallback) : 0;
+        return {
+          completed: completedFallback,
+          total: totalFallback,
+          percent: percentFallback
+        };
+      }
+
+      const percent = Math.round(sumPercent / requiredCount);
 
       return {
         completed: completed,
-        total: total,
+        total: requiredCount,
         percent: percent
       };
     }
