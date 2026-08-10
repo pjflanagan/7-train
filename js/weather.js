@@ -26,7 +26,9 @@
           self.getForecastForCoords({
             latitude: locData.latitude,
             longitude: locData.longitude,
-            country_code: locData.country_code || 'US'
+            country_code: locData.country_code || 'US',
+            city: locData.city,
+            region_code: locData.region_code
           });
         })
         .fail(function() {
@@ -37,7 +39,9 @@
               self.getForecastForCoords({
                 latitude: locData.latitude,
                 longitude: locData.longitude,
-                country_code: locData.countryCode || 'US'
+                country_code: locData.countryCode || 'US',
+                city: locData.cityName,
+                region_code: locData.regionCode
               });
             })
             .fail(function() {
@@ -72,6 +76,9 @@
       const lat = loc.latitude;
       const lon = loc.longitude;
       const country = loc.country_code;
+
+      // Update settings panel location text
+      this.updateLocationDisplay(loc);
 
       // Determine temperature unit based on country
       const isUS = country === 'US';
@@ -130,6 +137,31 @@
         .fail(function() {
           console.error('Weather: Failed to retrieve forecast data.');
         });
+    },
+
+    updateLocationDisplay: function(loc) {
+      if (!loc.city || !loc.region_code) {
+        // Need to reverse-geocode
+        const geocodeUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${loc.latitude}&longitude=${loc.longitude}&localityLanguage=en`;
+        $.getJSON(geocodeUrl)
+          .done(function(geoData) {
+            const cityOrLocality = geoData.locality || geoData.city || 'Unknown';
+            let region = geoData.principalSubdivision || '';
+            if (geoData.principalSubdivisionCode && geoData.principalSubdivisionCode.includes('-')) {
+              region = geoData.principalSubdivisionCode.split('-')[1];
+            }
+            const displayStr = region ? `${cityOrLocality}, ${region}` : cityOrLocality;
+            $('#settings-weather-location').text(`Weather data shown for ${displayStr}`);
+          })
+          .fail(function() {
+            // Fallback to coordinates
+            const displayStr = `${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
+            $('#settings-weather-location').text(`Weather data shown for ${displayStr}`);
+          });
+      } else {
+        const displayStr = loc.region_code ? `${loc.city}, ${loc.region_code}` : loc.city;
+        $('#settings-weather-location').text(`Weather data shown for ${displayStr}`);
+      }
     },
 
     /**
