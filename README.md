@@ -80,4 +80,4 @@ Since Workout Week uses standard browser APIs and CDN-hosted dependencies, setup
      ```
    - Or simply double-click `index.html` in your file explorer!
 
-3. **Enjoy your planning!** Play with the pre-populated default goals or click **"+ Add Goal"** to define your custom routine with specialized colors and metric targets.
+3. **Enjoy your planning!** Play with the pre-populated default goals or click **"+ Add goal"** to define your custom routine with specialized colors and metric targets.

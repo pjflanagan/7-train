@@ -52,7 +52,6 @@
   display: block;
   font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   color: white;
 }
@@ -308,7 +307,6 @@
   color: var(--text-main);
   padding-left: 0.35rem;
   border-left: 3px solid var(--accent-primary);
-  text-transform: uppercase;
   font-family: inherit;
 }
 
@@ -334,7 +332,6 @@
   font-size: 0.65rem;
   color: var(--text-muted);
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.025em;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -350,7 +347,6 @@
   font-size: 0.65rem;
   color: var(--text-muted);
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.025em;
 }
 

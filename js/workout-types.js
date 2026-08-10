@@ -58,7 +58,7 @@
         $('#workout-unit').val(unit);
       });
 
-      // Toggle Weekly Target Goal based on Optional checkbox
+      // Toggle Weekly target goal based on Optional checkbox
       $('#workout-optional').on('change', function() {
         const isOptional = $(this).is(':checked');
         const $targetGroup = $('#workout-target').closest('.form-group');
@@ -158,7 +158,7 @@
         $list.html(`
           <div class="empty-goals-message">
             <span class="material-icons">info_outline</span>
-            <p>No workout goals created yet. Click "+ Add Workout Goal" above to define your weekly routine!</p>
+            <p>No workout goals created yet. Click "+ Add workout goal" above to define your weekly routine!</p>
           </div>
         `);
         return;
@@ -169,7 +169,7 @@
         const isDone = p.isDone;
         const percent = p.percent;
 
-        const targetMetaHTML = type.optional ? '' : `<div class="goal-meta">Target: ${type.target} ${type.unit}</div>`;
+        const targetMetaHTML = type.optional ? '' : `<div class="goal-meta">${type.target} ${type.unit}</div>`;
         const progressSectionHTML = type.optional ? `
             <div class="goal-progress-section">
               <div class="goal-progress-labels">
@@ -321,7 +321,7 @@
       currentEditingTypeId = null;
       this.setupModalOptions();
 
-      $('#workout-modal-title').text('Add Workout Goal');
+      $('#workout-modal-title').text('Add workout goal');
       $('#workout-type-form')[0].reset();
       $('#workout-type-id').val('');
       

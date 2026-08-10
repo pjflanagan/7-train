@@ -20,7 +20,7 @@
         <span class="material-icons">calendar_month</span>
       </div>
       <div class="brand-titles">
-        <h1>WORKOUT WEEK</h1>
+        <h1>Workout Week</h1>
       </div>
     </div>
     <div class="header-actions">
@@ -40,10 +40,10 @@
     <aside class="app-sidebar">
       
       <div class="sidebar-section-header">
-        <h2>Weekly Goals</h2>
+        <h2>Weekly goals</h2>
         <button id="add-goal-btn" class="btn btn-primary" title="Create a new workout goal">
           <span class="material-icons">add</span>
-          Add Goal
+          Add goal
         </button>
       </div>
 
@@ -57,13 +57,13 @@
     <!-- Calendar View Area -->
     <section class="app-calendar">
       
-      <!-- Week 1: This Week -->
+      <!-- Week 1: This week -->
       <div class="calendar-week-section" data-week="1">
         <div class="week-section-header">
-          <h2 class="week-section-title">This Week</h2>
+          <h2 class="week-section-title">This week</h2>
           <button id="clear-week-1-btn" class="btn-capsule" title="Clear all workouts and notes for this week" style="margin-left: auto;">
             <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">delete_sweep</span>
-            Clear Week
+            Clear week
           </button>
           <div class="week-progress-tracker" style="display: none;">
             <span class="week-progress-stats">0 of 0 goals met</span>
@@ -176,17 +176,17 @@
         </div>
       </div>
 
-      <!-- Week 2: Next Week -->
+      <!-- Week 2: Next week -->
       <div class="calendar-week-section" data-week="2">
         <div class="week-section-header">
-          <h2 class="week-section-title">Next Week</h2>
+          <h2 class="week-section-title">Next week</h2>
           <button id="copy-week-btn" class="btn-capsule" title="Copy current week's plan to next week" style="margin-left: auto; margin-right: 0.5rem;">
             <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">content_copy</span>
-            Copy Current Week
+            Copy current week
           </button>
           <button id="clear-week-2-btn" class="btn-capsule" title="Clear all workouts and notes for next week">
             <span class="material-icons" style="font-size: 0.85rem; vertical-align: middle;">delete_sweep</span>
-            Clear Week
+            Clear week
           </button>
           <div class="week-progress-tracker" style="display: none;">
             <span class="week-progress-stats">0 of 0 goals met</span>
@@ -308,7 +308,7 @@
     <div class="modal-content">
       
       <div class="modal-header-row">
-        <h3 id="workout-modal-title">Add Workout Goal</h3>
+        <h3 id="workout-modal-title">Add workout goal</h3>
         <button type="button" class="remove-scheduled-btn cancel-workout-modal" title="Close modal">
           <span class="material-icons">close</span>
         </button>
@@ -318,16 +318,16 @@
         <!-- Hidden input for ID (only present when editing) -->
         <input type="hidden" id="workout-type-id" name="id" value="">
 
-        <!-- Goal Name -->
+        <!-- Goal name -->
         <div class="form-group">
-          <label for="workout-name" class="form-label">Goal Name</label>
+          <label for="workout-name" class="form-label">Goal name</label>
           <input type="text" id="workout-name" class="form-input" placeholder="e.g. Morning Run, Weightlifting" required autocomplete="off">
         </div>
 
         <!-- Metric & Custom Unit Row -->
         <div class="form-row">
           <div class="form-group">
-            <label for="workout-metric" class="form-label">How to Measure</label>
+            <label for="workout-metric" class="form-label">How to measure</label>
             <select id="workout-metric" class="form-input" style="-webkit-appearance: none;">
               <option value="times">Number of Times</option>
               <option value="distance">Distance</option>
@@ -335,21 +335,21 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="workout-unit" class="form-label">Unit of Measure</label>
+            <label for="workout-unit" class="form-label">Unit of measure</label>
             <input type="text" id="workout-unit" class="form-input" placeholder="e.g. miles, mins, times" required autocomplete="off">
           </div>
         </div>
 
         <!-- Goal Target -->
         <div class="form-group">
-          <label for="workout-target" class="form-label">Weekly Target Goal</label>
+          <label for="workout-target" class="form-label">Weekly target goal</label>
           <input type="number" id="workout-target" class="form-input" min="0.1" step="any" placeholder="e.g. 10, 3, 120" required autocomplete="off">
         </div>
 
         <!-- Optional Goal Checkbox -->
         <div class="form-group" style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.15rem;">
           <input type="checkbox" id="workout-optional" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);">
-          <label for="workout-optional" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); cursor: pointer; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0;">Optional Goal</label>
+          <label for="workout-optional" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); cursor: pointer; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0;">Optional</label>
         </div>
 
         <!-- Custom Icon Grid selection -->
@@ -363,20 +363,20 @@
 
         <!-- Custom Color Picker selection -->
         <div class="form-group">
-          <label class="form-label">Color Code</label>
+          <label class="form-label">Color code</label>
           <div class="color-presets-container">
             <!-- Color presets loaded in workout-types.js -->
           </div>
           <div class="color-input-wrapper">
             <input type="color" id="workout-color-picker" value="#ff4d4d">
-            <span>Or select a custom color code</span>
+            <span>Or select a custom Color code</span>
           </div>
         </div>
 
         <!-- Modal Footer Actions -->
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary cancel-workout-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Goal</button>
+          <button type="submit" class="btn btn-primary">Save goal</button>
         </div>
 
       </form>
@@ -399,7 +399,7 @@
         
         <div class="settings-action-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
           <div class="settings-action-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Reset Application</h4>
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Reset application</h4>
             <p style="font-size: 0.75rem; color: var(--text-muted);">Erase all custom goals, notes, and resets to defaults.</p>
           </div>
           <button id="reset-app-btn" class="btn btn-danger" title="Reset everything back to defaults" style="flex-shrink: 0;">
@@ -416,12 +416,12 @@
     </div>
   </div>
 
-  <!-- Modal Overlay: Helpful Links -->
+  <!-- Modal Overlay: Helpful links -->
   <div class="modal-overlay" id="links-modal-overlay">
     <div class="modal-content" style="max-width: 500px;">
       
       <div class="modal-header-row">
-        <h3>Helpful Links</h3>
+        <h3>Helpful links</h3>
         <button type="button" class="remove-scheduled-btn cancel-links-modal" title="Close modal">
           <span class="material-icons">close</span>
         </button>
@@ -437,10 +437,10 @@
 
         <!-- Add Link Form -->
         <form id="add-link-form" style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-          <h4 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 0.25rem;">Add New Link</h4>
+          <h4 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 0.25rem;">Add new link</h4>
           
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="link-title">Link Title</label>
+            <label class="form-label" for="link-title">Link title</label>
             <input type="text" id="link-title" class="form-input" placeholder="e.g. Gym Pool Schedule" required />
           </div>
 

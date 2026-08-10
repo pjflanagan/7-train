@@ -90,7 +90,7 @@
           columnDate.setDate(mondayDate.getDate() + totalDaysOffset);
           
           const dayOfMonth = columnDate.getDate();
-          const capitalizedDay = day.toUpperCase();
+          const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
           
           const $dayColumn = $(`.calendar-column[data-day="${day}"][data-week="${week}"]`);
           $dayColumn.find('.day-name').text(`${capitalizedDay} - ${dayOfMonth}`);

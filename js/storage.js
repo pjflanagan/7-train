@@ -150,7 +150,7 @@
     },
 
     /**
-     * Retrieves helpful links. Initializes with defaults if empty.
+     * Retrieves Helpful links. Initializes with defaults if empty.
      */
     getLinks: function() {
       const data = localStorage.getItem(STORAGE_KEYS.LINKS);
@@ -162,7 +162,7 @@
     },
 
     /**
-     * Saves helpful links to localStorage.
+     * Saves Helpful links to localStorage.
      */
     saveLinks: function(links) {
       localStorage.setItem(STORAGE_KEYS.LINKS, JSON.stringify(links));
