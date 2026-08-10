@@ -116,90 +116,84 @@
 
           const dayItems = items.filter(item => item.day === day && (item.week || 1) === week);
 
-          if (dayItems.length === 0) {
-            $dayContainer.append(`
-              <div class="empty-day-placeholder"></div>
-            `);
-          } else {
-            dayItems.forEach(item => {
-              const type = types.find(t => t.id === item.typeId);
-              
-              // If the workout type was deleted somehow, don't break rendering
-              if (!type) return;
+          dayItems.forEach(item => {
+            const type = types.find(t => t.id === item.typeId);
+            
+            // If the workout type was deleted somehow, don't break rendering
+            if (!type) return;
 
-              const isTimesMetric = type.metric === 'times';
-              
-              // For times-measured activities, the value is always implicitly 1
-              if (isTimesMetric && item.value !== 1) {
-                item.value = 1;
-                self.updateItemValue(item.id, 1);
-              }
+            const isTimesMetric = type.metric === 'times';
+            
+            // For times-measured activities, the value is always implicitly 1
+            if (isTimesMetric && item.value !== 1) {
+              item.value = 1;
+              self.updateItemValue(item.id, 1);
+            }
 
-              const showSubtitle = !!item.workoutType;
+            const showSubtitle = !!item.workoutType;
 
-              const $card = $(`
-                <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
-                  <div class="scheduled-card-header" style="${(isTimesMetric && !showSubtitle) ? 'margin-bottom: 0;' : ''}">
-                    <div class="scheduled-info">
-                      <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
-                      <div class="card-titles">
-                        <span class="card-type-name">${type.name}</span>
-                        ${showSubtitle ? `<span class="card-type-subtitle">${item.workoutType}</span>` : ''}
-                      </div>
+            const $card = $(`
+              <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
+                <div class="scheduled-card-header" style="${(isTimesMetric && !showSubtitle) ? 'margin-bottom: 0;' : ''}">
+                  <div class="scheduled-info">
+                    <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
+                    <div class="card-titles">
+                      <span class="card-type-name">${type.name}</span>
+                      ${showSubtitle ? `<span class="card-type-subtitle">${item.workoutType}</span>` : ''}
                     </div>
-                    <button class="remove-scheduled-btn" title="Remove activity">
-                      <span class="material-icons">close</span>
-                    </button>
                   </div>
-                  ${isTimesMetric ? '' : `
-                    <div class="scheduled-card-body">
-                      <div class="value-input-group">
-                        <input type="number" 
-                               class="scheduled-value-input" 
-                               value="${item.value}" 
-                               min="0.1" 
-                               step="0.1" 
-                               title="Planned amount" />
-                        <span class="unit-label">${type.unit}</span>
-                      </div>
-                    </div>
-                  `}
+                  <button class="remove-scheduled-btn" title="Remove activity">
+                    <span class="material-icons">close</span>
+                  </button>
                 </div>
-              `);
+                ${isTimesMetric ? '' : `
+                  <div class="scheduled-card-body">
+                    <div class="value-input-group">
+                      <input type="number" 
+                             class="scheduled-value-input" 
+                             value="${item.value}" 
+                             min="0.1" 
+                             step="0.1" 
+                             title="Planned amount" />
+                      <span class="unit-label">${type.unit}</span>
+                    </div>
+                  </div>
+                `}
+              </div>
+            `);
 
-              // Inline value update events (only for distance/duration, since times doesn't have an input)
-              if (!isTimesMetric) {
-                // On input (typing): allow user to clear the field to type freely
-                $card.find('.scheduled-value-input').on('input', function() {
-                  const valStr = $(this).val();
-                  if (valStr === '') return; // Allow empty string while typing!
-                  
-                  const val = parseFloat(valStr);
-                  if (!isNaN(val) && val > 0) {
-                    self.updateItemValue(item.id, val);
-                  }
-                });
-
-                // On change (blur/enter): enforce fallback if left empty or invalid
-                $card.find('.scheduled-value-input').on('change', function() {
-                  const valStr = $(this).val();
-                  let val = parseFloat(valStr);
-                  if (isNaN(val) || val <= 0) {
-                    val = 1; // sensible fallback
-                    $(this).val(val);
-                  }
+            // Inline value update events (only for distance/duration, since times doesn't have an input)
+            if (!isTimesMetric) {
+              // On input (typing): allow user to clear the field to type freely
+              $card.find('.scheduled-value-input').on('input', function() {
+                const valStr = $(this).val();
+                if (valStr === '') return; // Allow empty string while typing!
+                
+                const val = parseFloat(valStr);
+                if (!isNaN(val) && val > 0) {
                   self.updateItemValue(item.id, val);
-                });
-              }
-
-              // Remove item event
-              $card.find('.remove-scheduled-btn').on('click', function() {
-                self.removeItem(item.id);
+                }
               });
 
-              $dayContainer.append($card);
+              // On change (blur/enter): enforce fallback if left empty or invalid
+              $card.find('.scheduled-value-input').on('change', function() {
+                const valStr = $(this).val();
+                let val = parseFloat(valStr);
+                if (isNaN(val) || val <= 0) {
+                  val = 1; // sensible fallback
+                  $(this).val(val);
+                }
+                self.updateItemValue(item.id, val);
+              });
+            }
+
+            // Remove item event
+            $card.find('.remove-scheduled-btn').on('click', function() {
+              self.removeItem(item.id);
             });
-          }
+
+            $dayContainer.append($card);
+          });
         });
       });
 
@@ -222,6 +216,7 @@
         placeholder: 'scheduled-card-placeholder',
         tolerance: 'pointer',
         start: function(event, ui) {
+          self.dragHandled = false;
           $('body').addClass('is-dragging');
           ui.placeholder.height(ui.item.outerHeight());
           ui.placeholder.css({
@@ -244,6 +239,9 @@
           $(this).closest('.calendar-column').removeClass('day-droppable-hover');
         },
         receive: function(event, ui) {
+          if (self.dragHandled) return;
+          self.dragHandled = true;
+
           if (ui.item.hasClass('draggable-workout') || ui.item.hasClass('draggable-subtag')) {
             const typeId = ui.item.data('id');
             const tag = ui.item.data('tag') || null;
@@ -265,9 +263,69 @@
         stop: function(event, ui) {
           $('body').removeClass('is-dragging');
           if (!ui.item.hasClass('draggable-workout') && !ui.item.hasClass('draggable-subtag')) {
+            self.dragHandled = true;
             setTimeout(() => {
               self.saveLayoutFromDOM();
             }, 0);
+          }
+        }
+      });
+
+      // Enable the entire column as a droppable target on empty days (allows drops on header/notes)
+      $('.calendar-column').droppable({
+        accept: '.draggable-workout, .draggable-subtag, .scheduled-card',
+        tolerance: 'pointer',
+        activate: function(event, ui) {
+          const $column = $(this);
+          const hasCards = $column.find('.calendar-day-items .scheduled-card').length > 0;
+          if (!hasCards) {
+            $column.addClass('day-droppable-active');
+          }
+        },
+        deactivate: function(event, ui) {
+          $(this).removeClass('day-droppable-active day-droppable-hover');
+        },
+        over: function(event, ui) {
+          const $column = $(this);
+          const hasCards = $column.find('.calendar-day-items .scheduled-card').length > 0;
+          if (!hasCards) {
+            $column.addClass('day-droppable-hover');
+          }
+        },
+        out: function(event, ui) {
+          $(this).removeClass('day-droppable-hover');
+        },
+        drop: function(event, ui) {
+          const $column = $(this);
+          const $dayItemsContainer = $column.find('.calendar-day-items');
+          const hasCards = $dayItemsContainer.find('.scheduled-card').length > 0;
+          
+          if (!hasCards) {
+            if (self.dragHandled) return;
+            self.dragHandled = true;
+
+            const day = $column.data('day');
+            const week = $column.data('week') || 1;
+            
+            // Find what was dropped
+            const isWorkout = ui.draggable.hasClass('draggable-workout');
+            const isSubtag = ui.draggable.hasClass('draggable-subtag');
+            
+            if (isWorkout || isSubtag) {
+              const typeId = ui.draggable.data('id');
+              const tag = ui.draggable.data('tag') || null;
+              self.addWorkoutToDayAtIndex(typeId, day, week, 0, tag);
+            } else if (ui.draggable.hasClass('scheduled-card')) {
+              const cardId = ui.draggable.data('id');
+              const items = WorkoutApp.Storage.getCalendarItems();
+              const item = items.find(i => i.id === cardId);
+              if (item) {
+                item.day = day;
+                item.week = week;
+                WorkoutApp.Storage.saveCalendarItems(items);
+                self.render();
+              }
+            }
           }
         }
       });

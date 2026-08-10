@@ -1,4 +1,4 @@
-// Workout Week - Workout Types Management
+// Workout Week - Workout types Management
 (function() {
   window.WorkoutApp = window.WorkoutApp || {};
 
@@ -300,6 +300,9 @@
       $('.draggable-workout').draggable({
         connectToSortable: '.calendar-day-items',
         start: function(event, ui) {
+          if (WorkoutApp.Calendar) {
+            WorkoutApp.Calendar.dragHandled = false;
+          }
           $('body').addClass('is-dragging');
         },
         stop: function(event, ui) {
@@ -326,6 +329,9 @@
       $('.draggable-subtag').draggable({
         connectToSortable: '.calendar-day-items',
         start: function(event, ui) {
+          if (WorkoutApp.Calendar) {
+            WorkoutApp.Calendar.dragHandled = false;
+          }
           $('body').addClass('is-dragging');
         },
         stop: function(event, ui) {

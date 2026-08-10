@@ -314,7 +314,7 @@
   pointer-events: none;
 }
 
-/* --- Goal Card Subtags (Workout Types) --- */
+/* --- Goal Card Subtags (Workout types) --- */
 .goal-subtags-container {
   display: flex;
   flex-wrap: wrap;
