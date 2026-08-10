@@ -5,10 +5,9 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1.5rem;
   height: 100%;
-  min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .calendar-header {
@@ -26,8 +25,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5rem;
-  flex: 1;
-  min-height: 0;
+  min-height: 380px;
 }
 
 .calendar-column {
@@ -272,4 +270,113 @@
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+/* --- Today Column Highlight --- */
+.calendar-column.is-today {
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+  position: relative;
+}
+
+.calendar-column.is-today .column-header {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+/* --- Calendar Week Sections --- */
+.calendar-week-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.week-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.week-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  padding-left: 0.35rem;
+  border-left: 3px solid var(--accent-primary);
+  text-transform: uppercase;
+  font-family: inherit;
+}
+
+.week-progress-tracker {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+}
+
+.week-progress-stats {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.week-progress-bar-bg {
+  background-color: var(--bg-tertiary);
+  width: 70px;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.week-progress-bar-fill {
+  background: linear-gradient(to right, var(--accent-primary), #a855f7);
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.week-progress-percentage {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+/* --- Day Notes Styles --- */
+.day-notes-container {
+  padding: 0.5rem;
+  background-color: transparent;
+  display: flex;
+  align-items: flex-start;
+  margin-top: auto;
+}
+
+.day-notes-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.725rem;
+  font-weight: 500;
+  font-style: italic;
+  resize: none;
+  outline: none;
+  min-height: 32px;
+  line-height: 1.4;
+}
+
+.day-notes-input:focus {
+  color: var(--text-main);
+}
+
+.day-notes-input::placeholder {
+  color: var(--text-dim);
 }

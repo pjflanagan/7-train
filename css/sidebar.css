@@ -239,12 +239,11 @@
 }
 
 .goal-action-btn {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: transparent;
+  border: none;
   color: var(--text-muted);
-  width: 28px;
-  height: 28px;
-  border-radius: var(--border-radius-sm);
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,15 +251,16 @@
   transition: var(--transition-smooth);
 }
 
+.goal-action-btn .material-icons {
+  font-size: 14px;
+}
+
 .goal-action-btn:hover {
   color: white;
-  border-color: var(--text-muted);
 }
 
 .goal-action-btn.delete-goal-btn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
   color: var(--accent-error);
-  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Empty goal state message */

@@ -9,47 +9,114 @@
      * Initializes calendar event handlers.
      */
     init: function() {
-      // Clean calendar button
+      // Clear calendar button
       $('#clear-week-btn').on('click', () => {
-        if (confirm('Are you sure you want to clear all workouts from this week\'s calendar?')) {
+        if (confirm('Are you sure you want to clear all workouts from the calendar?')) {
           WorkoutApp.Storage.clearCalendar();
+          WorkoutApp.Storage.saveDayNotes({});
           this.render();
           WorkoutApp.WorkoutTypes.render();
+          
+          // Clear notes inputs in DOM
+          $('.day-notes-input').val('');
+          // Close settings modal
+          $('#settings-modal-overlay').removeClass('active');
         }
       });
 
       // Reset application button
       $('#reset-app-btn').on('click', () => {
-        if (confirm('Are you sure you want to reset EVERYTHING back to defaults? This will erase all custom workouts and planned activities.')) {
+        if (confirm('Are you sure you want to reset EVERYTHING back to defaults? This will erase all custom workouts, notes, and planned activities.')) {
           WorkoutApp.Storage.resetToDefaults();
           // Reload page to re-initialize with storage defaults
           window.location.reload();
         }
       });
+
+      // Day notes input listener
+      $(document).on('input', '.day-notes-input', function() {
+        const day = $(this).data('day');
+        const week = $(this).data('week');
+        const text = $(this).val();
+        
+        const notes = WorkoutApp.Storage.getDayNotes();
+        notes[`${day}-${week}`] = text;
+        WorkoutApp.Storage.saveDayNotes(notes);
+      });
+
+      // Hook up advance button
+      $('#advance-week-btn').on('click', () => {
+        if (confirm('Are you sure you want to advance to the next week? This week\'s workouts will be cleared, and next week\'s workouts and notes will move to this week.')) {
+          this.advanceToNextWeek();
+        }
+      });
     },
 
     /**
-     * Renders the 7 columns of the calendar with their scheduled cards.
+     * Renders the columns of the calendar with their scheduled cards and loads notes.
      */
     render: function() {
       const self = this;
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const items = WorkoutApp.Storage.getCalendarItems();
 
-      DAYS.forEach(day => {
-        const $dayContainer = $(`.calendar-column[data-day="${day}"] .calendar-day-items`);
-        $dayContainer.empty();
+      // Clear today highlights and compute today
+      $('.calendar-column').removeClass('is-today');
+      const todayIndex = new Date().getDay();
+      const weekdayMap = {
+        1: 'monday',
+        2: 'tuesday',
+        3: 'wednesday',
+        4: 'thursday',
+        5: 'friday',
+        6: 'saturday',
+        0: 'sunday'
+      };
+      const todayDayName = weekdayMap[todayIndex];
+      if (todayDayName) {
+        $(`.calendar-column[data-day="${todayDayName}"][data-week="1"]`).addClass('is-today');
+      }
 
-        const dayItems = items.filter(item => item.day === day);
+      // Calculate calendar dates starting from current Monday
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+      const mondayDiff = currentDay === 0 ? -6 : 1 - currentDay;
+      const mondayDate = new Date(today);
+      mondayDate.setDate(today.getDate() + mondayDiff);
 
-        if (dayItems.length === 0) {
-          // $dayContainer.html(`
-          //   <div class="empty-day-placeholder">
-          //     <span class="material-icons">add</span>
-          //     <p class="placeholder-text">Drop workouts here</p>
-          //   </div>
-          // `);
-        } else {
+      [1, 2].forEach(week => {
+        DAYS.forEach((day, index) => {
+          const columnDate = new Date(mondayDate);
+          const totalDaysOffset = (week - 1) * 7 + index;
+          columnDate.setDate(mondayDate.getDate() + totalDaysOffset);
+          
+          const dayOfMonth = columnDate.getDate();
+          const capitalizedDay = day.toUpperCase();
+          
+          const $dayColumn = $(`.calendar-column[data-day="${day}"][data-week="${week}"]`);
+          $dayColumn.find('.day-name').text(`${capitalizedDay} - ${dayOfMonth}`);
+        });
+      });
+
+      // Populate notes from storage (ignoring focused inputs)
+      const notes = WorkoutApp.Storage.getDayNotes();
+      $('.day-notes-input').each(function() {
+        const day = $(this).data('day');
+        const week = $(this).data('week');
+        const noteKey = `${day}-${week}`;
+        if (!$(this).is(':focus')) {
+          $(this).val(notes[noteKey] || '');
+        }
+      });
+
+      // Loop through both weeks
+      [1, 2].forEach(week => {
+        DAYS.forEach(day => {
+          const $dayContainer = $(`.calendar-column[data-day="${day}"][data-week="${week}"] .calendar-day-items`);
+          $dayContainer.empty();
+
+          const dayItems = items.filter(item => item.day === day && (item.week || 1) === week);
+
           dayItems.forEach(item => {
             const type = types.find(t => t.id === item.typeId);
             
@@ -140,7 +207,7 @@
 
             $dayContainer.append($card);
           });
-        }
+        });
       });
 
       // Refresh progress metrics on the left
@@ -162,30 +229,32 @@
         hoverClass: 'day-droppable-hover',
         drop: function(event, ui) {
           const day = $(this).data('day');
+          const week = $(this).data('week') || 1;
           
           if (ui.draggable.hasClass('scheduled-card')) {
-            // Re-schedule an existing event to a different day
+            // Re-schedule an existing event to a different day/week
             const itemId = ui.draggable.data('id');
-            self.moveWorkoutToDay(itemId, day);
+            self.moveWorkoutToDay(itemId, day, week);
           } else {
             // Add a brand new event
             const typeId = ui.draggable.data('id');
-            self.addWorkoutToDay(typeId, day);
+            self.addWorkoutToDay(typeId, day, week);
           }
         }
       });
     },
 
     /**
-     * Reschedules an existing scheduled workout to a new day.
+     * Reschedules an existing scheduled workout to a new day/week.
      */
-    moveWorkoutToDay: function(itemId, day) {
+    moveWorkoutToDay: function(itemId, day, week) {
       const items = WorkoutApp.Storage.getCalendarItems();
       const item = items.find(i => i.id === itemId);
       if (item) {
-        // Only trigger update if the day has actually changed
-        if (item.day !== day) {
+        // Only trigger update if the day or week has actually changed
+        if (item.day !== day || (item.week || 1) !== week) {
           item.day = day;
+          item.week = week;
           WorkoutApp.Storage.saveCalendarItems(items);
           this.render();
         }
@@ -193,10 +262,10 @@
     },
 
     /**
-     * Adds a workout type to a specific calendar day.
+     * Adds a workout type to a specific calendar day/week.
      * Assigns sensible default values based on the workout's metric.
      */
-    addWorkoutToDay: function(typeId, day) {
+    addWorkoutToDay: function(typeId, day, week) {
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const type = types.find(t => t.id === typeId);
       if (!type) return;
@@ -211,6 +280,7 @@
         id: 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
         typeId: typeId,
         day: day,
+        week: week,
         value: defaultValue
       };
 
@@ -244,6 +314,45 @@
       WorkoutApp.Storage.saveCalendarItems(items);
 
       this.render();
+    },
+
+    /**
+     * Advances to the next week (Shift week 2 items & notes to week 1).
+     */
+    advanceToNextWeek: function() {
+      // 1. Shift calendar items
+      const items = WorkoutApp.Storage.getCalendarItems();
+      const updatedItems = items
+        .filter(item => (item.week || 1) !== 1) // Remove week 1 items
+        .map(item => {
+          return {
+            ...item,
+            week: 1 // Promote week 2 items to week 1
+          };
+        });
+      WorkoutApp.Storage.saveCalendarItems(updatedItems);
+
+      // 2. Shift day notes
+      const notes = WorkoutApp.Storage.getDayNotes();
+      const updatedNotes = {};
+      DAYS.forEach(day => {
+        const nextWeekNote = notes[`${day}-2`];
+        if (nextWeekNote) {
+          updatedNotes[`${day}-1`] = nextWeekNote;
+        }
+      });
+      WorkoutApp.Storage.saveDayNotes(updatedNotes);
+
+      // 3. Render calendar & update notes inputs in DOM
+      this.render();
+      WorkoutApp.WorkoutTypes.render();
+
+      $('.day-notes-input').each(function() {
+        const day = $(this).data('day');
+        const week = $(this).data('week');
+        const noteKey = `${day}-${week}`;
+        $(this).val(updatedNotes[noteKey] || '');
+      });
     }
   };
 })();

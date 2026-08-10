@@ -15,6 +15,20 @@ $(document).ready(function() {
     WorkoutApp.WorkoutTypes.openAddModal();
   });
 
+  // Open settings modal
+  $('#settings-btn').on('click', function() {
+    $('#settings-modal-overlay').addClass('active');
+  });
+
+  // Close settings modal
+  function closeSettingsModal() {
+    $('#settings-modal-overlay').removeClass('active');
+  }
+
+  $('.cancel-settings-modal').on('click', function() {
+    closeSettingsModal();
+  });
+
   // Close modals on overlay click (if clicking precisely on the overlay background)
   $('#workout-modal-overlay').on('click', function(e) {
     if (e.target === this) {
@@ -22,10 +36,17 @@ $(document).ready(function() {
     }
   });
 
+  $('#settings-modal-overlay').on('click', function(e) {
+    if (e.target === this) {
+      closeSettingsModal();
+    }
+  });
+
   // Close modal with Escape key
   $(document).on('keydown', function(e) {
     if (e.key === 'Escape') {
       WorkoutApp.WorkoutTypes.closeModal();
+      closeSettingsModal();
     }
   });
 

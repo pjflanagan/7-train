@@ -45,7 +45,7 @@
       });
 
       // Hook up cancel button
-      $('#cancel-workout-modal').on('click', function() {
+      $('.cancel-workout-modal').on('click', function() {
         self.closeModal();
       });
 
@@ -113,19 +113,25 @@
       $list.empty();
 
       const types = WorkoutApp.Storage.getWorkoutTypes();
-      const items = WorkoutApp.Storage.getCalendarItems();
+      const items = WorkoutApp.Storage.getCalendarItems().filter(item => (item.week || 1) === 1);
       const progressMap = WorkoutApp.Progress.calculateProgress(types, items);
-      const overall = WorkoutApp.Progress.getOverallProgress(progressMap);
 
-      // Render aggregate stats card if we have workout goals
-      if (types.length > 0) {
-        $('#overall-progress-percentage').text(`${overall.percent}%`);
-        $('#overall-progress-stats').text(`${overall.completed} of ${overall.total} goals met`);
-        $('#overall-progress-bar-fill').css('width', `${overall.percent}%`);
-        $('.sidebar-stats-card').show();
-      } else {
-        $('.sidebar-stats-card').hide();
-      }
+      // Render weekly progress trackers on the calendar
+      [1, 2].forEach(weekNum => {
+        const weekItems = WorkoutApp.Storage.getCalendarItems().filter(item => (item.week || 1) === weekNum);
+        const weekProgressMap = WorkoutApp.Progress.calculateProgress(types, weekItems);
+        const weekOverall = WorkoutApp.Progress.getOverallProgress(weekProgressMap);
+
+        const $tracker = $(`.calendar-week-section[data-week="${weekNum}"] .week-progress-tracker`);
+        if (types.length > 0) {
+          $tracker.find('.week-progress-percentage').text(`${weekOverall.percent}%`);
+          $tracker.find('.week-progress-stats').text(`${weekOverall.completed} of ${weekOverall.total} goals met`);
+          $tracker.find('.week-progress-bar-fill').css('width', `${weekOverall.percent}%`);
+          $tracker.css('display', 'flex');
+        } else {
+          $tracker.hide();
+        }
+      });
 
       if (types.length === 0) {
         $list.html(`
@@ -152,7 +158,6 @@
               <div class="goal-details">
                 <div class="goal-title-row">
                   <span class="goal-name">${type.name}</span>
-                  ${isDone ? '<span class="done-badge"><span class="material-icons">check_circle</span>Crushed</span>' : ''}
                 </div>
                 <div class="goal-meta">Target: ${type.target} ${type.unit}</div>
               </div>

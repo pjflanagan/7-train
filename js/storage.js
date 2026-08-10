@@ -4,7 +4,8 @@
 
   const STORAGE_KEYS = {
     WORKOUT_TYPES: 'workout_week_types',
-    CALENDAR_ITEMS: 'workout_week_calendar'
+    CALENDAR_ITEMS: 'workout_week_calendar',
+    DAY_NOTES: 'workout_week_notes'
   };
 
   const DEFAULT_WORKOUT_TYPES = [
@@ -122,6 +123,24 @@
     },
 
     /**
+     * Retrieves day notes.
+     */
+    getDayNotes: function() {
+      const data = localStorage.getItem(STORAGE_KEYS.DAY_NOTES);
+      if (!data) {
+        return {};
+      }
+      return JSON.parse(data);
+    },
+
+    /**
+     * Saves day notes.
+     */
+    saveDayNotes: function(notes) {
+      localStorage.setItem(STORAGE_KEYS.DAY_NOTES, JSON.stringify(notes));
+    },
+
+    /**
      * Clears all session progress (calendar items) but keeps workout goals.
      */
     clearCalendar: function() {
@@ -134,6 +153,7 @@
     resetToDefaults: function() {
       localStorage.removeItem(STORAGE_KEYS.WORKOUT_TYPES);
       localStorage.removeItem(STORAGE_KEYS.CALENDAR_ITEMS);
+      localStorage.removeItem(STORAGE_KEYS.DAY_NOTES);
     }
   };
 })();

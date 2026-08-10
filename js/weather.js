@@ -113,7 +113,7 @@
             const dayKey = weekdayMap[dayOfWeek];
             if (dayKey) {
               const mapped = WorkoutApp.Weather.getWeatherDetails(code);
-              const $daySub = $(`.calendar-column[data-day="${dayKey}"] .day-sub`);
+              const $daySub = $(`.calendar-column[data-day="${dayKey}"][data-week="1"] .day-sub`);
               
               if ($daySub.length > 0) {
                 // Render the weather pill inside the .day-sub element!
