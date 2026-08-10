@@ -96,13 +96,10 @@
 
 /* Dropzone items list container */
 .calendar-day-items {
-  flex: 1;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 /* Droppable Hover styles */
@@ -355,7 +352,6 @@
   background-color: transparent;
   display: flex;
   align-items: flex-start;
-  margin-top: auto;
 }
 
 .day-notes-input {
