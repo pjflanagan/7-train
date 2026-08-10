@@ -17,7 +17,7 @@
         progressMap[type.id] = {
           type: type,
           current: 0,
-          target: Number(type.target) || 0,
+          target: type.optional ? 0 : (Number(type.target) || 0),
           percent: 0,
           isDone: false
         };
@@ -34,7 +34,11 @@
       // Compute percentages and completions
       types.forEach(type => {
         const p = progressMap[type.id];
-        if (p.target > 0) {
+        if (type.optional) {
+          p.current = Math.round(p.current * 100) / 100;
+          p.percent = 0;
+          p.isDone = p.current > 0;
+        } else if (p.target > 0) {
           // Round to 1 decimal place if float, else keep as integer
           p.current = Math.round(p.current * 100) / 100;
           p.percent = Math.min(100, Math.round((p.current / p.target) * 100));

@@ -306,8 +306,12 @@
       if (!type) return;
 
       let defaultValue = 1;
-      if (type.metric === 'distance') defaultValue = 3;
-      if (type.metric === 'duration') defaultValue = 30;
+      if (type.metric !== 'times' && type.target && !type.optional) {
+        defaultValue = Math.max(0.1, Math.round((type.target / 3) * 10) / 10);
+      } else {
+        if (type.metric === 'distance') defaultValue = 3;
+        if (type.metric === 'duration') defaultValue = 30;
+      }
 
       const items = WorkoutApp.Storage.getCalendarItems();
       const newItem = {
@@ -355,10 +359,14 @@
       const type = types.find(t => t.id === typeId);
       if (!type) return;
 
-      // Determine smart default values based on metric type
+      // Determine smart default values based on metric type and target
       let defaultValue = 1;
-      if (type.metric === 'distance') defaultValue = 3;   // e.g. 3 miles
-      if (type.metric === 'duration') defaultValue = 30;  // e.g. 30 minutes
+      if (type.metric !== 'times' && type.target && !type.optional) {
+        defaultValue = Math.max(0.1, Math.round((type.target / 3) * 10) / 10);
+      } else {
+        if (type.metric === 'distance') defaultValue = 3;   // e.g. 3 miles
+        if (type.metric === 'duration') defaultValue = 30;  // e.g. 30 minutes
+      }
 
       const items = WorkoutApp.Storage.getCalendarItems();
       const newItem = {

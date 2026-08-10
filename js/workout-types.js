@@ -58,6 +58,27 @@
         $('#workout-unit').val(unit);
       });
 
+      // Toggle Weekly Target Goal based on Optional checkbox
+      $('#workout-optional').on('change', function() {
+        const isOptional = $(this).is(':checked');
+        const $targetGroup = $('#workout-target').closest('.form-group');
+        if (isOptional) {
+          $targetGroup.hide();
+          $('#workout-target').prop('required', false).val('');
+        } else {
+          $targetGroup.show();
+          $('#workout-target').prop('required', true);
+          // Auto-populate sensible target default if empty
+          if (!$('#workout-target').val()) {
+            const metric = $('#workout-metric').val();
+            let defaultTarget = 3;
+            if (metric === 'times') defaultTarget = 3;
+            if (metric === 'duration') defaultTarget = 120;
+            $('#workout-target').val(defaultTarget);
+          }
+        }
+      });
+
       // Preset color selections
       $(document).on('click', '.color-preset-btn', function() {
         $('.color-preset-btn').removeClass('active');
@@ -148,22 +169,14 @@
         const isDone = p.isDone;
         const percent = p.percent;
 
-        const $card = $(`
-          <div class="goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}">
-            <div class="goal-drag-handle draggable-workout" data-id="${type.id}">
-              <span class="material-icons drag-icon" title="Drag to planner (or drag indicator to reorder)">drag_indicator</span>
-              <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
-                <span class="material-icons">${type.icon}</span>
-              </div>
-              <div class="goal-details">
-                <div class="goal-title-row" style="display: flex; align-items: center; gap: 0.4rem;">
-                  <span class="goal-name">${type.name}</span>
-                  ${type.optional ? '<span class="optional-badge" style="font-size: 0.575rem; font-weight: 700; background: rgba(255,255,255,0.08); color: var(--text-muted); padding: 0.1rem 0.3rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.025em; flex-shrink: 0;">Optional</span>' : ''}
-                </div>
-                <div class="goal-meta">Target: ${type.target} ${type.unit}</div>
+        const targetMetaHTML = type.optional ? '' : `<div class="goal-meta">Target: ${type.target} ${type.unit}</div>`;
+        const progressSectionHTML = type.optional ? `
+            <div class="goal-progress-section">
+              <div class="goal-progress-labels">
+                <span class="progress-current">Logged: ${p.current} ${type.unit}</span>
               </div>
             </div>
-
+        ` : `
             <div class="goal-progress-section">
               <div class="goal-progress-labels">
                 <span class="progress-current">${p.current} / ${p.target} ${type.unit}</span>
@@ -173,6 +186,25 @@
                 <div class="goal-progress-bar-fill" style="width: ${percent}%; background-color: ${type.color}"></div>
               </div>
             </div>
+        `;
+
+        const $card = $(`
+          <div class="goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}">
+            <div class="goal-drag-handle draggable-workout" data-id="${type.id}">
+              <span class="material-icons drag-icon" title="Drag to planner (or drag indicator to reorder)">drag_indicator</span>
+              <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
+                <span class="material-icons">${type.icon}</span>
+              </div>
+              <div class="goal-details">
+                <div class="goal-title-row">
+                  <span class="goal-name">${type.name}</span>
+                  ${type.optional ? '<span class="optional-badge">Optional</span>' : ''}
+                </div>
+                ${targetMetaHTML}
+              </div>
+            </div>
+
+            ${progressSectionHTML}
 
             <div class="goal-actions">
               <button class="goal-action-btn edit-goal-btn" title="Edit Workout Goal">
@@ -292,7 +324,6 @@
       $('#workout-modal-title').text('Add Workout Goal');
       $('#workout-type-form')[0].reset();
       $('#workout-type-id').val('');
-      $('#workout-optional').prop('checked', false);
       
       // Default selections
       $('.icon-grid-item[data-icon="directions_run"]').addClass('active');
@@ -302,6 +333,7 @@
       $('.color-preset-btn[data-color="' + defaultColor + '"]').addClass('active');
       $('#workout-color-picker').val(defaultColor);
       $('#workout-metric').val('distance').trigger('change');
+      $('#workout-optional').prop('checked', false).trigger('change');
 
       $('#workout-modal-overlay').addClass('active');
     },
@@ -322,8 +354,8 @@
       $('#workout-name').val(type.name);
       $('#workout-metric').val(type.metric);
       $('#workout-unit').val(type.unit);
-      $('#workout-target').val(type.target);
-      $('#workout-optional').prop('checked', !!type.optional);
+      $('#workout-target').val(type.target !== null && type.target !== undefined ? type.target : '');
+      $('#workout-optional').prop('checked', !!type.optional).trigger('change');
       
       // Setup icon selection
       $('.icon-grid-item').removeClass('active');
@@ -355,9 +387,9 @@
       const icon = $('#workout-icon').val() || 'directions_run';
       const metric = $('#workout-metric').val();
       const unit = $('#workout-unit').val().trim() || 'times';
-      const target = Number($('#workout-target').val()) || 1;
-      const color = $('#workout-color-picker').val();
       const optional = $('#workout-optional').is(':checked');
+      const target = optional ? null : (Number($('#workout-target').val()) || 1);
+      const color = $('#workout-color-picker').val();
 
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const newType = { id, name, icon, metric, unit, target, color, optional };

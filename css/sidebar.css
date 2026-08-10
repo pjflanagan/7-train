@@ -155,9 +155,10 @@
 .goal-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  justify-content: flex-start;
+  gap: 0.4rem;
   margin-bottom: 0.1rem;
+  padding-right: 2.2rem;
 }
 
 .goal-name {
@@ -167,6 +168,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-main);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.optional-badge {
+  font-size: 0.575rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  flex-shrink: 0;
 }
 
 .done-badge {
