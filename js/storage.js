@@ -25,7 +25,8 @@
       metric: 'distance',
       unit: 'miles',
       target: 10,
-      color: '#ff4d4d' // Vibrant Red
+      color: '#ff4d4d', // Vibrant Red
+      workoutTypes: ['Long Run', 'Tempo Run', 'Intervals']
     },
     {
       id: 'type-lift',
@@ -34,7 +35,8 @@
       metric: 'times',
       unit: 'times',
       target: 3,
-      color: '#a855f7' // Sunset Purple
+      color: '#a855f7', // Sunset Purple
+      workoutTypes: ['Chest Day', 'Leg Day', 'Arms']
     },
     {
       id: 'type-bike',
@@ -43,7 +45,8 @@
       metric: 'distance',
       unit: 'miles',
       target: 25,
-      color: '#10b981' // Emerald Green
+      color: '#10b981', // Emerald Green
+      workoutTypes: ['Road Bike', 'Mountain Bike']
     },
     {
       id: 'type-swim',
@@ -52,7 +55,8 @@
       metric: 'duration',
       unit: 'mins',
       target: 90,
-      color: '#06b6d4' // Ocean Blue
+      color: '#06b6d4', // Ocean Blue
+      workoutTypes: ['Laps', 'Technique']
     },
     {
       id: 'type-yoga',
@@ -61,7 +65,8 @@
       metric: 'duration',
       unit: 'mins',
       target: 60,
-      color: '#f59e0b' // Gold Amber
+      color: '#f59e0b', // Gold Amber
+      workoutTypes: ['Vinyasa', 'Hatha']
     }
   ];
 
@@ -70,25 +75,29 @@
       id: 'item-1',
       typeId: 'type-run',
       day: 'monday',
-      value: 3
+      value: 3,
+      workoutType: 'Long Run'
     },
     {
       id: 'item-2',
       typeId: 'type-lift',
       day: 'tuesday',
-      value: 1
+      value: 1,
+      workoutType: 'Chest Day'
     },
     {
       id: 'item-3',
       typeId: 'type-bike',
       day: 'wednesday',
-      value: 12
+      value: 12,
+      workoutType: 'Road Bike'
     },
     {
       id: 'item-4',
       typeId: 'type-yoga',
       day: 'thursday',
-      value: 30
+      value: 30,
+      workoutType: 'Vinyasa'
     }
   ];
 

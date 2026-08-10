@@ -30,6 +30,7 @@
   ];
 
   let currentEditingTypeId = null;
+  let modalTags = [];
 
   WorkoutApp.WorkoutTypes = {
     /**
@@ -99,6 +100,26 @@
         $(this).addClass('active');
         $('#workout-icon').val($(this).data('icon'));
       });
+
+      // Add workout type sub-tag button click
+      $('#add-workout-type-tag-btn').on('click', function() {
+        const tagVal = $('#workout-type-tag-input').val().trim();
+        if (tagVal) {
+          if (!modalTags.includes(tagVal)) {
+            modalTags.push(tagVal);
+            self.renderModalTags();
+          }
+          $('#workout-type-tag-input').val('').focus();
+        }
+      });
+
+      // Prevent enter key in tag input from submitting form
+      $('#workout-type-tag-input').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('#add-workout-type-tag-btn').trigger('click');
+        }
+      });
     },
 
     /**
@@ -123,6 +144,38 @@
             <span class="material-icons">${item.icon}</span>
           </button>
         `);
+      });
+    },
+
+    /**
+     * Renders the current list of workout type tags inside the modal.
+     */
+    renderModalTags: function() {
+      const $container = $('#workout-type-tags-list');
+      $container.empty();
+
+      if (modalTags.length === 0) {
+        $container.html('<span style="font-size: 0.75rem; color: var(--text-dim); font-style: italic; padding: 0.25rem 0;">No tags added yet</span>');
+        return;
+      }
+
+      modalTags.forEach((tag, index) => {
+        const $tagBadge = $(`
+          <div class="workout-type-modal-tag">
+            <span>${tag}</span>
+            <button type="button" class="remove-tag-btn" data-index="${index}" title="Remove tag">
+              <span class="material-icons" style="font-size: 12px;">close</span>
+            </button>
+          </div>
+        `);
+
+        $tagBadge.find('.remove-tag-btn').on('click', function() {
+          const idx = $(this).data('index');
+          modalTags.splice(idx, 1);
+          WorkoutApp.WorkoutTypes.renderModalTags();
+        });
+
+        $container.append($tagBadge);
       });
     },
 
@@ -206,6 +259,17 @@
 
             ${progressSectionHTML}
 
+            ${type.workoutTypes && type.workoutTypes.length > 0 ? `
+              <div class="goal-subtags-container">
+                ${type.workoutTypes.map(tag => `
+                  <div class="draggable-subtag" data-id="${type.id}" data-tag="${tag}" style="border: 1px solid ${type.color}40; background-color: ${type.color}08; color: ${type.color}">
+                    <span class="material-icons subtag-drag-icon">drag_indicator</span>
+                    <span class="subtag-name">${tag}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
             <div class="goal-actions">
               <button class="goal-action-btn edit-goal-btn" title="Edit Workout Goal">
                 <span class="material-icons">edit</span>
@@ -250,6 +314,33 @@
             <div class="workout-drag-helper" style="border-left: 4px solid ${type.color}">
               <span class="material-icons">${type.icon}</span>
               <span>${type.name}</span>
+            </div>
+          `);
+        },
+        cursorAt: { left: 10, top: 15 },
+        zIndex: 1000,
+        revert: 'invalid',
+        appendTo: 'body'
+      });
+
+      $('.draggable-subtag').draggable({
+        connectToSortable: '.calendar-day-items',
+        start: function(event, ui) {
+          $('body').addClass('is-dragging');
+        },
+        stop: function(event, ui) {
+          $('body').removeClass('is-dragging');
+        },
+        helper: function(event) {
+          const typeId = $(this).data('id');
+          const tag = $(this).data('tag');
+          const types = WorkoutApp.Storage.getWorkoutTypes();
+          const type = types.find(t => t.id === typeId);
+          
+          return $(`
+            <div class="workout-drag-helper" style="border-left: 4px solid ${type.color}">
+              <span class="material-icons">${type.icon}</span>
+              <span>${type.name}: ${tag}</span>
             </div>
           `);
         },
@@ -319,7 +410,10 @@
      */
     openAddModal: function() {
       currentEditingTypeId = null;
+      modalTags = [];
+      $('#workout-type-tag-input').val('');
       this.setupModalOptions();
+      this.renderModalTags();
 
       $('#workout-modal-title').text('Add workout goal');
       $('#workout-type-form')[0].reset();
@@ -348,6 +442,10 @@
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const type = types.find(t => t.id === id);
       if (!type) return;
+
+      modalTags = [...(type.workoutTypes || [])];
+      $('#workout-type-tag-input').val('');
+      this.renderModalTags();
 
       $('#workout-modal-title').text('Edit Workout Goal');
       $('#workout-type-id').val(type.id);
@@ -390,9 +488,10 @@
       const optional = $('#workout-optional').is(':checked');
       const target = optional ? null : (Number($('#workout-target').val()) || 1);
       const color = $('#workout-color-picker').val();
+      const workoutTypes = [...modalTags];
 
       const types = WorkoutApp.Storage.getWorkoutTypes();
-      const newType = { id, name, icon, metric, unit, target, color, optional };
+      const newType = { id, name, icon, metric, unit, target, color, optional, workoutTypes };
 
       if (currentEditingTypeId) {
         // Update existing

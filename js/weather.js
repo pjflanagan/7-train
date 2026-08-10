@@ -119,7 +119,7 @@
                 // Render the weather pill inside the .day-sub element!
                 $daySub.html(`
                   <span class="daily-weather-sub" title="${mapped.desc}">
-                    <span class="material-icons daily-weather-icon" style="color: ${mapped.color}">${mapped.icon}</span>
+                    <span class="material-symbols-outlined daily-weather-icon" style="color: ${mapped.color}">${mapped.icon}</span>
                     <span class="daily-weather-temp">${temp}${unitSymbol}</span>
                   </span>
                 `);
@@ -146,7 +146,7 @@
         return { icon: 'blur_on', desc: 'Foggy', color: '#64748b' };
       }
       if ((code >= 51 && code <= 55) || (code >= 61 && code <= 65)) {
-        return { icon: 'umbrella', desc: 'Raining', color: '#3b82f6' }; // Rain blue
+        return { icon: 'rainy', desc: 'Raining', color: '#3b82f6' }; // Rain blue
       }
       if ((code >= 56 && code <= 57) || (code >= 66 && code <= 67) || (code >= 80 && code <= 82)) {
         return { icon: 'water_drop', desc: 'Showers', color: '#60a5fa' };

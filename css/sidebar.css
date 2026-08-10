@@ -313,3 +313,44 @@
   font-size: 0.85rem;
   pointer-events: none;
 }
+
+/* --- Goal Card Subtags (Workout Types) --- */
+.goal-subtags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.draggable-subtag {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+  transition: var(--transition-smooth);
+}
+
+.draggable-subtag:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.draggable-subtag:active {
+  cursor: grabbing;
+}
+
+.subtag-drag-icon {
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.subtag-name {
+  white-space: nowrap;
+}

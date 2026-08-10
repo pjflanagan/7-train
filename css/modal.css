@@ -245,3 +245,42 @@
     min-height: 100px;
   }
 }
+
+/* --- Workout Type Tags in Modal --- */
+.workout-type-modal-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.workout-type-modal-tag .remove-tag-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  transition: var(--transition-smooth);
+}
+
+.workout-type-modal-tag .remove-tag-btn:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--accent-error);
+}
+
+.workout-type-modal-tag .remove-tag-btn .material-icons {
+  font-size: 10px;
+}

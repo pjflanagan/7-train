@@ -7,6 +7,7 @@
   
   <!-- Google Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
@@ -370,6 +371,18 @@
           <div class="color-input-wrapper">
             <input type="color" id="workout-color-picker" value="#ff4d4d">
             <span>Or select a custom Color code</span>
+          </div>
+        </div>
+
+        <!-- Workout Types sub-tags selection -->
+        <div class="form-group">
+          <label class="form-label">Workout Types / Sub-tags</label>
+          <div class="workout-types-input-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <input type="text" id="workout-type-tag-input" class="form-input" placeholder="e.g. Long Run, Chest Day, Arms" autocomplete="off">
+            <button type="button" id="add-workout-type-tag-btn" class="btn btn-secondary" style="padding: 0 1rem; flex-shrink: 0; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">Add</button>
+          </div>
+          <div id="workout-type-tags-list" class="tags-list-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background-color: rgba(255, 255, 255, 0.01);">
+            <!-- Tags will be dynamically populated here -->
           </div>
         </div>
 

@@ -41,15 +41,15 @@
         const notes = WorkoutApp.Storage.getDayNotes();
         notes[`${day}-${week}`] = text;
         WorkoutApp.Storage.saveDayNotes(notes);
-        });
+      });
 
-        // Hook up copy week button
-        $('#copy-week-btn').on('click', () => {
+      // Hook up copy week button
+      $('#copy-week-btn').on('click', () => {
         if (confirm("Are you sure you want to copy this week's workouts and notes to next week? This will overwrite next week's plan.")) {
           this.copyWeek1ToWeek2();
         }
-        });
-        },
+      });
+    },
 
     /**
      * Renders the columns of the calendar with their scheduled cards and loads notes.
@@ -116,79 +116,90 @@
 
           const dayItems = items.filter(item => item.day === day && (item.week || 1) === week);
 
-          dayItems.forEach(item => {
-            const type = types.find(t => t.id === item.typeId);
-            
-            // If the workout type was deleted somehow, don't break rendering
-            if (!type) return;
-
-            const isTimesMetric = type.metric === 'times';
-            
-            // For times-measured activities, the value is always implicitly 1
-            if (isTimesMetric && item.value !== 1) {
-              item.value = 1;
-              self.updateItemValue(item.id, 1);
-            }
-
-            const $card = $(`
-              <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
-                <div class="scheduled-card-header" style="${isTimesMetric ? 'margin-bottom: 0;' : ''}">
-                  <div class="scheduled-info">
-                    <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
-                    <span class="card-type-name">${type.name}</span>
-                  </div>
-                  <button class="remove-scheduled-btn" title="Remove activity">
-                    <span class="material-icons">close</span>
-                  </button>
-                </div>
-                ${isTimesMetric ? '' : `
-                  <div class="scheduled-card-body">
-                    <div class="value-input-group">
-                      <input type="number" 
-                             class="scheduled-value-input" 
-                             value="${item.value}" 
-                             min="0.1" 
-                             step="0.1" 
-                             title="Planned amount" />
-                      <span class="unit-label">${type.unit}</span>
-                    </div>
-                  </div>
-                `}
-              </div>
+          if (dayItems.length === 0) {
+            $dayContainer.append(`
+              <div class="empty-day-placeholder"></div>
             `);
+          } else {
+            dayItems.forEach(item => {
+              const type = types.find(t => t.id === item.typeId);
+              
+              // If the workout type was deleted somehow, don't break rendering
+              if (!type) return;
 
-            // Inline value update events (only for distance/duration, since times doesn't have an input)
-            if (!isTimesMetric) {
-              // On input (typing): allow user to clear the field to type freely
-              $card.find('.scheduled-value-input').on('input', function() {
-                const valStr = $(this).val();
-                if (valStr === '') return; // Allow empty string while typing!
-                
-                const val = parseFloat(valStr);
-                if (!isNaN(val) && val > 0) {
+              const isTimesMetric = type.metric === 'times';
+              
+              // For times-measured activities, the value is always implicitly 1
+              if (isTimesMetric && item.value !== 1) {
+                item.value = 1;
+                self.updateItemValue(item.id, 1);
+              }
+
+              const showSubtitle = !!item.workoutType;
+
+              const $card = $(`
+                <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
+                  <div class="scheduled-card-header" style="${(isTimesMetric && !showSubtitle) ? 'margin-bottom: 0;' : ''}">
+                    <div class="scheduled-info">
+                      <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
+                      <div class="card-titles">
+                        <span class="card-type-name">${type.name}</span>
+                        ${showSubtitle ? `<span class="card-type-subtitle">${item.workoutType}</span>` : ''}
+                      </div>
+                    </div>
+                    <button class="remove-scheduled-btn" title="Remove activity">
+                      <span class="material-icons">close</span>
+                    </button>
+                  </div>
+                  ${isTimesMetric ? '' : `
+                    <div class="scheduled-card-body">
+                      <div class="value-input-group">
+                        <input type="number" 
+                               class="scheduled-value-input" 
+                               value="${item.value}" 
+                               min="0.1" 
+                               step="0.1" 
+                               title="Planned amount" />
+                        <span class="unit-label">${type.unit}</span>
+                      </div>
+                    </div>
+                  `}
+                </div>
+              `);
+
+              // Inline value update events (only for distance/duration, since times doesn't have an input)
+              if (!isTimesMetric) {
+                // On input (typing): allow user to clear the field to type freely
+                $card.find('.scheduled-value-input').on('input', function() {
+                  const valStr = $(this).val();
+                  if (valStr === '') return; // Allow empty string while typing!
+                  
+                  const val = parseFloat(valStr);
+                  if (!isNaN(val) && val > 0) {
+                    self.updateItemValue(item.id, val);
+                  }
+                });
+
+                // On change (blur/enter): enforce fallback if left empty or invalid
+                $card.find('.scheduled-value-input').on('change', function() {
+                  const valStr = $(this).val();
+                  let val = parseFloat(valStr);
+                  if (isNaN(val) || val <= 0) {
+                    val = 1; // sensible fallback
+                    $(this).val(val);
+                  }
                   self.updateItemValue(item.id, val);
-                }
+                });
+              }
+
+              // Remove item event
+              $card.find('.remove-scheduled-btn').on('click', function() {
+                self.removeItem(item.id);
               });
 
-              // On change (blur/enter): enforce fallback if left empty or invalid
-              $card.find('.scheduled-value-input').on('change', function() {
-                const valStr = $(this).val();
-                let val = parseFloat(valStr);
-                if (isNaN(val) || val <= 0) {
-                  val = 1; // sensible fallback
-                  $(this).val(val);
-                }
-                self.updateItemValue(item.id, val);
-              });
-            }
-
-            // Remove item event
-            $card.find('.remove-scheduled-btn').on('click', function() {
-              self.removeItem(item.id);
+              $dayContainer.append($card);
             });
-
-            $dayContainer.append($card);
-          });
+          }
         });
       });
 
@@ -233,8 +244,9 @@
           $(this).closest('.calendar-column').removeClass('day-droppable-hover');
         },
         receive: function(event, ui) {
-          if (ui.item.hasClass('draggable-workout')) {
+          if (ui.item.hasClass('draggable-workout') || ui.item.hasClass('draggable-subtag')) {
             const typeId = ui.item.data('id');
+            const tag = ui.item.data('tag') || null;
             const $column = $(this).closest('.calendar-column');
             const day = $column.data('day');
             const week = $column.data('week') || 1;
@@ -246,13 +258,13 @@
 
             // Add the new workout at this index on next tick
             setTimeout(() => {
-              self.addWorkoutToDayAtIndex(typeId, day, week, index);
+              self.addWorkoutToDayAtIndex(typeId, day, week, index, tag);
             }, 0);
           }
         },
         stop: function(event, ui) {
           $('body').removeClass('is-dragging');
-          if (!ui.item.hasClass('draggable-workout')) {
+          if (!ui.item.hasClass('draggable-workout') && !ui.item.hasClass('draggable-subtag')) {
             setTimeout(() => {
               self.saveLayoutFromDOM();
             }, 0);
@@ -299,7 +311,7 @@
     /**
      * Adds a workout type to a specific calendar day/week at a specific index.
      */
-    addWorkoutToDayAtIndex: function(typeId, day, week, index) {
+    addWorkoutToDayAtIndex: function(typeId, day, week, index, tag = null) {
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const type = types.find(t => t.id === typeId);
       if (!type) return;
@@ -318,7 +330,8 @@
         typeId: typeId,
         day: day,
         week: week,
-        value: defaultValue
+        value: defaultValue,
+        workoutType: tag
       };
 
       const dayItems = items.filter(item => item.day === day && (item.week || 1) === week);
@@ -428,7 +441,8 @@
           typeId: item.typeId,
           day: item.day,
           week: 2,
-          value: item.value
+          value: item.value,
+          workoutType: item.workoutType
         };
       });
       

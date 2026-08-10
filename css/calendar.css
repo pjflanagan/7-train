@@ -119,26 +119,12 @@
 
 /* Empty day placeholder */
 .empty-day-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  color: var(--text-dim);
-  text-align: center;
-  padding: 1rem;
+  min-height: 52px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  border-radius: var(--border-radius-md);
+  background-color: rgba(255, 255, 255, 0.01);
   pointer-events: none;
-}
-
-.empty-day-placeholder .material-icons {
-  font-size: 20px;
-  margin-bottom: 0.25rem;
-  color: var(--text-dim);
-}
-
-.placeholder-text {
-  font-size: 0.7rem;
-  font-weight: 600;
+  box-sizing: border-box;
 }
 
 /* --- Scheduled Cards --- */
@@ -429,4 +415,22 @@ body.is-dragging .calendar-day-items::before {
     flex: none;
     min-height: auto;
   }
+}
+
+/* --- Card Subtitles --- */
+.card-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.card-type-subtitle {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.05rem;
 }

@@ -5,7 +5,11 @@ I want to add types of workouts. These are mostly a cosmetic change that doesn't
 
 In the goal modal below the color settings we should be able to define different types of workouts.
 
-Example: Long Run, or Chest Day
+Examples:
+
+Run: Long Run
+Lift: Chest
+Lift: Arms
 
 ## Schedule
 
