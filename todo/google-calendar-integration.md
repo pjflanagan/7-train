@@ -9,3 +9,6 @@ I want users to be able to use this locally. But if they choose to sign in with 
 - On page load we replace our local with whatever Google calendar has
 - Our local now needs to be able to set when each event is happening during the day, by dragging it up and down through the day
 
+## Google Sheets
+
+- Past events get recorded to a spreadsheet in Google Sheets as well\

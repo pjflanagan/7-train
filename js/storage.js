@@ -6,7 +6,9 @@
     WORKOUT_TYPES: 'workout_week_types',
     CALENDAR_ITEMS: 'workout_week_calendar',
     DAY_NOTES: 'workout_week_notes',
-    LINKS: 'workout_week_links'
+    LINKS: 'workout_week_links',
+    HISTORY: 'workout_week_history',
+    LAST_VIEWED_MONDAY: 'workout_week_last_viewed_monday'
   };
 
   const DEFAULT_LINKS = [
@@ -178,6 +180,153 @@
     },
 
     /**
+     * Retrieves all history items.
+     */
+    getHistory: function() {
+      const data = localStorage.getItem(STORAGE_KEYS.HISTORY);
+      if (!data) {
+        return [];
+      }
+      return JSON.parse(data);
+    },
+
+    /**
+     * Saves history items.
+     */
+    saveHistory: function(history) {
+      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+    },
+
+    /**
+     * Checks if real-world time has advanced to a new week, archiving past weeks and shifting calendar items.
+     */
+    checkAndProcessWeekTransition: function() {
+      const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+      function formatDateLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // Calculate current Monday's date
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+      const mondayDiff = currentDay === 0 ? -6 : 1 - currentDay;
+      const mondayDate = new Date(today);
+      mondayDate.setDate(today.getDate() + mondayDiff);
+      const currentMondayStr = formatDateLocal(mondayDate);
+
+      let lastViewedMonday = localStorage.getItem(STORAGE_KEYS.LAST_VIEWED_MONDAY);
+
+      if (!lastViewedMonday) {
+        // First time running. Set the marker and stop.
+        localStorage.setItem(STORAGE_KEYS.LAST_VIEWED_MONDAY, currentMondayStr);
+        return;
+      }
+
+      if (lastViewedMonday === currentMondayStr) {
+        // No week transition has occurred.
+        return;
+      }
+
+      // Calculate weeks elapsed
+      const lastDate = new Date(lastViewedMonday + 'T00:00:00');
+      const currDate = new Date(currentMondayStr + 'T00:00:00');
+      const diffTime = currDate - lastDate;
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const weeksPassed = Math.round(diffDays / 7);
+
+      if (weeksPassed <= 0) {
+        // System clock went backwards or value is invalid. Just update the marker.
+        localStorage.setItem(STORAGE_KEYS.LAST_VIEWED_MONDAY, currentMondayStr);
+        return;
+      }
+
+      const activeItems = this.getCalendarItems();
+      const activeNotes = this.getDayNotes();
+      const history = this.getHistory();
+
+      // Archive weeks step-by-step
+      for (let i = 0; i < weeksPassed; i++) {
+        const archiveMonday = new Date(lastDate);
+        archiveMonday.setDate(lastDate.getDate() + (i * 7));
+        const archiveMondayStr = formatDateLocal(archiveMonday);
+
+        const activeWeekNum = i + 1;
+
+        if (activeWeekNum === 1 || activeWeekNum === 2) {
+          DAYS.forEach(day => {
+            const dayItems = activeItems.filter(item => item.day === day && (item.week || 1) === activeWeekNum);
+            const noteText = activeNotes[`${day}-${activeWeekNum}`] || "";
+
+            if (dayItems.length > 0) {
+              dayItems.forEach(item => {
+                const dayOffset = DAYS.indexOf(day);
+                const itemDate = new Date(archiveMonday);
+                itemDate.setDate(archiveMonday.getDate() + dayOffset);
+
+                history.push({
+                  id: 'hist-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                  date: formatDateLocal(itemDate),
+                  day: day,
+                  typeId: item.typeId,
+                  workoutType: item.workoutType || null,
+                  value: item.value,
+                  notes: noteText || null
+                });
+              });
+            } else if (noteText) {
+              // Note-only record
+              const dayOffset = DAYS.indexOf(day);
+              const itemDate = new Date(archiveMonday);
+              itemDate.setDate(archiveMonday.getDate() + dayOffset);
+
+              history.push({
+                id: 'hist-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                date: formatDateLocal(itemDate),
+                day: day,
+                typeId: null,
+                workoutType: null,
+                value: null,
+                notes: noteText
+              });
+            }
+          });
+        }
+      }
+
+      // Shift active calendar items
+      let updatedActiveItems = [];
+      let updatedActiveNotes = {};
+
+      if (weeksPassed === 1) {
+        // Old Week 2 becomes new Week 1
+        updatedActiveItems = activeItems.filter(item => (item.week || 1) === 2);
+        updatedActiveItems.forEach(item => {
+          item.week = 1;
+        });
+
+        DAYS.forEach(day => {
+          if (activeNotes[`${day}-2`]) {
+            updatedActiveNotes[`${day}-1`] = activeNotes[`${day}-2`];
+          }
+        });
+      } else {
+        // All active items in Week 1 & 2 are in the past. Clear active week.
+        updatedActiveItems = [];
+        updatedActiveNotes = {};
+      }
+
+      // Save transitions
+      this.saveHistory(history);
+      this.saveCalendarItems(updatedActiveItems);
+      this.saveDayNotes(updatedActiveNotes);
+      localStorage.setItem(STORAGE_KEYS.LAST_VIEWED_MONDAY, currentMondayStr);
+    },
+
+    /**
      * Clears all session progress (calendar items) but keeps workout goals.
      */
     clearCalendar: function() {
@@ -192,6 +341,8 @@
       localStorage.removeItem(STORAGE_KEYS.CALENDAR_ITEMS);
       localStorage.removeItem(STORAGE_KEYS.DAY_NOTES);
       localStorage.removeItem(STORAGE_KEYS.LINKS);
+      localStorage.removeItem(STORAGE_KEYS.HISTORY);
+      localStorage.removeItem(STORAGE_KEYS.LAST_VIEWED_MONDAY);
     }
   };
 })();

@@ -306,7 +306,7 @@
 
   <!-- Modal Overlay: Add/Edit workout goal -->
   <div class="modal-overlay" id="workout-modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 600px;">
       
       <div class="modal-header-row">
         <h3 id="workout-modal-title">Add workout goal</h3>
@@ -315,74 +315,90 @@
         </button>
       </div>
 
+      <!-- Modal Tabs -->
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-tab="basic">Basic</button>
+        <button type="button" class="modal-tab-btn" data-tab="appearance">Appearance</button>
+        <button type="button" class="modal-tab-btn" data-tab="workout-types">Workout Types</button>
+      </div>
+
       <form id="workout-type-form">
         <!-- Hidden input for ID (only present when editing) -->
         <input type="hidden" id="workout-type-id" name="id" value="">
 
-        <!-- Goal name -->
-        <div class="form-group">
-          <label for="workout-name" class="form-label">Goal name</label>
-          <input type="text" id="workout-name" class="form-input" placeholder="e.g. Morning Run, Weightlifting" required autocomplete="off">
-        </div>
-
-        <!-- Metric & Custom Unit Row -->
-        <div class="form-row">
+        <!-- Tab content: Basic -->
+        <div class="modal-tab-content active" id="tab-basic">
+          <!-- Goal name -->
           <div class="form-group">
-            <label for="workout-metric" class="form-label">How to measure</label>
-            <select id="workout-metric" class="form-input" style="-webkit-appearance: none;">
-              <option value="times">Number of Times</option>
-              <option value="distance">Distance</option>
-              <option value="duration">Duration</option>
-            </select>
+            <label for="workout-name" class="form-label">Goal name</label>
+            <input type="text" id="workout-name" class="form-input" placeholder="e.g. Morning Run, Weightlifting" required autocomplete="off">
           </div>
+
+          <!-- Metric & Custom Unit Row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="workout-metric" class="form-label">How to measure</label>
+              <select id="workout-metric" class="form-input" style="-webkit-appearance: none;">
+                <option value="times">Number of Times</option>
+                <option value="distance">Distance</option>
+                <option value="duration">Duration</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="workout-unit" class="form-label">Unit of measure</label>
+              <input type="text" id="workout-unit" class="form-input" placeholder="e.g. miles, mins, times" required autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Goal Target -->
           <div class="form-group">
-            <label for="workout-unit" class="form-label">Unit of measure</label>
-            <input type="text" id="workout-unit" class="form-input" placeholder="e.g. miles, mins, times" required autocomplete="off">
+            <label for="workout-target" class="form-label">Weekly target goal</label>
+            <input type="number" id="workout-target" class="form-input" min="0.1" step="any" placeholder="e.g. 10, 3, 120" required autocomplete="off">
+          </div>
+
+          <!-- Optional Goal Checkbox -->
+          <div class="form-group" style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.15rem;">
+            <input type="checkbox" id="workout-optional" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);">
+            <label for="workout-optional" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); cursor: pointer; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0;">Optional</label>
           </div>
         </div>
 
-        <!-- Goal Target -->
-        <div class="form-group">
-          <label for="workout-target" class="form-label">Weekly target goal</label>
-          <input type="number" id="workout-target" class="form-input" min="0.1" step="any" placeholder="e.g. 10, 3, 120" required autocomplete="off">
-        </div>
+        <!-- Tab content: Appearance -->
+        <div class="modal-tab-content" id="tab-appearance">
+          <!-- Custom Icon Grid selection -->
+          <div class="form-group">
+            <label class="form-label">Icon</label>
+            <input type="hidden" id="workout-icon" value="directions_run">
+            <div class="icon-grid-container">
+              <!-- Icons grid dynamically loaded in workout-types.js -->
+            </div>
+          </div>
 
-        <!-- Optional Goal Checkbox -->
-        <div class="form-group" style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.15rem;">
-          <input type="checkbox" id="workout-optional" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);">
-          <label for="workout-optional" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); cursor: pointer; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0;">Optional</label>
-        </div>
-
-        <!-- Custom Icon Grid selection -->
-        <div class="form-group">
-          <label class="form-label">Icon</label>
-          <input type="hidden" id="workout-icon" value="directions_run">
-          <div class="icon-grid-container">
-            <!-- Icons grid dynamically loaded in workout-types.js -->
+          <!-- Custom Color Picker selection -->
+          <div class="form-group">
+            <label class="form-label">Color code</label>
+            <div class="color-presets-container">
+              <!-- Color presets loaded in workout-types.js -->
+            </div>
+            <div class="color-input-wrapper">
+              <input type="color" id="workout-color-picker" value="#ff4d4d">
+              <span>Or select a custom Color code</span>
+            </div>
           </div>
         </div>
 
-        <!-- Custom Color Picker selection -->
-        <div class="form-group">
-          <label class="form-label">Color code</label>
-          <div class="color-presets-container">
-            <!-- Color presets loaded in workout-types.js -->
-          </div>
-          <div class="color-input-wrapper">
-            <input type="color" id="workout-color-picker" value="#ff4d4d">
-            <span>Or select a custom Color code</span>
-          </div>
-        </div>
-
-        <!-- Workout types sub-tags selection -->
-        <div class="form-group">
-          <label class="form-label">Workout types</label>
-          <div class="workout-types-input-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <input type="text" id="workout-type-tag-input" class="form-input" placeholder="e.g. Long Run, Chest Day, Arms" autocomplete="off">
-            <button type="button" id="add-workout-type-tag-btn" class="btn btn-secondary" style="padding: 0 1rem; flex-shrink: 0; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">Add</button>
-          </div>
-          <div id="workout-type-tags-list" class="tags-list-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background-color: rgba(255, 255, 255, 0.01);">
-            <!-- Tags will be dynamically populated here -->
+        <!-- Tab content: Workout Types -->
+        <div class="modal-tab-content" id="tab-workout-types">
+          <!-- Workout types sub-tags selection -->
+          <div class="form-group">
+            <label class="form-label">Workout types</label>
+            <div class="workout-types-input-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <input type="text" id="workout-type-tag-input" class="form-input" placeholder="e.g. Long Run, Chest Day, Arms" autocomplete="off">
+              <button type="button" id="add-workout-type-tag-btn" class="btn btn-secondary" style="padding: 0 1rem; flex-shrink: 0; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">Add</button>
+            </div>
+            <div id="workout-type-tags-list" class="tags-list-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background-color: rgba(255, 255, 255, 0.01);">
+              <!-- Tags will be dynamically populated here -->
+            </div>
           </div>
         </div>
 
@@ -410,6 +426,17 @@
       <div class="settings-modal-body" style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem;">
         <p class="settings-desc" id="settings-weather-location" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;"></p>
         
+        <div class="settings-action-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <div class="settings-action-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Export Historic Log</h4>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Export all archived past weeks' workouts and notes as a CSV file.</p>
+          </div>
+          <button id="export-csv-btn" class="btn btn-primary" title="Export historic log to CSV" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.4rem;">
+            <span class="material-icons" style="font-size: 16px;">download</span>
+            Export CSV
+          </button>
+        </div>
+
         <div class="settings-action-row" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
           <div class="settings-action-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
             <h4 style="font-size: 0.9rem; font-weight: 700; color: white;">Reset application</h4>

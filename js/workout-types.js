@@ -120,6 +120,16 @@
           $('#add-workout-type-tag-btn').trigger('click');
         }
       });
+
+      // Tab switching in workout goal modal
+      $(document).on('click', '.modal-tab-btn', function() {
+        const tab = $(this).data('tab');
+        $('.modal-tab-btn').removeClass('active');
+        $(this).addClass('active');
+
+        $('.modal-tab-content').removeClass('active');
+        $(`#tab-${tab}`).addClass('active');
+      });
     },
 
     /**
@@ -435,6 +445,12 @@
       $('#workout-metric').val('distance').trigger('change');
       $('#workout-optional').prop('checked', false).trigger('change');
 
+      // Reset active tab to basic
+      $('.modal-tab-btn').removeClass('active');
+      $('.modal-tab-btn[data-tab="basic"]').addClass('active');
+      $('.modal-tab-content').removeClass('active');
+      $('#tab-basic').addClass('active');
+
       $('#workout-modal-overlay').addClass('active');
     },
 
@@ -471,6 +487,12 @@
       $('#workout-color-picker').val(colorVal);
       $('.color-preset-btn').removeClass('active');
       $(`.color-preset-btn[data-color="${colorVal}"]`).addClass('active');
+
+      // Reset active tab to basic
+      $('.modal-tab-btn').removeClass('active');
+      $('.modal-tab-btn[data-tab="basic"]').addClass('active');
+      $('.modal-tab-content').removeClass('active');
+      $('#tab-basic').addClass('active');
 
       $('#workout-modal-overlay').addClass('active');
     },

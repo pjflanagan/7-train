@@ -5,3 +5,5 @@ The tabs are:
 - Basic
 - Appearance
 - Workout Types
+
+The modal should also be bigger because we are going to get rid of the sidebar.

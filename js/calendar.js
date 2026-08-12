@@ -49,16 +49,17 @@
           this.copyWeek1ToWeek2();
         }
       });
+
+      // Start auto-update interval for today highlights and dates (every 60 seconds)
+      setInterval(() => {
+        this.updateTodayHighlightAndDates();
+      }, 60000);
     },
 
     /**
-     * Renders the columns of the calendar with their scheduled cards and loads notes.
+     * Recalculates and updates the today column highlights and dates in the headers without rebuilding items.
      */
-    render: function() {
-      const self = this;
-      const types = WorkoutApp.Storage.getWorkoutTypes();
-      const items = WorkoutApp.Storage.getCalendarItems();
-
+    updateTodayHighlightAndDates: function() {
       // Clear today highlights and compute today
       $('.calendar-column').removeClass('is-today');
       const todayIndex = new Date().getDay();
@@ -96,6 +97,18 @@
           $dayColumn.find('.day-name').text(`${capitalizedDay} - ${dayOfMonth}`);
         });
       });
+    },
+
+    /**
+     * Renders the columns of the calendar with their scheduled cards and loads notes.
+     */
+    render: function() {
+      const self = this;
+      const types = WorkoutApp.Storage.getWorkoutTypes();
+      const items = WorkoutApp.Storage.getCalendarItems();
+
+      // Update today highlight and calendar header dates
+      this.updateTodayHighlightAndDates();
 
       // Populate notes from storage (ignoring focused inputs)
       const notes = WorkoutApp.Storage.getDayNotes();

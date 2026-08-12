@@ -6,6 +6,9 @@ $(document).ready(function() {
     return;
   }
 
+  // Check and process week transition (archive past weeks and shift current weeks)
+  WorkoutApp.Storage.checkAndProcessWeekTransition();
+
   // 1. Initialize core component event listeners
   WorkoutApp.WorkoutTypes.init();
   WorkoutApp.Calendar.init();
@@ -18,6 +21,61 @@ $(document).ready(function() {
   // Open settings modal
   $('#settings-btn').on('click', function() {
     $('#settings-modal-overlay').addClass('active');
+  });
+
+  // Export CSV historic log
+  $('#export-csv-btn').on('click', function() {
+    const history = WorkoutApp.Storage.getHistory();
+    if (!history || history.length === 0) {
+      alert('No historic data is archived yet. Once a week passes, it will be automatically archived and available for export!');
+      return;
+    }
+
+    const types = WorkoutApp.Storage.getWorkoutTypes();
+    const headers = ["Date", "Day", "Workout Category", "Workout Type/Subtype", "Value", "Unit", "Notes"];
+
+    function escapeCSV(val) {
+      if (val === null || val === undefined) {
+        return '';
+      }
+      let str = String(val);
+      if (/[",\n\r]/.test(str)) {
+        str = '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    const csvRows = [headers.join(",")];
+
+    history.forEach(item => {
+      const type = item.typeId ? types.find(t => t.id === item.typeId) : null;
+      const categoryName = type ? type.name : (item.typeId || '');
+      const unit = type ? type.unit : '';
+      const dayNameCap = item.day.charAt(0).toUpperCase() + item.day.slice(1);
+
+      const row = [
+        item.date,
+        dayNameCap,
+        categoryName,
+        item.workoutType || '',
+        item.value !== null ? item.value : '',
+        unit,
+        item.notes || ''
+      ];
+
+      csvRows.push(row.map(escapeCSV).join(","));
+    });
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "workout_history_log.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   });
 
   // Close settings modal
