@@ -1,11 +1,11 @@
 @use '@/styles/mixins' as mixins;
 
 .chip {
-  @include mixins.signage-panel();
+  @include mixins.card-surface();
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.5rem 0.6rem;
   min-width: 190px;
 }
 

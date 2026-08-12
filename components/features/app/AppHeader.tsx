@@ -1,15 +1,9 @@
 'use client';
 import React, { useState } from 'react';
-import clsx from 'clsx';
 import styles from './AppHeader.module.scss';
-import { useScheduleFocus } from '@/hooks/useScheduleFocus';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
-import {
-  MdFitnessCenter,
-  MdSettings,
-  MdLink,
-} from 'react-icons/md';
+import { MdFitnessCenter, MdSettings, MdLink } from 'react-icons/md';
 import { MyWorkoutsModal } from '@/components/features/goals/MyWorkoutsModal';
 import { LinksModal } from '@/components/features/links/LinksModal';
 import { SettingsModal } from '@/components/features/settings/SettingsModal';
@@ -18,19 +12,14 @@ export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { isScheduleFocused } = useScheduleFocus();
 
   return (
     <>
-      <header className={clsx(styles.header, isScheduleFocused && styles.collapsed)}>
+      <header className={styles.header}>
         <div className={styles.headerBar}>
           <div className={styles.brandSection}>
-            <SevenLogo size={32} className={styles.brandLogoBadge} title="7 train" />
-            <div className={styles.brandTitles}>
-              <h1>
-                <span className={styles.wordTrain}>Train</span>
-              </h1>
-            </div>
+            <SevenLogo size={28} className={styles.brandLogo} title="7 train" />
+            <h1>Train</h1>
           </div>
 
           <div className={styles.headerActions}>

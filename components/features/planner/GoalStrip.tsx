@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useGoals } from '@/hooks/usePlannerSelectors';
 import { useHorizontalOverflow } from '@/hooks/useHorizontalOverflow';
-import { MtaArrow } from '@/components/elements/MtaArrow/MtaArrow';
 import { GoalChip } from './GoalChip';
 import styles from './GoalStrip.module.scss';
 
@@ -24,7 +24,7 @@ export function GoalStrip({ weekStart }: { weekStart: string }) {
           aria-label="Scroll workouts left"
           onClick={() => scrollBy(-1)}
         >
-          <MtaArrow direction="left" size={26} />
+          <MdChevronLeft size={20} />
         </button>
       )}
 
@@ -41,7 +41,7 @@ export function GoalStrip({ weekStart }: { weekStart: string }) {
           aria-label="Scroll workouts right"
           onClick={() => scrollBy(1)}
         >
-          <MtaArrow direction="right" size={26} />
+          <MdChevronRight size={20} />
         </button>
       )}
     </div>

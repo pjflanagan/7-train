@@ -25,6 +25,23 @@ export const useIsWeekEmpty = (weekStart: string) =>
     !DAYS.some(day => state.notes[noteKey(weekStart, day)]?.trim())
   );
 
+/**
+ * The `workoutType` sub-tags already scheduled in a week, per goal — used to
+ * mute a sub-tag chip once it is on the board.
+ */
+export const useScheduledSubTags = (weekStart: string, typeId: string) => {
+  const items = usePlannerStore((state) => state.items);
+  return useMemo(() => {
+    const scheduled = new Set<string>();
+    for (const item of items) {
+      if (item.weekStart === weekStart && item.typeId === typeId && item.workoutType) {
+        scheduled.add(item.workoutType);
+      }
+    }
+    return scheduled;
+  }, [items, weekStart, typeId]);
+};
+
 export const useLinks = () => usePlannerStore((state) => state.links);
 
 export const useWeekStartsOn = () =>

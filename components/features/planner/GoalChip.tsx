@@ -2,6 +2,7 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { WorkoutType } from '@/lib/types';
 import { useWeekProgress } from '@/hooks/useWeekProgress';
+import { useScheduledSubTags } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
@@ -13,6 +14,7 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
   const { progressMap } = useWeekProgress(weekStart);
   const setGoalTarget = usePlannerStore(state => state.setGoalTarget);
   const progress = progressMap[goal.id];
+  const scheduledSubTags = useScheduledSubTags(weekStart, goal.id);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `goal-${goal.id}`,
@@ -45,7 +47,13 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
       {goal.workoutTypes && goal.workoutTypes.length > 0 && (
         <div className={styles.tags}>
           {goal.workoutTypes.map(tag => (
-            <SubTagChip key={tag} tag={tag} typeId={goal.id} color={goal.color} />
+            <SubTagChip
+              key={tag}
+              tag={tag}
+              typeId={goal.id}
+              color={goal.color}
+              isScheduled={scheduledSubTags.has(tag)}
+            />
           ))}
         </div>
       )}

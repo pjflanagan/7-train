@@ -1,23 +1,12 @@
 import type { Metadata } from 'next';
-import { Doto, Permanent_Marker } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.scss';
 
-// Self-hosted at build time and exposed as a CSS variable so SCSS modules can
-// reach it without importing anything.
-const permanentMarker = Permanent_Marker({
-  weight: '400',
+const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-marker',
-});
-
-// Dot-matrix face for the day/weather strip, like a train's destination sign.
-const doto = Doto({
-  weight: ['400', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-doto',
+  variable: '--font-sans',
 });
 
 export const metadata: Metadata = {
@@ -31,10 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${permanentMarker.variable} ${doto.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body>
         {children}
-        <Toaster />
+        <Toaster theme="dark" />
       </body>
     </html>
   );

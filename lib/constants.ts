@@ -2,23 +2,6 @@ import { WorkoutType, CalendarItem, HelpfulLink } from './types';
 
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
-/**
- * Height in px of one repeat of the subway-tile background unit defined by
- * `--tile-pattern` in globals.scss: four 20px brick rows.
- *
- * Week heights snap to a multiple of this. A multiple of the 20px tile row
- * alone would avoid slicing tiles but would restart the brick offset, since
- * odd rows are shifted half a tile — only a whole unit keeps the bond running
- * unbroken from one week into the next.
- */
-export const TILE_UNIT_HEIGHT = 80;
-
-/** Round a measured height up to the next whole tile unit. */
-export function snapToTileUnit(height: number): number {
-  if (!Number.isFinite(height) || height <= 0) return 0;
-  return Math.ceil(height / TILE_UNIT_HEIGHT) * TILE_UNIT_HEIGHT;
-}
-
 export const PRESET_COLORS = [
   '#EE352E', // Tomato Red (1, 2, 3)
   '#00933C', // Apple Green (4, 5, 6)

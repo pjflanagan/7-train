@@ -3,28 +3,13 @@
 .section {
   display: flex;
   flex-direction: column;
-
-  // The tiles belong to the section, so they scroll with it natively — no
-  // scroll listener, no repainting, nothing to jolt. The section's height is
-  // snapped to a whole tile unit in JS so the bond carries into the next week.
-  background-color: var(--tile-grout);
-  background-image: var(--tile-pattern);
-  background-repeat: repeat;
-
-  h2 {
-    color: var(--bg-primary)
-  }
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-// Holds the padding and spacing so its height stays purely content-driven —
-// the measurement the tile-unit snapping is based on.
-.inner {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 1rem;
-}
-
+// Deliberately compact: the week header is a label, the day columns are the
+// content that matters.
 .headerRow {
   display: flex;
   align-items: center;
@@ -37,42 +22,30 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  min-width: 0;
+  // Never wraps: the progress bar stays on the title's line and shrinks first.
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
 }
 
-// "This week", "Next week", "Mar 3" — hand-marker lettering against the tile.
 .header {
   flex: 0 0 auto;
-  font-family: var(--font-marker), 'Permanent Marker', cursive;
-  font-size: 1.75rem;
-  font-weight: 400;
-  letter-spacing: 0.5px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-main);
 }
 
-// The week rides in a subway car: brushed silver shell with rounded ends.
-.car {
+.board {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 22px;
-  background: linear-gradient(
-    180deg,
-    #eceef0 0%,
-    #c9cdd2 18%,
-    #b6bbc1 50%,
-    #cfd3d8 82%,
-    #9fa4aa 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 4px 10px rgba(0, 0, 0, 0.35);
+  gap: 0.5rem;
+  @include mixins.scroll-area();
+  overflow-x: auto;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1rem;
-  @include mixins.scroll-area();
-  overflow-x: auto;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 0.75rem;
 }

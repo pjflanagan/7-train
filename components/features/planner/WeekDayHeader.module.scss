@@ -1,91 +1,46 @@
-// Column geometry is shared with the day grid below so every stop sits over
-// its column. Keep in step with `.grid` in WeekSection.module.scss.
-$gap: 1rem;
-$dot-size: 1rem;
-
-.panel {
-  position: relative;
+// Column geometry mirrors `.grid` in WeekSection.module.scss so each label
+// sits over its own day column.
+.row {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: $gap;
-  align-items: end;
-  padding: 1.4rem 0.4rem 0.4rem;
-  background: #000;
-  border-radius: var(--border-radius-md);
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 0.75rem;
 }
 
-// The trunk line, running between the first and last stop centres. The dots
-// sit at the left edge of their column, so the right inset has to clear a
-// whole column less half a dot.
-$column: calc((100% - 1.5rem - #{$gap} * 6) / 7);
-
-.line {
-  position: absolute;
-  left: calc(0.4rem + #{$dot-size} / 2);
-  right: calc(0.4rem + #{$column} - #{$dot-size} / 2);
-  bottom: calc(0.4rem + #{$dot-size} / 2 - 1px);
-  height: 2px;
-  background: #fff;
-}
-
-.stop {
-  position: relative;
+.day {
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
+  align-items: baseline;
+  gap: 0.35rem;
   min-width: 0;
-}
-
-// Angled like the station names on a line diagram. Sits above the trunk line
-// and the dots so the today marker never gets crossed out by them.
-.labels {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.05rem;
-  margin-left: 0.15rem;
-  padding: 0.1rem 0.2rem;
-  border: 2px solid transparent;
-  transform-origin: bottom left;
-  white-space: nowrap;
-  font-family: var(--font-doto), 'Doto', monospace;
-  line-height: 1;
-  transform: translateY(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dayName {
-  font-size: 0.94rem;
-  font-weight: 700;
-  color: #f2c94c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
+.date {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+// The forecast pill trails the date at the far edge of the label.
 .weather {
-  font-size: 0.45rem;
-  font-weight: 400;
-  color: #27ae60;
+  margin-left: auto;
+  display: inline-flex;
 }
 
-// The current day's stop: the text is boxed, the dot deliberately isn't.
+// Today reads as the active column, in the accent colour.
 .isToday {
-  border-color: #e03131;
-}
+  background-color: var(--accent-primary-soft);
+  border-bottom-color: var(--accent-primary);
 
-.dot {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: $dot-size;
-  height: $dot-size;
-  border-radius: 50%;
-  background: #fff;
-  color: #000;
-  // Station numerals stay in the plain grotesque — only the strip text is dotted.
-  font-family: inherit;
-  font-size: 0.6rem;
-  font-weight: 700;
+  .dayName {
+    color: var(--accent-primary);
+  }
 }

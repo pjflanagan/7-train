@@ -2,17 +2,15 @@
 
 .wrapper {
   position: relative;
-  margin-bottom: 0.2rem;
 }
 
 .strip {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.5rem;
   overflow-x: auto;
   // The chips keep their own width and page sideways instead of stacking.
   flex-wrap: nowrap;
   scroll-behavior: smooth;
-  padding-bottom: 6px; // room for the signage drop shadow
   @include mixins.hide-scrollbar();
 
   > * {
@@ -26,15 +24,21 @@
   transform: translateY(-50%);
   z-index: 2;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  border: none;
-  background: transparent;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-elevated);
+  color: var(--text-main);
   cursor: pointer;
   line-height: 0;
   @include mixins.focus-ring();
 
   &:hover {
-    filter: brightness(1.15);
+    background-color: var(--border-focus);
   }
 }
 

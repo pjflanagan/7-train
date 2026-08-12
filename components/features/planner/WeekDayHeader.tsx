@@ -5,27 +5,24 @@ import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
+import { WeatherPill } from './WeatherPill';
 import { dateForDay, dayLabel, formatDateLocal, orderedDays } from '@/lib/dates';
 import styles from './WeekDayHeader.module.scss';
 
 export interface WeekDayHeaderProps {
   weekStart: string;
-  /** Today's date key, so the current stop can be marked. */
+  /** Today's date key, so the current day can be marked. */
   todayKey: string;
 }
 
-/**
- * The week's days drawn as a subway line diagram: each day is a stop on a
- * white trunk line, labelled on an angle like a station map.
- */
+/** Day name, date, and forecast, sitting over each column of the week grid. */
 export function WeekDayHeader({ weekStart, todayKey }: WeekDayHeaderProps) {
   const weekStartsOn = useWeekStartsOn();
   const days = orderedDays(weekStartsOn);
   const { data: weather } = useWeather();
 
   return (
-    <div className={styles.panel}>
-      <div className={styles.line} aria-hidden="true" />
+    <div className={styles.row}>
       {days.map((day: typeof DAYS[number]) => {
         const date = dateForDay(weekStart, day, weekStartsOn);
         const dateKey = formatDateLocal(date);
@@ -33,14 +30,18 @@ export function WeekDayHeader({ weekStart, todayKey }: WeekDayHeaderProps) {
         const forecast = weather?.days.find(d => d.date === dateKey);
 
         return (
-          <div key={day} className={styles.stop}>
-            <span className={styles.dot}>{date.getDate()}</span>
-            <div className={clsx(styles.labels, isToday && styles.isToday)}>
-              <span className={styles.dayName}>{dayLabel(day)}</span>
+          <div key={day} className={clsx(styles.day, isToday && styles.isToday)}>
+            <span className={styles.dayName}>{dayLabel(day)}</span>
+            <span className={styles.date}>{date.getDate()}</span>
+            {forecast && (
               <span className={styles.weather}>
-                {forecast ? `${forecast.tempMax}${weather?.unit ?? ''}` : '--'}
+                <WeatherPill
+                  code={forecast.code}
+                  tempMax={forecast.tempMax}
+                  unit={weather?.unit ?? ''}
+                />
               </span>
-            </div>
+            )}
           </div>
         );
       })}

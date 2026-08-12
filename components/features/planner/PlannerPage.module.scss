@@ -29,7 +29,7 @@
 
   &:hover {
     transform: translateY(-1px);
-    border-color: var(--header-rule, var(--border-focus));
+    border-color: var(--accent-primary);
   }
 }
 
@@ -48,22 +48,19 @@
   flex-direction: column;
 }
 
-// Zero-height probes that trigger loading another week when scrolled near.
+// Probes that trigger loading another week when scrolled near.
 .loadMore {
   flex: 0 0 auto;
-  // Full-bleed so the wall runs unbroken into the weeks above and below.
   padding: 0.85rem 1.25rem;
   font-family: inherit;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--bg-primary);
-  background-color: var(--tile-grout);
-  background-image: var(--tile-pattern);
-  background-repeat: repeat;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
   border: none;
   cursor: pointer;
 
   &:hover {
-    filter: brightness(1.04);
+    color: var(--accent-primary);
   }
 }

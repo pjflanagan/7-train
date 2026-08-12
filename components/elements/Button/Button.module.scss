@@ -21,9 +21,9 @@
 
 .primary {
   background-color: var(--accent-primary);
-  color: var(--text-main);
+  color: #fff;
   &:hover:not(:disabled) {
-    background-color: #2563eb;
+    background-color: var(--accent-primary-hover);
   }
 }
 

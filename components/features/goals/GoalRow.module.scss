@@ -3,7 +3,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background-color: var(--bg-surface);
+  background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-bottom: 8px;
@@ -51,7 +51,7 @@
   
   .target {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
   }
 }
 

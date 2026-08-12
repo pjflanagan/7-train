@@ -3,7 +3,7 @@
 import React from 'react';
 import { MdToday } from 'react-icons/md';
 import { AppShell } from '@/components/features/app/AppShell';
-import { MetroCardSwipe } from '@/components/elements/MetroCardSwipe/MetroCardSwipe';
+import { Spinner } from '@/components/elements/Spinner/Spinner';
 import { WeekSection } from './WeekSection';
 import { useHydrated } from '@/hooks/useHydrated';
 import { usePlannerStore } from '@/lib/store';
@@ -78,7 +78,7 @@ export function PlannerPage() {
   if (!isHydrated) {
     return (
       <AppShell>
-        <MetroCardSwipe />
+        <Spinner />
       </AppShell>
     );
   }

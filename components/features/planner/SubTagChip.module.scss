@@ -8,3 +8,11 @@
   white-space: nowrap;
   cursor: grab;
 }
+
+// Already on the board this week: no colour fill, just an outline, so the
+// remaining sub-tags are the ones that read as available.
+.isScheduled {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-dim);
+}

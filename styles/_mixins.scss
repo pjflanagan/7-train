@@ -45,12 +45,3 @@
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
 }
-
-// NYC subway signage: a solid panel underlined by a white rule, with the
-// backing colour repeated below it as a hard drop shadow — no blur, the way
-// screen-printed station signs stack.
-@mixin signage-panel() {
-  background-color: var(--bg-primary);
-  border-bottom: 2px solid white;
-  box-shadow: 0 4px 0 var(--bg-primary);
-}
