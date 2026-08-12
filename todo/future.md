@@ -4,6 +4,7 @@ Not major
 - [x] auto update what day is highlighted on an interval so I don't have to refresh
 - [x] goal modal (see goal-modal.md)
 - different weeks (see progress.md)
+- (see workout-types-enhanced.md)
 
 Major
 - nextjs app on vercel
