@@ -23,7 +23,6 @@ export const MyWeekModal: React.FC<MyWeekModalProps> = ({ isOpen, onClose }) => 
       <Modal isOpen={isOpen} onClose={onClose} title="My Week" maxWidth="600px">
         <div className={styles.container}>
           <div className={styles.header}>
-            <p>Drag to reorder your goals.</p>
             <Button variant="primary" onClick={() => setIsAddOpen(true)}>
               <MdAdd /> Add Goal
             </Button>

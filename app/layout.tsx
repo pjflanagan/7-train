@@ -9,7 +9,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Workout Planner",
+  title: "7 Train",
   description: "Plan your weekly workouts",
 };
 

@@ -1,4 +1,4 @@
-# Workout Planner
+# 7 Train
 
 A sleek, responsive, local-first workout planner built for maximum usability and zero loading screens.
 
