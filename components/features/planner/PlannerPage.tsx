@@ -10,6 +10,7 @@ import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider';
 import { useInitWeather } from '@/hooks/useWeather';
+import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
 
@@ -26,11 +27,13 @@ function WeekFeed() {
     isCurrentWeekVisible,
     scrollToCurrentWeek,
   } = useInfiniteWeeks({ currentWeekStart });
+  const focusTriggers = useScheduleFocusTriggers();
 
   return (
     <div className={styles.feed}>
       <div
         className={styles.scroller}
+        {...focusTriggers}
         ref={(node) => {
           scrollRef.current = node;
         }}

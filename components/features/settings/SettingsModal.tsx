@@ -9,7 +9,7 @@ import { Button } from '@/components/elements/Button/Button';
 import { Select } from '@/components/elements/Select/Select';
 import { useWeather, useWeatherStore } from '@/hooks/useWeather';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
-import { getWeekStartKey, addWeeks, WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
+import { WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
 import styles from './SettingsModal.module.scss';
 
 export interface SettingsModalProps {
@@ -17,7 +17,7 @@ export interface SettingsModalProps {
   onClose: () => void;
 }
 
-type ConfirmAction = 'clearThis' | 'clearNext' | 'copyThisToNext' | 'reset' | null;
+type ConfirmAction = 'reset' | null;
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -25,17 +25,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const { data: weatherData } = useWeather();
   const fetchWeather = useWeatherStore((s) => s.fetchWeather);
 
-  const clearWeek = usePlannerStore((state) => state.clearWeek);
-  const copyWeek = usePlannerStore((state) => state.copyWeek);
   const resetAll = usePlannerStore((state) => state.resetAll);
 
   const tempUnit = usePlannerStore((state) => state.tempUnit ?? 'F');
   const setTempUnit = usePlannerStore((state) => state.setTempUnit);
   const weekStartsOn = useWeekStartsOn();
   const setWeekStartsOn = usePlannerStore((state) => state.setWeekStartsOn);
-
-  const thisWeek = getWeekStartKey(new Date(), weekStartsOn);
-  const nextWeek = addWeeks(thisWeek, 1);
 
   const handleTempUnitChange = (unit: 'C' | 'F') => {
     setTempUnit(unit);
@@ -45,15 +40,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const handleConfirm = () => {
     switch (confirmAction) {
-      case 'clearThis':
-        clearWeek(thisWeek);
-        break;
-      case 'clearNext':
-        clearWeek(nextWeek);
-        break;
-      case 'copyThisToNext':
-        copyWeek(thisWeek, nextWeek);
-        break;
       case 'reset':
         resetAll();
         break;
@@ -63,12 +49,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const getConfirmDetails = () => {
     switch (confirmAction) {
-      case 'clearThis':
-        return { title: 'Clear This Week', message: 'Are you sure you want to clear all workouts and notes from this week?', isDestructive: true };
-      case 'clearNext':
-        return { title: 'Clear Next Week', message: 'Are you sure you want to clear all workouts and notes from next week?', isDestructive: true };
-      case 'copyThisToNext':
-        return { title: 'Copy This Week to Next', message: 'This will overwrite next week with the contents of this week. Are you sure?', isDestructive: false };
       case 'reset':
         return { title: 'Factory Reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
       default:
@@ -119,22 +99,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <div className={styles.row}>
               <span className={styles.text}>Export history to CSV format</span>
               <Button onClick={exportData} variant="secondary">Export CSV</Button>
-            </div>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Week Management</h3>
-            <div className={styles.row}>
-              <span className={styles.text}>Clear all items from this week</span>
-              <Button onClick={() => setConfirmAction('clearThis')} variant="danger">Clear This Week</Button>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Clear all items from next week</span>
-              <Button onClick={() => setConfirmAction('clearNext')} variant="danger">Clear Next Week</Button>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Copy this week&apos;s schedule to next week</span>
-              <Button onClick={() => setConfirmAction('copyThisToNext')} variant="secondary">Copy This → Next</Button>
             </div>
           </div>
 

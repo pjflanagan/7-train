@@ -1,10 +1,38 @@
 .container {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+.streak {
+  flex: 1 1 auto;
+  height: 26px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.grey path,
+.purple path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.grey path {
+  stroke: #6b6f76;
+}
+
+.purple path {
+  stroke: var(--accent-spray, #8b3ff0);
 }
 
 .label {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-family: var(--font-marker), 'Permanent Marker', cursive;
+  font-size: 1rem;
+  color: var(--accent-spray, #8b3ff0);
+  letter-spacing: 0.5px;
+  flex: 0 0 auto;
 }

@@ -94,17 +94,6 @@ export function weekLabel(weekStartKey: string, currentWeekStartKey: string): st
   if (delta === -1) return 'Last week';
 
   const start = parseDateLocal(weekStartKey);
-  const label = start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  return `Week of ${label}`;
+  return start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-/** e.g. "Mar 3 – Mar 9" — the secondary line under the week label. */
-export function weekRangeLabel(weekStartKey: string): string {
-  const start = parseDateLocal(weekStartKey);
-  const end = parseDateLocal(weekStartKey);
-  end.setDate(end.getDate() + 6);
-
-  const fmt = (d: Date) =>
-    d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  return `${fmt(start)} – ${fmt(end)}`;
-}

@@ -1,7 +1,10 @@
 'use client';
 import React, { useState } from 'react';
+import clsx from 'clsx';
 import styles from './AppHeader.module.scss';
+import { useScheduleFocus } from '@/hooks/useScheduleFocus';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
+import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
 import {
   MdFitnessCenter,
   MdSettings,
@@ -15,13 +18,14 @@ export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { isScheduleFocused } = useScheduleFocus();
 
   return (
     <>
-      <header className={styles.header}>
+      <header className={clsx(styles.header, isScheduleFocused && styles.collapsed)}>
         <div className={styles.headerBar}>
           <div className={styles.brandSection}>
-            <div className={styles.brandLogoBadge}>7</div>
+            <SevenLogo size={32} className={styles.brandLogoBadge} title="7 train" />
             <div className={styles.brandTitles}>
               <h1>
                 <span className={styles.wordTrain}>Train</span>

@@ -1,9 +1,10 @@
 import { WeekProgressBar } from './WeekProgressBar';
+import { WeekActions } from './WeekActions';
 import { GoalStrip } from './GoalStrip';
 import { DayColumn } from './DayColumn';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useTileGridHeight } from '@/hooks/useTileGridHeight';
-import { orderedDays, weekLabel, weekRangeLabel, formatDateLocal, dateForDay } from '@/lib/dates';
+import { orderedDays, weekLabel, formatDateLocal, dateForDay } from '@/lib/dates';
 import styles from './WeekSection.module.scss';
 
 export interface WeekSectionProps {
@@ -25,10 +26,12 @@ export function WeekSection({ weekStart, currentWeekStart }: WeekSectionProps) {
     <section className={styles.section} style={{ minHeight }}>
       <div className={styles.inner} ref={contentRef}>
         <header className={styles.headerRow}>
-          <h2 className={styles.header}>{weekLabel(weekStart, currentWeekStart)}</h2>
-          <span className={styles.range}>{weekRangeLabel(weekStart)}</span>
+          <div className={styles.headerLeft}>
+            <h2 className={styles.header}>{weekLabel(weekStart, currentWeekStart)}</h2>
+            <WeekActions weekStart={weekStart} />
+          </div>
+          <WeekProgressBar weekStart={weekStart} />
         </header>
-        <WeekProgressBar weekStart={weekStart} />
         <GoalStrip weekStart={weekStart} />
         <div className={styles.grid}>
           {days.map(day => (
