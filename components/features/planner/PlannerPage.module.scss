@@ -67,16 +67,3 @@
     filter: brightness(1.04);
   }
 }
-
-.loadingSkeleton {
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--text-main);
-  background-color: var(--bg-secondary);
-  border-radius: 16px; // Using standard border radius
-  border: 1px solid var(--border-color);
-  max-width: 400px;
-  margin: 4rem auto;
-  font-weight: 500;
-  box-shadow: var(--box-shadow-premium);
-}

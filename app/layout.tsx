@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Permanent_Marker } from 'next/font/google';
+import { Doto, Permanent_Marker } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.scss';
 
@@ -10,6 +10,14 @@ const permanentMarker = Permanent_Marker({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-marker',
+});
+
+// Dot-matrix face for the day/weather strip, like a train's destination sign.
+const doto = Doto({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-doto',
 });
 
 export const metadata: Metadata = {
@@ -23,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={permanentMarker.variable}>
+    <html lang="en" className={`${permanentMarker.variable} ${doto.variable}`}>
       <body>
         {children}
         <Toaster />
