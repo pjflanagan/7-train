@@ -1,58 +1,65 @@
+@use '@/styles/mixins' as mixins;
+
 .chip {
+  @include mixins.signage-panel();
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  background-color: var(--bg-primary);
-  min-width: 150px;
+  gap: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  min-width: 190px;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+}
+
+.iconBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
 }
 
 .icon {
-  font-size: 1.25rem;
+  font-size: 0.85rem;
 }
 
 .name {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
-.targetSection {
+// Pushed right so the count sits at the far edge of the panel.
+.tally {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.15rem;
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .targetInput {
-  width: 40px;
+  width: 2.2em;
+  padding: 0 0.1rem;
   text-align: center;
-  padding: 0.25rem;
-}
-
-.unit {
-  color: var(--text-secondary);
-}
-
-.progressText {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: var(--text-main);
+  font-weight: 600;
 }
 
 .progressBar {
-  height: 6px;
+  height: 5px;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-top: 0.25rem;
 }

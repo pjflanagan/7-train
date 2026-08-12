@@ -1,6 +1,47 @@
+@use '@/styles/mixins' as mixins;
+
+.wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
 .strip {
   display: flex;
-  flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1rem;
+  overflow-x: auto;
+  // The chips keep their own width and page sideways instead of stacking.
+  flex-wrap: nowrap;
+  scroll-behavior: smooth;
+  padding-bottom: 6px; // room for the signage drop shadow
+  @include mixins.hide-scrollbar();
+
+  > * {
+    flex: 0 0 auto;
+  }
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  @include mixins.focus-ring();
+
+  &:hover {
+    filter: brightness(1.15);
+  }
+}
+
+.left {
+  left: -6px;
+}
+
+.right {
+  right: -6px;
 }

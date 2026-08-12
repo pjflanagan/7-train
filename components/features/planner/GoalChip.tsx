@@ -23,31 +23,29 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
     <div 
       ref={setNodeRef}
       className={styles.chip} 
-      style={{ 
-        borderColor: goal.color,
-        opacity: isDragging ? 0.5 : 1 
-      }}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <div className={styles.header} {...attributes} {...listeners} style={{ cursor: 'grab' }}>
-        {React.createElement(getIconByKey(goal.icon), { className: styles.icon, style: { color: goal.color } })}
+        <span className={styles.iconBadge} style={{ backgroundColor: goal.color }}>
+          {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
+        </span>
         <span className={styles.name}>{goal.name}</span>
-      </div>
-      <div className={styles.targetSection}>
-        <InlineNumberInput
-          value={goal.target || 0}
-          onCommit={(val) => setGoalTarget(goal.id, val)}
-          className={styles.targetInput}
-        />
-        <span className={styles.unit}>{goal.unit}</span>
-      </div>
-      <div className={styles.progressText}>
-        {progress?.current || 0} / {goal.target || 0} {goal.unit}
+        <span className={styles.tally}>
+          {progress?.current || 0} /
+          <InlineNumberInput
+            value={goal.target || 0}
+            onCommit={(val) => setGoalTarget(goal.id, val)}
+            className={styles.targetInput}
+            aria-label={`${goal.name} target`}
+          />
+          {goal.unit}
+        </span>
       </div>
       <ProgressBar percent={progress?.percent || 0} color={goal.color} className={styles.progressBar} />
       {goal.workoutTypes && goal.workoutTypes.length > 0 && (
         <div className={styles.tags}>
           {goal.workoutTypes.map(tag => (
-            <SubTagChip key={tag} tag={tag} typeId={goal.id} />
+            <SubTagChip key={tag} tag={tag} typeId={goal.id} color={goal.color} />
           ))}
         </div>
       )}

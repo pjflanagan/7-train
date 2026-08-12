@@ -22,17 +22,15 @@
 }
 
 .headerBar {
+  @include signage-panel();
   max-width: 640px;
   margin: 0 auto;
-  background-color: var(--bg-primary);
   padding: 0.65rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  border-bottom: 2px solid white;
-  box-shadow: 0 4px 0 var(--bg-primary);
 }
 
 .brandSection {
