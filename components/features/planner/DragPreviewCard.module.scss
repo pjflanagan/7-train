@@ -1,0 +1,11 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.preview {
+  @include card-surface;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: var(--box-shadow-premium);
+  opacity: 0.9;
+  cursor: grabbing;
+}

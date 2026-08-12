@@ -1,0 +1,58 @@
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-primary);
+  min-width: 150px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  font-size: 1.25rem;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.targetSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.targetInput {
+  width: 40px;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.unit {
+  color: var(--text-secondary);
+}
+
+.progressText {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.progressBar {
+  height: 6px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}

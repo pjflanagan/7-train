@@ -1,0 +1,23 @@
+@use "../../../styles/mixins" as *;
+
+.input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  font: inherit;
+  width: 100%;
+  padding: 0.25rem;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+  text-align: center;
+  @include focus-ring();
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &:focus {
+    background: var(--bg-secondary);
+    border-color: var(--border-focus);
+  }
+}

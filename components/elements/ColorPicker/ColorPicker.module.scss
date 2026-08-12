@@ -1,0 +1,27 @@
+@use "../../../styles/mixins" as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  gap: 0.5rem;
+}
+
+.colorButton {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+  @include focus-ring();
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &.selected {
+    border-color: var(--text-main);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--text-main);
+  }
+}
