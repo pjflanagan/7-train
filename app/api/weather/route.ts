@@ -4,6 +4,7 @@ export const revalidate = 1800;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const unitParam = searchParams.get('unit') || 'F';
   
   let lat = searchParams.get('lat');
   let lon = searchParams.get('lon');

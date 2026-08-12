@@ -10,7 +10,8 @@ describe('weekRollover', () => {
 
     const state: PlannerState = {
       goals: [], items: [], notes: {}, links: [], history: [],
-      lastViewedMonday: mondayStr
+      lastViewedMonday: mondayStr,
+      tempUnit: 'F'
     };
 
     const result = computeRollover(state, today);
@@ -34,7 +35,8 @@ describe('weekRollover', () => {
       },
       links: [],
       history: [],
-      lastViewedMonday: lastViewedStr
+      lastViewedMonday: lastViewedStr,
+      tempUnit: 'F'
     };
 
     const result = computeRollover(state, today);
@@ -63,7 +65,8 @@ describe('weekRollover', () => {
       notes: {},
       links: [],
       history: [],
-      lastViewedMonday: lastViewedStr
+      lastViewedMonday: lastViewedStr,
+      tempUnit: 'F'
     };
 
     const result = computeRollover(state, today);
