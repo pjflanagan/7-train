@@ -77,37 +77,44 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
   }
 ];
 
-export const DEFAULT_CALENDAR_ITEMS: CalendarItem[] = [
-  {
-    id: 'item-1',
-    typeId: 'type-run',
-    day: 'monday',
-    week: 1,
-    value: 3,
-    workoutType: 'Long Run'
-  },
-  {
-    id: 'item-2',
-    typeId: 'type-lift',
-    day: 'tuesday',
-    week: 1,
-    value: 1,
-    workoutType: 'Chest Day'
-  },
-  {
-    id: 'item-3',
-    typeId: 'type-bike',
-    day: 'wednesday',
-    week: 1,
-    value: 12,
-    workoutType: 'Road Bike'
-  },
-  {
-    id: 'item-4',
-    typeId: 'type-yoga',
-    day: 'thursday',
-    week: 1,
-    value: 30,
-    workoutType: 'Vinyasa'
-  }
-];
+/**
+ * Seed items for a fresh install, anchored to whichever week is current.
+ * Takes the week key as an argument so this module stays free of date logic
+ * (lib/dates imports DAYS from here).
+ */
+export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
+  return [
+    {
+      id: 'item-1',
+      typeId: 'type-run',
+      day: 'monday',
+      weekStart,
+      value: 3,
+      workoutType: 'Long Run'
+    },
+    {
+      id: 'item-2',
+      typeId: 'type-lift',
+      day: 'tuesday',
+      weekStart,
+      value: 1,
+      workoutType: 'Chest Day'
+    },
+    {
+      id: 'item-3',
+      typeId: 'type-bike',
+      day: 'wednesday',
+      weekStart,
+      value: 12,
+      workoutType: 'Road Bike'
+    },
+    {
+      id: 'item-4',
+      typeId: 'type-yoga',
+      day: 'thursday',
+      weekStart,
+      value: 30,
+      workoutType: 'Vinyasa'
+    }
+  ];
+}

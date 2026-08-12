@@ -1,25 +1,42 @@
 import React from 'react';
-import { DAYS } from '@/lib/constants';
+import clsx from 'clsx';
 import { WeekProgressBar } from './WeekProgressBar';
 import { GoalStrip } from './GoalStrip';
 import { DayColumn } from './DayColumn';
+import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { orderedDays, weekLabel, weekRangeLabel, formatDateLocal, dateForDay } from '@/lib/dates';
 import styles from './WeekSection.module.scss';
 
 export interface WeekSectionProps {
-  week: 1 | 2;
+  weekStart: string;
+  /** The week key containing today, used to label this one relative to now. */
+  currentWeekStart: string;
 }
 
-export function WeekSection({ week }: WeekSectionProps) {
+export function WeekSection({ weekStart, currentWeekStart }: WeekSectionProps) {
+  const weekStartsOn = useWeekStartsOn();
+  const days = orderedDays(weekStartsOn);
+  const isCurrent = weekStart === currentWeekStart;
+  const todayKey = formatDateLocal(new Date());
+
   return (
-    <div className={styles.section}>
-      <h2 className={styles.header}>Week {week}</h2>
-      <WeekProgressBar week={week} />
-      <GoalStrip week={week} />
+    <section className={clsx(styles.section, isCurrent && styles.isCurrent)}>
+      <header className={styles.headerRow}>
+        <h2 className={styles.header}>{weekLabel(weekStart, currentWeekStart)}</h2>
+        <span className={styles.range}>{weekRangeLabel(weekStart)}</span>
+      </header>
+      <WeekProgressBar weekStart={weekStart} />
+      <GoalStrip weekStart={weekStart} />
       <div className={styles.grid}>
-        {DAYS.map(day => (
-          <DayColumn key={day} day={day} week={week} />
+        {days.map(day => (
+          <DayColumn
+            key={day}
+            day={day}
+            weekStart={weekStart}
+            isToday={formatDateLocal(dateForDay(weekStart, day, weekStartsOn)) === todayKey}
+          />
         ))}
       </div>
-    </div>
+    </section>
   );
 }

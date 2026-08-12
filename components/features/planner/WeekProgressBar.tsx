@@ -3,8 +3,8 @@ import { useWeekProgress } from '@/hooks/useWeekProgress';
 import { ProgressBar } from '@/components/elements/ProgressBar/ProgressBar';
 import styles from './WeekProgressBar.module.scss';
 
-export function WeekProgressBar({ week }: { week: 1 | 2 }) {
-  const { overall } = useWeekProgress(week);
+export function WeekProgressBar({ weekStart }: { weekStart: string }) {
+  const { overall } = useWeekProgress(weekStart);
   return (
     <div className={styles.container}>
       <span className={styles.label}>Progress: {Math.round(overall.percent)}%</span>

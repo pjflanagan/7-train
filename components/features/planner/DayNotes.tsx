@@ -5,8 +5,8 @@ import { DAYS } from '@/lib/constants';
 import { Textarea } from '@/components/elements/Textarea/Textarea';
 import styles from './DayNotes.module.scss';
 
-export function DayNotes({ day, week }: { day: typeof DAYS[number]; week: 1 | 2 }) {
-  const note = useNote(day, week);
+export function DayNotes({ day, weekStart }: { day: typeof DAYS[number]; weekStart: string }) {
+  const note = useNote(day, weekStart);
   const setNote = usePlannerStore(state => state.setNote);
   const [prevNote, setPrevNote] = useState(note);
   const [localNote, setLocalNote] = useState(note || '');
@@ -19,11 +19,11 @@ export function DayNotes({ day, week }: { day: typeof DAYS[number]; week: 1 | 2 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (localNote !== (note || '')) {
-        setNote(day, week, localNote);
+        setNote(day, weekStart, localNote);
       }
     }, 500);
     return () => clearTimeout(handler);
-  }, [localNote, day, week, note, setNote]);
+  }, [localNote, day, weekStart, note, setNote]);
 
   return (
     <Textarea

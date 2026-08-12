@@ -6,7 +6,10 @@ import { useCsvExport } from '@/hooks/useCsvExport';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { Button } from '@/components/elements/Button/Button';
-import { useWeather } from '@/hooks/useWeather';
+import { Select } from '@/components/elements/Select/Select';
+import { useWeather, useWeatherStore } from '@/hooks/useWeather';
+import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { getWeekStartKey, addWeeks, WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
 import styles from './SettingsModal.module.scss';
 
 export interface SettingsModalProps {
@@ -14,27 +17,42 @@ export interface SettingsModalProps {
   onClose: () => void;
 }
 
-type ConfirmAction = 'clear1' | 'clear2' | 'copy1to2' | 'reset' | null;
+type ConfirmAction = 'clearThis' | 'clearNext' | 'copyThisToNext' | 'reset' | null;
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const { exportData } = useCsvExport();
   const { data: weatherData } = useWeather();
+  const fetchWeather = useWeatherStore((s) => s.fetchWeather);
 
   const clearWeek = usePlannerStore((state) => state.clearWeek);
   const copyWeek = usePlannerStore((state) => state.copyWeek);
   const resetAll = usePlannerStore((state) => state.resetAll);
 
+  const tempUnit = usePlannerStore((state) => state.tempUnit ?? 'F');
+  const setTempUnit = usePlannerStore((state) => state.setTempUnit);
+  const weekStartsOn = useWeekStartsOn();
+  const setWeekStartsOn = usePlannerStore((state) => state.setWeekStartsOn);
+
+  const thisWeek = getWeekStartKey(new Date(), weekStartsOn);
+  const nextWeek = addWeeks(thisWeek, 1);
+
+  const handleTempUnitChange = (unit: 'C' | 'F') => {
+    setTempUnit(unit);
+    // The forecast is fetched in the stored unit, so re-fetch on change.
+    fetchWeather();
+  };
+
   const handleConfirm = () => {
     switch (confirmAction) {
-      case 'clear1':
-        clearWeek(1);
+      case 'clearThis':
+        clearWeek(thisWeek);
         break;
-      case 'clear2':
-        clearWeek(2);
+      case 'clearNext':
+        clearWeek(nextWeek);
         break;
-      case 'copy1to2':
-        copyWeek(1, 2);
+      case 'copyThisToNext':
+        copyWeek(thisWeek, nextWeek);
         break;
       case 'reset':
         resetAll();
@@ -45,12 +63,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const getConfirmDetails = () => {
     switch (confirmAction) {
-      case 'clear1':
-        return { title: 'Clear Week 1', message: 'Are you sure you want to clear all workouts and notes from Week 1?', isDestructive: true };
-      case 'clear2':
-        return { title: 'Clear Week 2', message: 'Are you sure you want to clear all workouts and notes from Week 2?', isDestructive: true };
-      case 'copy1to2':
-        return { title: 'Copy Week 1 to 2', message: 'This will overwrite Week 2 with the contents of Week 1. Are you sure?', isDestructive: false };
+      case 'clearThis':
+        return { title: 'Clear This Week', message: 'Are you sure you want to clear all workouts and notes from this week?', isDestructive: true };
+      case 'clearNext':
+        return { title: 'Clear Next Week', message: 'Are you sure you want to clear all workouts and notes from next week?', isDestructive: true };
+      case 'copyThisToNext':
+        return { title: 'Copy This Week to Next', message: 'This will overwrite next week with the contents of this week. Are you sure?', isDestructive: false };
       case 'reset':
         return { title: 'Factory Reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
       default:
@@ -64,9 +82,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Settings" maxWidth="500px">
         <div className={styles.container}>
-          
+
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>General</h3>
+            <div className={styles.row}>
+              <span className={styles.text}>Week starts on</span>
+              <Select
+                value={String(weekStartsOn)}
+                onChange={(e) => setWeekStartsOn(Number(e.target.value) as WeekStartsOn)}
+              >
+                {WEEK_START_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div className={styles.row}>
+              <span className={styles.text}>Temperature unit</span>
+              <Select
+                value={tempUnit}
+                onChange={(e) => handleTempUnitChange(e.target.value as 'C' | 'F')}
+              >
+                <option value="F">Fahrenheit (°F)</option>
+                <option value="C">Celsius (°C)</option>
+              </Select>
+            </div>
             <div className={styles.row}>
               <span className={styles.text}>Weather Location</span>
               <span className={styles.text} style={{ color: 'var(--text-muted)' }}>
@@ -76,7 +115,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Data & History</h3>
+            <h3 className={styles.sectionTitle}>Data &amp; History</h3>
             <div className={styles.row}>
               <span className={styles.text}>Export history to CSV format</span>
               <Button onClick={exportData} variant="secondary">Export CSV</Button>
@@ -86,16 +125,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Week Management</h3>
             <div className={styles.row}>
-              <span className={styles.text}>Clear all items from Week 1</span>
-              <Button onClick={() => setConfirmAction('clear1')} variant="danger">Clear Week 1</Button>
+              <span className={styles.text}>Clear all items from this week</span>
+              <Button onClick={() => setConfirmAction('clearThis')} variant="danger">Clear This Week</Button>
             </div>
             <div className={styles.row}>
-              <span className={styles.text}>Clear all items from Week 2</span>
-              <Button onClick={() => setConfirmAction('clear2')} variant="danger">Clear Week 2</Button>
+              <span className={styles.text}>Clear all items from next week</span>
+              <Button onClick={() => setConfirmAction('clearNext')} variant="danger">Clear Next Week</Button>
             </div>
             <div className={styles.row}>
-              <span className={styles.text}>Copy Week 1 schedule to Week 2</span>
-              <Button onClick={() => setConfirmAction('copy1to2')} variant="secondary">Copy 1 → 2</Button>
+              <span className={styles.text}>Copy this week&apos;s schedule to next week</span>
+              <Button onClick={() => setConfirmAction('copyThisToNext')} variant="secondary">Copy This → Next</Button>
             </div>
           </div>
 

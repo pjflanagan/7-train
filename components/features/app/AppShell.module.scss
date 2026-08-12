@@ -1,27 +1,19 @@
-@use '@/styles/breakpoints' as *;
-
 .appContainer {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 0; 
+  min-height: 0;
   overflow: hidden;
   height: 100dvh;
-  
-  @include respond-to(mobile) {
-    height: auto;
-    overflow: visible;
-  }
 }
 
+// The planner feed owns scrolling at every size: it pages weeks in as its own
+// scroll position changes, so it must be the scroll container rather than the
+// window. That also keeps the header pinned above the feed.
 .mainContent {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  
-  @include respond-to(mobile) {
-    overflow: visible;
-  }
+  overflow: hidden;
 }

@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PlannerState, WorkoutType, CalendarItem, HelpfulLink } from './types';
-import { DEFAULT_WORKOUT_TYPES, DEFAULT_CALENDAR_ITEMS, DEFAULT_LINKS, DAYS } from './constants';
+import { DEFAULT_WORKOUT_TYPES, getDefaultCalendarItems, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
-import { computeRollover } from './weekRollover';
+import { getWeekStartKey, WeekStartsOn } from './dates';
 import { arrayMove } from '@dnd-kit/sortable';
+
+type DayName = typeof DAYS[number];
+
+export const noteKey = (weekStart: string, day: DayName) => `${weekStart}-${day}`;
 
 type PlannerStore = PlannerState & {
   addGoal: (goal: WorkoutType) => void;
@@ -12,41 +16,48 @@ type PlannerStore = PlannerState & {
   deleteGoal: (id: string) => void;
   reorderGoals: (oldIndex: number, newIndex: number) => void;
   setGoalTarget: (id: string, target: number) => void;
-  
+
   addItem: (item: Omit<CalendarItem, 'id'>) => void;
   updateItemValue: (id: string, value: number) => void;
   setItemSubType: (id: string, subType: string | null) => void;
   removeItem: (id: string) => void;
-  moveItem: (id: string, targetDay: typeof DAYS[number], targetWeek: 1 | 2, newIndex?: number) => void;
-  reorderDay: (day: typeof DAYS[number], week: 1 | 2, oldIndex: number, newIndex: number) => void;
-  
-  setNote: (day: typeof DAYS[number], week: 1 | 2, note: string) => void;
-  copyWeek: (fromWeek: 1 | 2, toWeek: 1 | 2) => void;
-  clearWeek: (week: 1 | 2) => void;
-  
+  moveItem: (id: string, targetDay: DayName, targetWeekStart: string, newIndex?: number) => void;
+  reorderDay: (day: DayName, weekStart: string, oldIndex: number, newIndex: number) => void;
+
+  setNote: (day: DayName, weekStart: string, note: string) => void;
+  copyWeek: (fromWeekStart: string, toWeekStart: string) => void;
+  clearWeek: (weekStart: string) => void;
+
   addLink: (link: HelpfulLink) => void;
   removeLink: (id: string) => void;
-  
-  applyRollover: (today: Date) => void;
+
   setTempUnit: (unit: 'C' | 'F') => void;
+  setWeekStartsOn: (weekStartsOn: WeekStartsOn) => void;
   resetAll: () => void;
 };
 
-const initialState: PlannerState = {
-  goals: DEFAULT_WORKOUT_TYPES,
-  items: DEFAULT_CALENDAR_ITEMS,
-  notes: {},
-  links: DEFAULT_LINKS,
-  history: [],
-  lastViewedMonday: null,
-  tempUnit: 'F',
-};
+function buildInitialState(): PlannerState {
+  const weekStart = getWeekStartKey(new Date(), 1);
+  return {
+    goals: DEFAULT_WORKOUT_TYPES,
+    items: getDefaultCalendarItems(weekStart),
+    notes: {},
+    links: DEFAULT_LINKS,
+    history: [],
+    lastViewedMonday: null,
+    tempUnit: 'F',
+    weekStartsOn: 1,
+  };
+}
+
+const newId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
     (set) => ({
-      ...initialState,
-      
+      ...buildInitialState(),
+
       addGoal: (goal) => set((state) => ({ goals: [...state.goals, goal] })),
       updateGoal: (id, updates) => set((state) => ({
         goals: state.goals.map(g => g.id === id ? { ...g, ...updates } : g)
@@ -61,11 +72,10 @@ export const usePlannerStore = create<PlannerStore>()(
       setGoalTarget: (id, target) => set((state) => ({
         goals: state.goals.map(g => g.id === id ? { ...g, target } : g)
       })),
-      
-      addItem: (item) => set((state) => {
-        const id = 'item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 5);
-        return { items: [...state.items, { ...item, id }] };
-      }),
+
+      addItem: (item) => set((state) => ({
+        items: [...state.items, { ...item, id: newId('item') }]
+      })),
       updateItemValue: (id, value) => set((state) => ({
         items: state.items.map(i => i.id === id ? { ...i, value } : i)
       })),
@@ -75,35 +85,34 @@ export const usePlannerStore = create<PlannerStore>()(
       removeItem: (id) => set((state) => ({
         items: state.items.filter(i => i.id !== id)
       })),
-      moveItem: (id, targetDay, targetWeek, newIndex) => set((state) => {
+      moveItem: (id, targetDay, targetWeekStart, newIndex) => set((state) => {
         const item = state.items.find(i => i.id === id);
         if (!item) return state;
-        
+
         let newItems = state.items.filter(i => i.id !== id);
-        const updatedItem: CalendarItem = { ...item, day: targetDay, week: targetWeek };
-        
+        const updatedItem: CalendarItem = { ...item, day: targetDay, weekStart: targetWeekStart };
+
         if (newIndex !== undefined) {
-          const targetDayItems = newItems.filter(i => i.day === targetDay && i.week === targetWeek);
+          const inTarget = (i: CalendarItem) =>
+            i.day === targetDay && i.weekStart === targetWeekStart;
+          const targetDayItems = newItems.filter(inTarget);
           targetDayItems.splice(newIndex, 0, updatedItem);
-          newItems = [
-            ...newItems.filter(i => !(i.day === targetDay && i.week === targetWeek)),
-            ...targetDayItems
-          ];
+          newItems = [...newItems.filter(i => !inTarget(i)), ...targetDayItems];
         } else {
           newItems.push(updatedItem);
         }
-        
+
         return { items: newItems };
       }),
-      reorderDay: (day, week, oldIndex, newIndex) => set((state) => {
-        const dayItems = state.items.filter(i => i.day === day && i.week === week);
-        const otherItems = state.items.filter(i => !(i.day === day && i.week === week));
-        const reordered = arrayMove(dayItems, oldIndex, newIndex);
-        return { items: [...otherItems, ...reordered] };
+      reorderDay: (day, weekStart, oldIndex, newIndex) => set((state) => {
+        const inDay = (i: CalendarItem) => i.day === day && i.weekStart === weekStart;
+        const dayItems = state.items.filter(inDay);
+        const otherItems = state.items.filter(i => !inDay(i));
+        return { items: [...otherItems, ...arrayMove(dayItems, oldIndex, newIndex)] };
       }),
-      
-      setNote: (day, week, note) => set((state) => {
-        const key = `${day}-${week}`;
+
+      setNote: (day, weekStart, note) => set((state) => {
+        const key = noteKey(weekStart, day);
         if (!note) {
           const newNotes = { ...state.notes };
           delete newNotes[key];
@@ -111,48 +120,47 @@ export const usePlannerStore = create<PlannerStore>()(
         }
         return { notes: { ...state.notes, [key]: note } };
       }),
-      copyWeek: (fromWeek, toWeek) => set((state) => {
-        const fromItems = state.items.filter(i => i.week === fromWeek);
-        const retainedItems = state.items.filter(i => i.week !== toWeek);
-        
+      copyWeek: (fromWeekStart, toWeekStart) => set((state) => {
+        const fromItems = state.items.filter(i => i.weekStart === fromWeekStart);
+        const retainedItems = state.items.filter(i => i.weekStart !== toWeekStart);
+
         const copiedItems = fromItems.map(i => ({
           ...i,
-          id: 'item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 5),
-          week: toWeek
+          id: newId('item'),
+          weekStart: toWeekStart
         }));
-        
+
         const newNotes = { ...state.notes };
         DAYS.forEach(day => {
-          const fromKey = `${day}-${fromWeek}`;
-          const toKey = `${day}-${toWeek}`;
-          if (state.notes[fromKey]) {
-            newNotes[toKey] = state.notes[fromKey];
+          const from = state.notes[noteKey(fromWeekStart, day)];
+          if (from) {
+            newNotes[noteKey(toWeekStart, day)] = from;
           } else {
-            delete newNotes[toKey];
+            delete newNotes[noteKey(toWeekStart, day)];
           }
         });
-        
+
         return { items: [...retainedItems, ...copiedItems], notes: newNotes };
       }),
-      clearWeek: (week) => set((state) => {
+      clearWeek: (weekStart) => set((state) => {
         const newNotes = { ...state.notes };
-        DAYS.forEach(day => { delete newNotes[`${day}-${week}`]; });
+        DAYS.forEach(day => { delete newNotes[noteKey(weekStart, day)]; });
         return {
-          items: state.items.filter(i => i.week !== week),
+          items: state.items.filter(i => i.weekStart !== weekStart),
           notes: newNotes
         };
       }),
-      
+
       addLink: (link) => set((state) => ({ links: [...state.links, link] })),
       removeLink: (id) => set((state) => ({ links: state.links.filter(l => l.id !== id) })),
-      
-      applyRollover: (today) => set((state) => computeRollover(state, today)),
+
       setTempUnit: (tempUnit) => set({ tempUnit }),
-      resetAll: () => set(initialState)
+      setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
+      resetAll: () => set(buildInitialState())
     }),
     {
       name: 'workout-week',
-      version: 1,
+      version: 2,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

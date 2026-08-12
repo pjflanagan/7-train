@@ -26,3 +26,14 @@
   background-color: var(--bg-secondary);
   border-radius: 0.5rem;
 }
+
+// Today's column, so the current day stays findable in a long scroll.
+.isToday {
+  .header {
+    border-bottom-color: var(--header-rule, var(--accent-success));
+  }
+
+  .dayName {
+    color: var(--header-rule, var(--accent-success));
+  }
+}

@@ -26,7 +26,8 @@ export const CalendarItemSchema = z.object({
   id: z.string(),
   typeId: z.string(),
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
-  week: z.union([z.literal(1), z.literal(2)]).optional().default(1),
+  /** YYYY-MM-DD of the day the containing week starts on. */
+  weekStart: z.string(),
   value: z.number(),
   workoutType: z.string().nullable().optional()
 });
@@ -46,10 +47,12 @@ export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 export const PlannerStateSchema = z.object({
   goals: z.array(WorkoutTypeSchema),
   items: z.array(CalendarItemSchema),
-  notes: z.record(z.string(), z.string()), // `${day}-${week}` -> text
+  notes: z.record(z.string(), z.string()), // `${weekStart}-${day}` -> text
   links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),
-  tempUnit: z.enum(['C', 'F']).optional().default('F')
+  tempUnit: z.enum(['C', 'F']).optional().default('F'),
+  /** 0 = Sunday ... 6 = Saturday. */
+  weekStartsOn: z.number().int().min(0).max(6).optional().default(1)
 });
 export type PlannerState = z.infer<typeof PlannerStateSchema>;

@@ -1,8 +1,57 @@
+// Positioning context for the floating jump-back button.
+.feed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.jumpToToday {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  box-shadow: var(--box-shadow-premium);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--header-rule, var(--border-focus));
+  }
+}
+
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  // Keep the browser from fighting the manual offset correction on prepend.
+  overflow-anchor: none;
+}
+
 .container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   padding: 1rem;
+}
+
+// Zero-height probes that trigger loading another week when scrolled near.
+.sentinel {
+  height: 1px;
+  flex: 0 0 auto;
 }
 
 .loadingSkeleton {

@@ -1,5 +1,6 @@
 import { PlannerState, WorkoutTypeSchema, CalendarItemSchema, HelpfulLinkSchema, HistoryEntrySchema, WorkoutType, CalendarItem } from './types';
-import { DEFAULT_WORKOUT_TYPES, DEFAULT_CALENDAR_ITEMS, DEFAULT_LINKS } from './constants';
+import { DEFAULT_WORKOUT_TYPES, getDefaultCalendarItems, DEFAULT_LINKS } from './constants';
+import { getWeekStartKey, addWeeks } from './dates';
 import { ACTIVITY_ICONS, IconKey } from './icons';
 
 function mapLegacyIcon(iconStr: string): IconKey {
@@ -21,11 +22,32 @@ function normalizeGoal(raw: unknown): WorkoutType {
   return WorkoutTypeSchema.parse(goal);
 }
 
-function normalizeItem(raw: unknown): CalendarItem {
-  const item = { ...(raw as Record<string, unknown>) } as Partial<CalendarItem> & Record<string, unknown>;
-  if (!item.week) item.week = 1;
-  const parsed = CalendarItemSchema.parse(item);
-  return parsed;
+function normalizeItem(raw: unknown, weekStarts: [string, string]): CalendarItem {
+  const item = { ...(raw as Record<string, unknown>) } as Record<string, unknown>;
+  // Legacy items carried a relative slot (week 1 or 2); anchor it to a real date.
+  if (typeof item.weekStart !== 'string') {
+    item.weekStart = item.week === 2 ? weekStarts[1] : weekStarts[0];
+  }
+  delete item.week;
+  return CalendarItemSchema.parse(item);
+}
+
+/** Rekey notes from the legacy `${day}-${week}` form to `${weekStart}-${day}`. */
+function migrateNotes(
+  notes: Record<string, string>,
+  weekStarts: [string, string]
+): Record<string, string> {
+  const migrated: Record<string, string> = {};
+  Object.entries(notes).forEach(([key, value]) => {
+    const match = /^([a-z]+)-([12])$/.exec(key);
+    if (match) {
+      const [, day, week] = match;
+      migrated[`${weekStarts[week === '2' ? 1 : 0]}-${day}`] = value;
+    } else {
+      migrated[key] = value;
+    }
+  });
+  return migrated;
 }
 
 export function importLegacy(): Partial<PlannerState> | null {
@@ -42,6 +64,11 @@ export function importLegacy(): Partial<PlannerState> | null {
 
   if (Object.values(raw).every(v => v == null)) return null;
 
+  // Legacy data is relative to whichever week it was last edited in; anchor
+  // week 1 to the week the import happens in.
+  const currentWeekStart = getWeekStartKey(new Date(), 1);
+  const weekStarts: [string, string] = [currentWeekStart, addWeeks(currentWeekStart, 1)];
+
   let goals = DEFAULT_WORKOUT_TYPES;
   if (raw.types) {
     try {
@@ -52,11 +79,11 @@ export function importLegacy(): Partial<PlannerState> | null {
     }
   }
 
-  let items = DEFAULT_CALENDAR_ITEMS;
+  let items = getDefaultCalendarItems(currentWeekStart);
   if (raw.items) {
     try {
       const parsed = JSON.parse(raw.items);
-      items = parsed.map(normalizeItem);
+      items = parsed.map((i: unknown) => normalizeItem(i, weekStarts));
     } catch (e) {
       console.error('Failed to parse legacy items', e);
     }
@@ -71,9 +98,9 @@ export function importLegacy(): Partial<PlannerState> | null {
     return item;
   });
 
-  let notes = {};
+  let notes: Record<string, string> = {};
   if (raw.notes) {
-    try { notes = JSON.parse(raw.notes); } catch {}
+    try { notes = migrateNotes(JSON.parse(raw.notes), weekStarts); } catch {}
   }
 
   let links = DEFAULT_LINKS;
@@ -112,7 +139,36 @@ export function importLegacy(): Partial<PlannerState> | null {
   return newState;
 }
 
-export function migrateStore(persistedState: unknown): unknown {
-  // If version 0 -> 1 needed, do it here. Currently we start at version 1.
-  return persistedState;
+/**
+ * v1 -> v2: weeks stopped being relative slots (1 and 2) and became absolute
+ * dates, so past weeks can be kept and scrolled back to. Week 1 lands on the
+ * current week and week 2 on the next one.
+ */
+export function migrateStore(persistedState: unknown, version: number): unknown {
+  if (version >= 2 || !persistedState || typeof persistedState !== 'object') {
+    return persistedState;
+  }
+
+  const state = persistedState as Record<string, unknown>;
+  const weekStartsOn = 1; // v1 always started weeks on Monday
+  const current = getWeekStartKey(new Date(), weekStartsOn);
+  const weekStarts: [string, string] = [current, addWeeks(current, 1)];
+
+  const items = Array.isArray(state.items)
+    ? state.items.map((item) => {
+        const raw = { ...(item as Record<string, unknown>) };
+        if (typeof raw.weekStart !== 'string') {
+          raw.weekStart = raw.week === 2 ? weekStarts[1] : weekStarts[0];
+        }
+        delete raw.week;
+        return raw;
+      })
+    : state.items;
+
+  const notes =
+    state.notes && typeof state.notes === 'object'
+      ? migrateNotes(state.notes as Record<string, string>, weekStarts)
+      : state.notes;
+
+  return { ...state, items, notes, weekStartsOn };
 }

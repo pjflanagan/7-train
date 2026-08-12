@@ -9,7 +9,7 @@ export interface PlannerDndData {
   tag?: string;
   itemId?: string;
   day?: typeof DAYS[number];
-  week?: 1 | 2;
+  weekStart?: string;
 }
 
 export function usePlannerDnd() {
@@ -39,12 +39,12 @@ export function usePlannerDnd() {
     if (!activeData || !overData) return;
 
     if (activeData.kind === 'goal' && overData.kind === 'column') {
-      if (activeData.typeId && overData.day && overData.week) {
-        addItem({ typeId: activeData.typeId, day: overData.day, week: overData.week, value: 1 });
+      if (activeData.typeId && overData.day && overData.weekStart) {
+        addItem({ typeId: activeData.typeId, day: overData.day, weekStart: overData.weekStart, value: 1 });
       }
     } else if (activeData.kind === 'subtag' && overData.kind === 'column') {
-      if (activeData.typeId && activeData.tag && overData.day && overData.week) {
-        addItem({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, week: overData.week, value: 1 });
+      if (activeData.typeId && activeData.tag && overData.day && overData.weekStart) {
+        addItem({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, weekStart: overData.weekStart, value: 1 });
       }
     } else if (activeData.kind === 'item') {
       const activeItem = items.find(i => i.id === activeData.itemId);
@@ -53,23 +53,23 @@ export function usePlannerDnd() {
       if (overData.kind === 'item') {
         const overItem = items.find(i => i.id === overData.itemId);
         if (!overItem) return;
-        if (activeItem.day === overItem.day && activeItem.week === overItem.week) {
+        if (activeItem.day === overItem.day && activeItem.weekStart === overItem.weekStart) {
           // Same column
-          const dayItems = items.filter(i => i.day === activeItem.day && i.week === activeItem.week);
+          const dayItems = items.filter(i => i.day === activeItem.day && i.weekStart === activeItem.weekStart);
           const oldIndex = dayItems.findIndex(i => i.id === activeItem.id);
           const newIndex = dayItems.findIndex(i => i.id === overItem.id);
           if (oldIndex !== newIndex) {
-            reorderDay(activeItem.day, activeItem.week, oldIndex, newIndex);
+            reorderDay(activeItem.day, activeItem.weekStart, oldIndex, newIndex);
           }
         } else {
           // Different column, insert at specific index
-          const targetDayItems = items.filter(i => i.day === overItem.day && i.week === overItem.week);
+          const targetDayItems = items.filter(i => i.day === overItem.day && i.weekStart === overItem.weekStart);
           const newIndex = targetDayItems.findIndex(i => i.id === overItem.id);
-          moveItem(activeItem.id, overItem.day, overItem.week, newIndex);
+          moveItem(activeItem.id, overItem.day, overItem.weekStart, newIndex);
         }
       } else if (overData.kind === 'column') {
-        if (overData.day && overData.week && (activeItem.day !== overData.day || activeItem.week !== overData.week)) {
-          moveItem(activeItem.id, overData.day, overData.week);
+        if (overData.day && overData.weekStart && (activeItem.day !== overData.day || activeItem.weekStart !== overData.weekStart)) {
+          moveItem(activeItem.id, overData.day, overData.weekStart);
         }
       }
     }

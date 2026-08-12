@@ -9,8 +9,8 @@ import { ProgressBar } from '@/components/elements/ProgressBar/ProgressBar';
 import { SubTagChip } from './SubTagChip';
 import styles from './GoalChip.module.scss';
 
-export function GoalChip({ goal, week }: { goal: WorkoutType; week: 1 | 2 }) {
-  const { progressMap } = useWeekProgress(week);
+export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: string }) {
+  const { progressMap } = useWeekProgress(weekStart);
   const setGoalTarget = usePlannerStore(state => state.setGoalTarget);
   const progress = progressMap[goal.id];
 
