@@ -106,7 +106,7 @@ Every row below is a regression-test checklist item. Nothing here may be dropped
 | 10 | "Optional" goals: no target, no bar, shows "Logged: N unit", excluded from overall % | Same logic, moved into `lib/progress.ts` unchanged. |
 | 11 | Sub-tag chips on goal card, each independently draggable | `<SubTagChip>` as its own drag source (`dnd-kit` draggable with `data.kind: 'subtag'`). |
 | 12 | Link icon on goal card → 1 link opens directly, >1 opens a picker modal | `<GoalLinksButton>`; picker becomes `<GoalLinksPickerModal>`. Keep the "don't start a drag" behaviour via `dnd-kit`'s activation constraint rather than `stopPropagation` on mousedown. |
-| 13 | "My Week" modal listing all goals, drag-to-reorder by handle, edit/delete | `<MyWeekModal>` + `<SortableGoalList>` (`dnd-kit` `verticalListSortingStrategy`). |
+| 13 | "My Week" modal listing all goals, drag-to-reorder by handle, edit/delete | `<MyWorkoutsModal>` + `<SortableGoalList>` (`dnd-kit` `verticalListSortingStrategy`). |
 | 14 | Add/Edit goal modal with 4 tabs: Basic, Workout Types (sub-tags), Links, Appearance (color presets + custom picker, icon grid) | `<GoalFormModal>` with `<Tabs>`; form state via `react-hook-form` + `zod`. Tabs get real ARIA roles and keyboard arrow navigation (currently none). |
 | 15 | Metric change auto-sets unit; Optional checkbox hides target and seeds a default | Derived in the form via `watch()`, no imperative `.trigger('change')`. |
 | 16 | Delete goal → `confirm()` → also deletes all its calendar items | `<ConfirmDialog>` component replaces `window.confirm`. Cascade delete stays in the store action. |
@@ -213,7 +213,7 @@ workout-plan/
 │       │   ├── DragPreviewCard/
 │       │   └── PlannerDndProvider/
 │       ├── goals/
-│       │   ├── MyWeekModal/
+│       │   ├── MyWorkoutsModal/
 │       │   ├── SortableGoalList/
 │       │   ├── GoalRow/
 │       │   ├── GoalFormModal/
@@ -539,7 +539,7 @@ At the end of this step the app should *look* identical to the current one, side
 
 ### Step 10 — Goal modals
 
-`GoalFormModal` (RHF + zod, 4 tabs, `ColorPicker`, `IconPicker`, `TagInput`, links sub-form), `MyWeekModal` + `SortableGoalList` + `GoalRow` (edit/delete/reorder), `GoalLinksPickerModal`. Features #12–#16.
+`GoalFormModal` (RHF + zod, 4 tabs, `ColorPicker`, `IconPicker`, `TagInput`, links sub-form), `MyWorkoutsModal` + `SortableGoalList` + `GoalRow` (edit/delete/reorder), `GoalLinksPickerModal`. Features #12–#16.
 
 ### Step 11 — Links & settings modals
 

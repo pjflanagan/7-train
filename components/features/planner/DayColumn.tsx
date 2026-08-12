@@ -18,11 +18,14 @@ export function DayColumn({ day, week }: { day: typeof DAYS[number]; week: 1 | 2
   const { data: weather } = useWeather();
   const lastViewedMonday = usePlannerStore(s => s.lastViewedMonday);
 
+  const monday = lastViewedMonday ? new Date(lastViewedMonday) : getMonday(new Date());
+  const dayDate = new Date(monday);
+  const daysToAdd = dayIndex(day) + (week - 1) * 7;
+  dayDate.setDate(monday.getDate() + daysToAdd);
+  const dayOfMonth = dayDate.getDate();
+
   let weatherPill = null;
-  if (week === 1 && weather && weather.days.length > 0) {
-    const monday = lastViewedMonday ? new Date(lastViewedMonday) : getMonday(new Date());
-    const dayDate = new Date(monday);
-    dayDate.setDate(monday.getDate() + dayIndex(day));
+  if (weather && weather.days.length > 0) {
     const dayStr = formatDateLocal(dayDate);
     const dayWeather = weather.days.find(d => d.date === dayStr);
     
@@ -42,8 +45,8 @@ export function DayColumn({ day, week }: { day: typeof DAYS[number]; week: 1 | 2
       ref={setNodeRef}
     >
       <div className={styles.header}>
-        <span className={styles.dayName}>{day.charAt(0).toUpperCase() + day.slice(1)}</span>
-        <div className={styles.weatherPlaceholder}>{weatherPill}</div>
+        <span className={styles.dayName}>{day.slice(0, 3).toUpperCase()} {dayOfMonth}</span>
+        {weatherPill}
       </div>
       <DayNotes day={day} week={week} />
       <div className={styles.itemsList}>

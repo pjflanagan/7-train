@@ -49,6 +49,7 @@ export const PlannerStateSchema = z.object({
   notes: z.record(z.string(), z.string()), // `${day}-${week}` -> text
   links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
-  lastViewedMonday: z.string().nullable()
+  lastViewedMonday: z.string().nullable(),
+  tempUnit: z.enum(['C', 'F']).optional().default('F')
 });
 export type PlannerState = z.infer<typeof PlannerStateSchema>;

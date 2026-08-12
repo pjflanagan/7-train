@@ -56,7 +56,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max&timezone=auto`;
+    const tempUnitQuery = unitParam.toUpperCase() === 'C' ? 'celsius' : 'fahrenheit';
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max&timezone=auto&forecast_days=16&temperature_unit=${tempUnitQuery}`;
     const res = await fetch(url, { next: { revalidate: 1800 } });
     if (!res.ok) throw new Error('Weather API failed');
     const data = await res.json();
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       location: { city, lat: parseFloat(lat), lon: parseFloat(lon) },
-      unit: '°C',
+      unit: unitParam.toUpperCase() === 'C' ? '°C' : '°F',
       days
     });
   } catch {

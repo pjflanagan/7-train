@@ -27,7 +27,11 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
   fetchWeather: async (lat, lon) => {
     set({ loading: true, error: null });
     try {
-      const url = lat && lon ? `/api/weather?lat=${lat}&lon=${lon}` : '/api/weather';
+      const tempUnit = usePlannerStore.getState().tempUnit || 'F';
+      let url = `/api/weather?unit=${tempUnit}`;
+      if (lat && lon) {
+        url += `&lat=${lat}&lon=${lon}`;
+      }
       const res = await fetch(url);
       
       if (!res.ok) {
@@ -35,7 +39,7 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
           // Attempt geolocation fallback
           navigator.geolocation.getCurrentPosition(
             async (pos) => {
-              const urlGeo = `/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
+              const urlGeo = `/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&unit=${tempUnit}`;
               const resGeo = await fetch(urlGeo);
               if (resGeo.ok) {
                 const jsonGeo = await resGeo.json();

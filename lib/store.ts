@@ -28,6 +28,7 @@ type PlannerStore = PlannerState & {
   removeLink: (id: string) => void;
   
   applyRollover: (today: Date) => void;
+  setTempUnit: (unit: 'C' | 'F') => void;
   resetAll: () => void;
 };
 
@@ -38,6 +39,7 @@ const initialState: PlannerState = {
   links: DEFAULT_LINKS,
   history: [],
   lastViewedMonday: null,
+  tempUnit: 'F',
 };
 
 export const usePlannerStore = create<PlannerStore>()(
@@ -145,6 +147,7 @@ export const usePlannerStore = create<PlannerStore>()(
       removeLink: (id) => set((state) => ({ links: state.links.filter(l => l.id !== id) })),
       
       applyRollover: (today) => set((state) => computeRollover(state, today)),
+      setTempUnit: (tempUnit) => set({ tempUnit }),
       resetAll: () => set(initialState)
     }),
     {

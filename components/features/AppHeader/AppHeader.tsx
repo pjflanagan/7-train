@@ -4,7 +4,7 @@ import styles from './AppHeader.module.scss';
 import { Button } from '../../elements/Button/Button';
 import { IconButton } from '../../elements/IconButton/IconButton';
 import { MdFitnessCenter, MdSettings, MdLink, MdCalendarMonth } from 'react-icons/md';
-import { MyWeekModal } from '../goals/MyWeekModal';
+import { MyWorkoutsModal } from '../goals/MyWorkoutsModal';
 import { GoalFormModal } from '../goals/GoalFormModal';
 import { LinksModal } from '../links/LinksModal';
 import { SettingsModal } from '../settings/SettingsModal';
@@ -39,7 +39,7 @@ export const AppHeader: React.FC = () => {
         </div>
       </header>
 
-      <MyWeekModal isOpen={isMyWeekOpen} onClose={() => setIsMyWeekOpen(false)} />
+      <MyWorkoutsModal isOpen={isMyWeekOpen} onClose={() => setIsMyWeekOpen(false)} />
       <LinksModal isOpen={isLinksOpen} onClose={() => setIsLinksOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </>

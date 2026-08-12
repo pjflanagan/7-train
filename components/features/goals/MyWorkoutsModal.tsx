@@ -5,22 +5,22 @@ import { SortableGoalList } from './SortableGoalList';
 import { GoalFormModal } from './GoalFormModal';
 import { usePlannerStore } from '../../../lib/store';
 import { MdAdd } from 'react-icons/md';
-import styles from './MyWeekModal.module.scss';
+import styles from './MyWorkoutsModal.module.scss';
 import { useGoals } from '../../../hooks/usePlannerStore';
 
-export interface MyWeekModalProps {
+export interface MyWorkoutsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const MyWeekModal: React.FC<MyWeekModalProps> = ({ isOpen, onClose }) => {
+export const MyWorkoutsModal: React.FC<MyWorkoutsModalProps> = ({ isOpen, onClose }) => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const goals = useGoals();
   const reorderGoals = usePlannerStore((s) => s.reorderGoals);
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="My Week" maxWidth="600px">
+      <Modal isOpen={isOpen} onClose={onClose} title="My Workouts" maxWidth="600px">
         <div className={styles.container}>
           <div className={styles.header}>
             <Button variant="primary" onClick={() => setIsAddOpen(true)}>

@@ -7,6 +7,7 @@ import { Modal } from '../../elements/Modal/Modal';
 import { ConfirmDialog } from '../../elements/ConfirmDialog/ConfirmDialog';
 import { Button } from '../../elements/Button/Button';
 import { useWeather } from '../../../hooks/useWeather';
+import { Select } from '../../elements/Select/Select';
 import styles from './SettingsModal.module.scss';
 
 export interface SettingsModalProps {
