@@ -182,6 +182,15 @@ $(document).ready(function() {
     WorkoutApp.WorkoutTypes.openAddModal();
   });
 
+  // Close Goal Links Select modal
+  function closeGoalLinksSelectModal() {
+    $('#goal-links-select-modal-overlay').removeClass('active');
+  }
+
+  $('#close-goal-links-select-modal, #close-goal-links-select-modal-btn').on('click', function() {
+    closeGoalLinksSelectModal();
+  });
+
   // Close modals on overlay click (if clicking precisely on the overlay background)
   $('#workout-modal-overlay').on('click', function(e) {
     if (e.target === this) {
@@ -207,6 +216,12 @@ $(document).ready(function() {
     }
   });
 
+  $('#goal-links-select-modal-overlay').on('click', function(e) {
+    if (e.target === this) {
+      closeGoalLinksSelectModal();
+    }
+  });
+
   // Close modal with Escape key
   $(document).on('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -214,6 +229,7 @@ $(document).ready(function() {
       closeSettingsModal();
       closeLinksModal();
       closeMyWeekModal();
+      closeGoalLinksSelectModal();
     }
   });
 

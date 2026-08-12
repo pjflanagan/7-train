@@ -31,6 +31,7 @@
 
   let currentEditingTypeId = null;
   let modalTags = [];
+  let modalLinks = [];
 
   WorkoutApp.WorkoutTypes = {
     /**
@@ -130,6 +131,30 @@
         $('.modal-tab-content').removeClass('active');
         $(`#tab-${tab}`).addClass('active');
       });
+
+      // Add goal-specific link click
+      $('#add-goal-link-btn').on('click', function() {
+        const title = $('#goal-link-title').val().trim();
+        const url = $('#goal-link-url').val().trim();
+        if (title && url) {
+          modalLinks.push({
+            id: 'link-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+            title: title,
+            url: url
+          });
+          self.renderModalLinks();
+          $('#goal-link-title').val('');
+          $('#goal-link-url').val('').focus();
+        }
+      });
+
+      // Prevent enter key inside goal-link inputs from submitting form
+      $('#goal-link-title, #goal-link-url').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('#add-goal-link-btn').trigger('click');
+        }
+      });
     },
 
     /**
@@ -187,6 +212,68 @@
 
         $container.append($tagBadge);
       });
+    },
+
+    /**
+     * Renders the current list of goal-specific links inside the modal.
+     */
+    renderModalLinks: function() {
+      const $container = $('#goal-links-list');
+      $container.empty();
+
+      if (modalLinks.length === 0) {
+        $container.html('<span style="font-size: 0.75rem; color: var(--text-dim); font-style: italic; padding: 0.25rem 0;">No links added yet</span>');
+        return;
+      }
+
+      modalLinks.forEach((link, index) => {
+        const $linkRow = $(`
+          <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-tertiary); padding: 0.4rem 0.6rem; border-radius: var(--border-radius-sm); border: 1px solid var(--border-color); width: 100%; margin-bottom: 0.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">
+              <span class="material-icons" style="font-size: 14px; color: var(--text-muted); flex-shrink: 0;">link</span>
+              <span style="font-size: 0.75rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main);">${link.title}</span>
+            </div>
+            <button type="button" class="remove-scheduled-btn remove-goal-link-btn" data-index="${index}" title="Remove link" style="flex-shrink: 0;">
+              <span class="material-icons" style="font-size: 12px;">close</span>
+            </button>
+          </div>
+        `);
+
+        $linkRow.find('.remove-goal-link-btn').on('click', function() {
+          const idx = $(this).data('index');
+          modalLinks.splice(idx, 1);
+          WorkoutApp.WorkoutTypes.renderModalLinks();
+        });
+
+        $container.append($linkRow);
+      });
+    },
+
+    /**
+     * Launches a modal selection overlay when clicking on a multi-link weekly goal.
+     */
+    openLinksSelectModal: function(goalName, links) {
+      $('#goal-links-select-title').text(`${goalName} Links`);
+      const $list = $('#goal-links-select-list');
+      $list.empty();
+
+      links.forEach(link => {
+        const $btn = $(`
+          <button class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start; text-align: left; padding: 0.6rem 0.8rem; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--accent-primary); border-radius: var(--border-radius-md); font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">
+            <span class="material-icons" style="font-size: 16px;">open_in_new</span>
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${link.title}</span>
+          </button>
+        `);
+
+        $btn.on('click', function() {
+          window.open(link.url, '_blank', 'noopener,noreferrer');
+          $('#goal-links-select-modal-overlay').removeClass('active');
+        });
+
+        $list.append($btn);
+      });
+
+      $('#goal-links-select-modal-overlay').addClass('active');
     },
 
     /**
@@ -308,14 +395,24 @@
               <span>${percent}%</span>
             `;
 
+          const hasLinks = type.links && type.links.length > 0;
+          const linksIconHTML = hasLinks 
+            ? `
+              <button class="small-goal-link-btn" data-id="${type.id}" title="Open links" style="background: transparent; border: none; color: rgba(255,255,255,0.6); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin-left: auto; flex-shrink: 0; z-index: 5;">
+                <span class="material-icons" style="font-size: 12px; transition: var(--transition-smooth);">link</span>
+              </button>
+            ` 
+            : '';
+
           const $smallCard = $(`
             <div class="small-goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}; border-left: 3px solid ${type.color};">
-              <div class="small-goal-header draggable-workout" data-id="${type.id}">
+              <div class="small-goal-header draggable-workout" data-id="${type.id}" style="width: 100%; display: flex; align-items: center; gap: 0.35rem;">
                 <div class="small-goal-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
                   <span class="material-icons" style="font-size: 11px;">${type.icon}</span>
                 </div>
                 <span class="small-goal-name">${type.name}</span>
                 ${type.optional ? '<span class="optional-badge" style="font-size: 0.5rem; padding: 0.1rem 0.25rem;">Opt</span>' : ''}
+                ${linksIconHTML}
               </div>
 
               <div class="small-goal-progress">
@@ -341,6 +438,21 @@
               ` : ''}
             </div>
           `);
+
+          // Event listener for links click
+          if (hasLinks) {
+            $smallCard.find('.small-goal-link-btn').on('mousedown click', function(e) {
+              e.stopPropagation(); // Prevents dragging from starting!
+              if (e.type === 'click') {
+                const linksList = type.links || [];
+                if (linksList.length === 1) {
+                  window.open(linksList[0].url, '_blank', 'noopener,noreferrer');
+                } else if (linksList.length > 1) {
+                  WorkoutApp.WorkoutTypes.openLinksSelectModal(type.name, linksList);
+                }
+              }
+            });
+          }
 
           // Event listeners for inline target input
           if (!type.optional) {
@@ -518,9 +630,13 @@
     openAddModal: function() {
       currentEditingTypeId = null;
       modalTags = [];
+      modalLinks = [];
       $('#workout-type-tag-input').val('');
+      $('#goal-link-title').val('');
+      $('#goal-link-url').val('');
       this.setupModalOptions();
       this.renderModalTags();
+      this.renderModalLinks();
 
       $('#workout-modal-title').text('Add workout goal');
       $('#workout-type-form')[0].reset();
@@ -557,8 +673,12 @@
       if (!type) return;
 
       modalTags = [...(type.workoutTypes || [])];
+      modalLinks = [...(type.links || [])];
       $('#workout-type-tag-input').val('');
+      $('#goal-link-title').val('');
+      $('#goal-link-url').val('');
       this.renderModalTags();
+      this.renderModalLinks();
 
       $('#workout-modal-title').text('Edit workout goal');
       $('#workout-type-id').val(type.id);
@@ -608,9 +728,10 @@
       const target = optional ? null : (Number($('#workout-target').val()) || 1);
       const color = $('#workout-color-picker').val();
       const workoutTypes = [...modalTags];
+      const links = [...modalLinks];
 
       const types = WorkoutApp.Storage.getWorkoutTypes();
-      const newType = { id, name, icon, metric, unit, target, color, optional, workoutTypes };
+      const newType = { id, name, icon, metric, unit, target, color, optional, workoutTypes, links };
 
       if (currentEditingTypeId) {
         // Update existing

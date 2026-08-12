@@ -356,6 +356,7 @@
         <button type="button" class="modal-tab-btn active" data-tab="basic">Basic</button>
         <button type="button" class="modal-tab-btn" data-tab="appearance">Appearance</button>
         <button type="button" class="modal-tab-btn" data-tab="workout-types">Workout Types</button>
+        <button type="button" class="modal-tab-btn" data-tab="links">Links</button>
       </div>
 
       <form id="workout-type-form">
@@ -438,6 +439,22 @@
           </div>
         </div>
 
+        <!-- Tab content: Links -->
+        <div class="modal-tab-content" id="tab-links">
+          <!-- Goal-specific links selection -->
+          <div class="form-group">
+            <label class="form-label">Goal-specific Links</label>
+            <div class="goal-links-input-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <input type="text" id="goal-link-title" class="form-input" placeholder="Link title (e.g. Pool Hours)" autocomplete="off">
+              <input type="url" id="goal-link-url" class="form-input" placeholder="https://..." autocomplete="off">
+              <button type="button" id="add-goal-link-btn" class="btn btn-secondary" style="padding: 0 1rem; flex-shrink: 0; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--border-radius-md); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth);">Add</button>
+            </div>
+            <div id="goal-links-list" class="tags-list-container" style="display: flex; flex-direction: column; gap: 0.5rem; min-height: 40px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background-color: rgba(255, 255, 255, 0.01);">
+              <!-- Goal links will be dynamically populated here -->
+            </div>
+          </div>
+        </div>
+
         <!-- Modal Footer Actions -->
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary cancel-workout-modal">Cancel</button>
@@ -445,6 +462,31 @@
         </div>
 
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Overlay: Select Goal Link -->
+  <div class="modal-overlay" id="goal-links-select-modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      
+      <div class="modal-header-row">
+        <h3 id="goal-links-select-title">Goal Links</h3>
+        <button type="button" class="remove-scheduled-btn" id="close-goal-links-select-modal" title="Close modal">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="goal-links-select-body" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Select a link to open:</p>
+        <div id="goal-links-select-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <!-- Dynamically populated links buttons -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" id="close-goal-links-select-modal-btn">Close</button>
+      </div>
+
     </div>
   </div>
 

@@ -605,3 +605,7 @@ body.is-dragging .calendar-day-items::before {
   flex-wrap: wrap;
   gap: 0.25rem;
 }
+
+.small-goal-link-btn:hover {
+  color: white !important;
+}
