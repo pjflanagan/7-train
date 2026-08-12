@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.scss";
+import { SubwayTileBackground } from "../components/elements/SubwayTileBackground/SubwayTileBackground";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={jakarta.className}>
         {children}
         <Toaster />
+        <SubwayTileBackground />
       </body>
     </html>
   );
