@@ -49,9 +49,23 @@
 }
 
 // Zero-height probes that trigger loading another week when scrolled near.
-.sentinel {
-  height: 1px;
+.loadMore {
   flex: 0 0 auto;
+  // Full-bleed so the wall runs unbroken into the weeks above and below.
+  padding: 0.85rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--bg-primary);
+  background-color: var(--tile-grout);
+  background-image: var(--tile-pattern);
+  background-repeat: repeat;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.04);
+  }
 }
 
 .loadingSkeleton {

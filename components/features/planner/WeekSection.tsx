@@ -32,7 +32,8 @@ export function WeekSection({ weekStart, currentWeekStart }: WeekSectionProps) {
           </div>
           <WeekProgressBar weekStart={weekStart} />
         </header>
-        <GoalStrip weekStart={weekStart} />
+        {/* The strip is the drag source for planning ahead; past weeks are read-only. */}
+        {weekStart >= currentWeekStart && <GoalStrip weekStart={weekStart} />}
         <div className={styles.grid}>
           {days.map(day => (
             <DayColumn

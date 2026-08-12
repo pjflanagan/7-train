@@ -23,10 +23,12 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
   const currentWeek = getWeekStartKey(new Date(), weekStartsOn);
   const previousWeek = addWeeks(weekStart, -1);
 
-  // Hide a copy whose source is this week itself, or that duplicates the other
-  // button — next week's "previous" is the current week.
-  const canCopyCurrent = weekStart !== currentWeek;
-  const canCopyPrevious = previousWeek !== currentWeek && previousWeek !== weekStart;
+  // Past weeks are a record, not a plan — nothing gets copied into them. Beyond
+  // that, hide a copy whose source is this week itself, or that duplicates the
+  // other button: next week's "previous" is the current week.
+  const isPast = weekStart < currentWeek;
+  const canCopyCurrent = !isPast && weekStart !== currentWeek;
+  const canCopyPrevious = !isPast && previousWeek !== currentWeek && previousWeek !== weekStart;
 
   const handleConfirm = () => {
     if (action === 'current') copyWeek(currentWeek, weekStart);

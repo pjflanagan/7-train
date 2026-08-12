@@ -7,7 +7,7 @@ import { WeekSection } from './WeekSection';
 import { useHydrated } from '@/hooks/useHydrated';
 import { usePlannerStore } from '@/lib/store';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
-import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
+import { useInfiniteWeeks, PAGE_SIZE } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider';
 import { useInitWeather } from '@/hooks/useWeather';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
@@ -21,9 +21,9 @@ function WeekFeed() {
   const {
     weeks,
     scrollRef,
-    topSentinelRef,
-    bottomSentinelRef,
     currentWeekRef,
+    loadEarlier,
+    loadLater,
     isCurrentWeekVisible,
     scrollToCurrentWeek,
   } = useInfiniteWeeks({ currentWeekStart });
@@ -39,7 +39,9 @@ function WeekFeed() {
         }}
       >
         <div className={styles.container}>
-          <div ref={topSentinelRef} className={styles.sentinel} aria-hidden="true" />
+          <button type="button" className={styles.loadMore} onClick={loadEarlier}>
+            Show {PAGE_SIZE} earlier weeks
+          </button>
           {weeks.map((weekStart) => (
             <div
               key={weekStart}
@@ -48,7 +50,9 @@ function WeekFeed() {
               <WeekSection weekStart={weekStart} currentWeekStart={currentWeekStart} />
             </div>
           ))}
-          <div ref={bottomSentinelRef} className={styles.sentinel} aria-hidden="true" />
+          <button type="button" className={styles.loadMore} onClick={loadLater}>
+            Show {PAGE_SIZE} more weeks
+          </button>
         </div>
       </div>
 
