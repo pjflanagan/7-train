@@ -23,13 +23,13 @@
 .brandLogoBadge {
   background: #a855f7;
   color: #fff;
+  font-weight: bold;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 
 .brandTitles h1 {
@@ -39,7 +39,7 @@
 }
 
 .btnMyWeek {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #a855f7 100%);
+  background: var(--accent-primary);
   color: white;
   font-family: inherit;
   font-size: 0.8rem;
@@ -51,22 +51,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
   transition: var(--transition-smooth);
-  animation: pulse-glow 2s infinite alternate;
   margin-left: 1.25rem;
   @include focus-ring();
   
   &:hover {
     transform: translateY(-1px);
     filter: brightness(1.1);
-    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
   }
-}
-
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4), 0 0 15px rgba(168, 85, 247, 0.2); }
-  100% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.7), 0 0 30px rgba(168, 85, 247, 0.5); }
 }
 
 .headerActions {

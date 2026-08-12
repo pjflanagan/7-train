@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useHydrated } from '../../../hooks/useHydrated';
 import styles from './SubwayTileBackground.module.scss';
 
 // Deterministic seed-based random generator to ensure exact same colors
-// on both server (SSR) and client, avoiding hydration mismatches.
+// for each tile coordinate (r, c).
 function createSeededRandom(seed: number) {
   let s = seed;
   return () => {
@@ -14,52 +15,60 @@ function createSeededRandom(seed: number) {
 }
 
 export const SubwayTileBackground: React.FC = () => {
-  const PW = 320;  // Pattern width (C * W)
-  const PH = 160;  // Pattern height (R * H)
+  const isHydrated = useHydrated();
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isHydrated]);
+
   const W = 40;    // Tile width
   const H = 20;    // Tile height
   const G = 1;     // Grout line gap (pixels)
-  const R = 8;     // Rows
-  const C = 8;     // Columns
 
-  // Generate tile colors once, deterministically
+  // Generate the tiles that fully fill the viewport, starting from negative
+  // top-left to positive bottom-right, dynamically.
   const tiles = useMemo(() => {
-    const rVal = createSeededRandom(4232912); // Seed
-    const colors: string[][] = [];
-
-    for (let r = 0; r < R; r++) {
-      const rowColors: string[] = [];
-      for (let c = 0; c < C; c++) {
-        // Generate beautiful, subtle off-white shades
-        // Lightness between 96.0% and 99.0% (subtle premium variations)
-        const l = 96.0 + rVal() * 3.0;
-        // Saturation between 0.1% and 1.1%
-        const s = 0.1 + rVal() * 1.0;
-        // Warm/ceramic ivory tone (hue 35)
-        const h = 35;
-        rowColors.push(`hsl(${h}, ${s.toFixed(2)}%, ${l.toFixed(2)}%)`);
-      }
-      colors.push(rowColors);
-    }
+    if (!isHydrated) return [];
 
     const tileElements: React.JSX.Element[] = [];
+    
+    // We start from negative H and fill until we are positive of the screen bottom
+    const startY = -H;
+    const endY = dimensions.height + H;
 
-    for (let r = 0; r < R; r++) {
+    for (let y = startY; y < endY; y += H) {
+      const r = Math.round(y / H);
       const isOdd = r % 2 !== 0;
       const shift = isOdd ? W / 2 : 0;
-      const y = r * H;
 
-      for (let c = -1; c <= C; c++) {
-        const x = c * W + shift;
+      // We start from negative W (including shift offsets) and fill until screen right
+      const startX = -W - (isOdd ? W / 2 : 0);
+      const endX = dimensions.width + W;
 
-        // Skip if tile is completely outside the [0, PW] pattern boundary
-        if (x + W < 0 || x >= PW) continue;
+      for (let x = startX; x < endX; x += W) {
+        const c = Math.round((x - shift) / W);
 
-        // Wrap column index for color lookup
-        const cGrid = (c + C) % C;
-        const color = colors[r][cGrid];
+        // Generate a completely unique, stable seed for this specific coordinate
+        // This ensures the color for tile (r, c) is completely stable across resizes.
+        const tileSeed = r * 10000 + c;
+        const rVal = createSeededRandom(tileSeed);
 
-        // Shrink tile size by the grout gap
+        // Generate subtle, beautiful off-white shades
+        const l = 96.0 + rVal() * 3.0;
+        const s = 0.1 + rVal() * 1.0;
+        const h = 35;
+        const color = `hsl(${h}, ${s.toFixed(2)}%, ${l.toFixed(2)}%)`;
+
         const rxPos = x + G / 2;
         const ryPos = y + G / 2;
         const rWidth = W - G;
@@ -94,7 +103,7 @@ export const SubwayTileBackground: React.FC = () => {
     }
 
     return tileElements;
-  }, [PW, PH, W, H, G, R, C]);
+  }, [dimensions, isHydrated]);
 
   return (
     <div className={styles.backgroundContainer}>
@@ -108,24 +117,13 @@ export const SubwayTileBackground: React.FC = () => {
             <stop offset="88%" stopColor="#000000" stopOpacity={0} />
             <stop offset="100%" stopColor="#000000" stopOpacity={0.07} />
           </linearGradient>
-
-          {/* Repeating SVG pattern for maximum rendering performance */}
-          <pattern
-            id="subway-tiles"
-            width={PW}
-            height={PH}
-            patternUnits="userSpaceOnUse"
-          >
-            {/* Grout background behind tiles (slate-300 / light grey) */}
-            <rect width={PW} height={PH} fill="#d2d6dc" />
-            
-            {/* Generated Tiles */}
-            {tiles}
-          </pattern>
         </defs>
 
-        {/* Fill the entire screen with the high-performance tile pattern */}
-        <rect width="100%" height="100%" fill="url(#subway-tiles)" />
+        {/* Grout background color (slate-300 / light grey) */}
+        <rect width="100%" height="100%" fill="#d2d6dc" />
+
+        {/* Dynamic, non-repeating tiles covering the entire screen */}
+        {tiles}
       </svg>
     </div>
   );
