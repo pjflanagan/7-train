@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { Toaster } from "sonner";
-import "./globals.scss";
-import { SubwayTileBackground } from "../components/elements/SubwayTileBackground/SubwayTileBackground";
+import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
+import './globals.scss';
+import { SubwayTileBackground } from '@/components/elements/SubwayTileBackground/SubwayTileBackground';
 
 export const metadata: Metadata = {
-  title: "7 Train",
-  description: "Plan your weekly workouts",
+  title: '7 Train',
+  description: 'Plan your weekly workouts',
 };
 
 export default function RootLayout({

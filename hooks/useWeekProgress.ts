@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { usePlannerStore } from '../lib/store';
-import { calculateProgress, getOverallProgress } from '../lib/progress';
+import { usePlannerStore } from '@/lib/store';
+import { calculateProgress, getOverallProgress } from '@/lib/progress';
 
 export function useWeekProgress(week: 1 | 2) {
   const goals = usePlannerStore(state => state.goals);

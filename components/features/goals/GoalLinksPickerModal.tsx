@@ -1,7 +1,7 @@
 import React from 'react';
-import { WorkoutType } from '../../../lib/types';
-import { Modal } from '../../elements/Modal/Modal';
-import { Button } from '../../elements/Button/Button';
+import { WorkoutType } from '@/lib/types';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { Button } from '@/components/elements/Button/Button';
 import styles from './GoalLinksPickerModal.module.scss';
 import { MdOpenInNew } from 'react-icons/md';
 

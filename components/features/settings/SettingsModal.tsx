@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePlannerStore } from '../../../lib/store';
-import { useCsvExport } from '../../../hooks/useCsvExport';
-import { Modal } from '../../elements/Modal/Modal';
-import { ConfirmDialog } from '../../elements/ConfirmDialog/ConfirmDialog';
-import { Button } from '../../elements/Button/Button';
-import { useWeather } from '../../../hooks/useWeather';
-import { Select } from '../../elements/Select/Select';
+import { usePlannerStore } from '@/lib/store';
+import { useCsvExport } from '@/hooks/useCsvExport';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
+import { Button } from '@/components/elements/Button/Button';
+import { useWeather } from '@/hooks/useWeather';
 import styles from './SettingsModal.module.scss';
 
 export interface SettingsModalProps {

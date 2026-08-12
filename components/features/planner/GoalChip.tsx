@@ -1,11 +1,11 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { WorkoutType } from '../../../lib/types';
-import { useWeekProgress } from '../../../hooks/useWeekProgress';
-import { usePlannerStore } from '../../../lib/store';
-import { getIconByKey } from '../../../lib/icons';
-import { InlineNumberInput } from '../../elements/InlineNumberInput/InlineNumberInput';
-import { ProgressBar } from '../../elements/ProgressBar/ProgressBar';
+import { WorkoutType } from '@/lib/types';
+import { useWeekProgress } from '@/hooks/useWeekProgress';
+import { usePlannerStore } from '@/lib/store';
+import { getIconByKey } from '@/lib/icons';
+import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
+import { ProgressBar } from '@/components/elements/ProgressBar/ProgressBar';
 import { SubTagChip } from './SubTagChip';
 import styles from './GoalChip.module.scss';
 

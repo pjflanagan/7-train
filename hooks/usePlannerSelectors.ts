@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { usePlannerStore } from '../lib/store';
-export { usePlannerStore };
-import { DAYS } from '../lib/constants';
+import { usePlannerStore } from '@/lib/store';
+import { DAYS } from '@/lib/constants';
 
 export const useGoals = () => usePlannerStore((state) => state.goals);
 export const useGoal = (id: string) => usePlannerStore((state) => state.goals.find(g => g.id === id));

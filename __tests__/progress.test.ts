@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculateProgress, getOverallProgress } from '../lib/progress';
-import { WorkoutType, CalendarItem } from '../lib/types';
+import { calculateProgress, getOverallProgress } from '@/lib/progress';
+import { WorkoutType, CalendarItem } from '@/lib/types';
 
 describe('progress math', () => {
   it('calculates correct progress for single type', () => {

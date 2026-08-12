@@ -2,13 +2,14 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import { DAYS } from '../../../lib/constants';
-import { useDayItems, usePlannerStore } from '../../../hooks/usePlannerStore';
+import { DAYS } from '@/lib/constants';
+import { useDayItems } from '@/hooks/usePlannerSelectors';
+import { usePlannerStore } from '@/lib/store';
 import { DayNotes } from './DayNotes';
 import { ScheduledCard } from './ScheduledCard';
 import { WeatherPill } from './WeatherPill';
-import { useWeather } from '../../../hooks/useWeather';
-import { getMonday, dayIndex, formatDateLocal } from '../../../lib/dates';
+import { useWeather } from '@/hooks/useWeather';
+import { getMonday, dayIndex, formatDateLocal } from '@/lib/dates';
 import styles from './DayColumn.module.scss';
 
 export function DayColumn({ day, week }: { day: typeof DAYS[number]; week: 1 | 2 }) {

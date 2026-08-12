@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { exportCsv } from '../lib/csv';
-import { HistoryEntry, WorkoutType } from '../lib/types';
+import { exportCsv } from '@/lib/csv';
+import { HistoryEntry, WorkoutType } from '@/lib/types';
 
 describe('csv export', () => {
   it('exports basic history', () => {

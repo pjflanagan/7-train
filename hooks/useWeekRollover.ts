@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { usePlannerStore } from '../lib/store';
+import { usePlannerStore } from '@/lib/store';
 import { useHydrated } from './useHydrated';
 
 export function useWeekRollover() {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { PRESET_COLORS } from '../../../lib/constants';
+import { PRESET_COLORS } from '@/lib/constants';
 import styles from './ColorPicker.module.scss';
 
 export interface ColorPickerProps {

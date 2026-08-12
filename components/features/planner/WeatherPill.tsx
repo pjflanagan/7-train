@@ -1,5 +1,5 @@
 import React from 'react';
-import { getWeatherDetails } from '../../../lib/weather';
+import { getWeatherDetails } from '@/lib/weather';
 import styles from './WeatherPill.module.scss';
 
 interface WeatherPillProps {

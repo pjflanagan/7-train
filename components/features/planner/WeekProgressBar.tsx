@@ -1,6 +1,6 @@
 import React from 'react';
-import { useWeekProgress } from '../../../hooks/useWeekProgress';
-import { ProgressBar } from '../../elements/ProgressBar/ProgressBar';
+import { useWeekProgress } from '@/hooks/useWeekProgress';
+import { ProgressBar } from '@/components/elements/ProgressBar/ProgressBar';
 import styles from './WeekProgressBar.module.scss';
 
 export function WeekProgressBar({ week }: { week: 1 | 2 }) {

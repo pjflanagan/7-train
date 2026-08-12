@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useEffect, useRef } from 'react';
-import { usePlannerStore } from '../lib/store';
+import { usePlannerStore } from '@/lib/store';
 
 export interface WeatherDay {
   date: string; // YYYY-MM-DD

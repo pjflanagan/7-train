@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { computeRollover } from '../lib/weekRollover';
-import { PlannerState } from '../lib/types';
-import { formatDateLocal, getMonday } from '../lib/dates';
+import { computeRollover } from '@/lib/weekRollover';
+import { PlannerState } from '@/lib/types';
+import { formatDateLocal, getMonday } from '@/lib/dates';
 
 describe('weekRollover', () => {
   it('does nothing if no weeks passed', () => {

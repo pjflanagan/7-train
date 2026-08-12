@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useHydrated } from '../../../hooks/useHydrated';
+import { useHydrated } from '@/hooks/useHydrated';
 import styles from './SubwayTileBackground.module.scss';
 
 // Deterministic seed-based random generator to ensure exact same colors

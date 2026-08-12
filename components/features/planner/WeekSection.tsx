@@ -1,5 +1,5 @@
 import React from 'react';
-import { DAYS } from '../../../lib/constants';
+import { DAYS } from '@/lib/constants';
 import { WeekProgressBar } from './WeekProgressBar';
 import { GoalStrip } from './GoalStrip';
 import { DayColumn } from './DayColumn';

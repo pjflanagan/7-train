@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import { MdClose } from 'react-icons/md';
-import { IconButton } from '../IconButton/IconButton';
+import { IconButton } from '@/components/elements/IconButton/IconButton';
 import styles from './Modal.module.scss';
 
 export interface ModalProps {

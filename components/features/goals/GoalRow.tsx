@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { WorkoutType } from '../../../lib/types';
-import { IconButton } from '../../elements/IconButton/IconButton';
-import { ConfirmDialog } from '../../elements/ConfirmDialog/ConfirmDialog';
+import { WorkoutType } from '@/lib/types';
+import { IconButton } from '@/components/elements/IconButton/IconButton';
+import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { MdDragIndicator, MdEdit, MdDelete, MdLink } from 'react-icons/md';
-import { usePlannerStore } from '../../../lib/store';
+import { usePlannerStore } from '@/lib/store';
 import { GoalFormModal } from './GoalFormModal';
 import { GoalLinksPickerModal } from './GoalLinksPickerModal';
 import styles from './GoalRow.module.scss';
 import clsx from 'clsx';
-import { getIconByKey } from '../../../lib/icons';
+import { getIconByKey } from '@/lib/icons';
 
 export interface GoalRowProps {
   goal: WorkoutType;

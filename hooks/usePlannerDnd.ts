@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { usePlannerStore } from '../lib/store';
-import { DAYS } from '../lib/constants';
+import { usePlannerStore } from '@/lib/store';
+import { DAYS } from '@/lib/constants';
 
 export interface PlannerDndData {
   kind: 'goal' | 'subtag' | 'item' | 'column';

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Modal } from '../../elements/Modal/Modal';
-import { Button } from '../../elements/Button/Button';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { Button } from '@/components/elements/Button/Button';
 import { SortableGoalList } from './SortableGoalList';
 import { GoalFormModal } from './GoalFormModal';
-import { usePlannerStore } from '../../../lib/store';
+import { usePlannerStore } from '@/lib/store';
 import { MdAdd } from 'react-icons/md';
 import styles from './MyWorkoutsModal.module.scss';
-import { useGoals } from '../../../hooks/usePlannerStore';
+import { useGoals } from '@/hooks/usePlannerSelectors';
 
 export interface MyWorkoutsModalProps {
   isOpen: boolean;

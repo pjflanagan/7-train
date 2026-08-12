@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Modal } from '../Modal/Modal';
-import { Button } from '../Button/Button';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { Button } from '@/components/elements/Button/Button';
 import styles from './ConfirmDialog.module.scss';
 
 export interface ConfirmDialogProps {

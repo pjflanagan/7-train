@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNote } from '../../../hooks/usePlannerStore';
-import { usePlannerStore } from '../../../lib/store';
-import { DAYS } from '../../../lib/constants';
-import { Textarea } from '../../elements/Textarea/Textarea';
+import { useNote } from '@/hooks/usePlannerSelectors';
+import { usePlannerStore } from '@/lib/store';
+import { DAYS } from '@/lib/constants';
+import { Textarea } from '@/components/elements/Textarea/Textarea';
 import styles from './DayNotes.module.scss';
 
 export function DayNotes({ day, week }: { day: typeof DAYS[number]; week: 1 | 2 }) {

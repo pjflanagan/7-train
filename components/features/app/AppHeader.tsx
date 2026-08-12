@@ -1,18 +1,15 @@
-"use client";
-import React, { useState } from "react";
-import styles from "./AppHeader.module.scss";
-import { Button } from "../../elements/Button/Button";
-import { IconButton } from "../../elements/IconButton/IconButton";
+'use client';
+import React, { useState } from 'react';
+import styles from './AppHeader.module.scss';
+import { IconButton } from '@/components/elements/IconButton/IconButton';
 import {
   MdFitnessCenter,
   MdSettings,
   MdLink,
-  MdCalendarMonth,
-} from "react-icons/md";
-import { MyWorkoutsModal } from "../goals/MyWorkoutsModal";
-import { GoalFormModal } from "../goals/GoalFormModal";
-import { LinksModal } from "../links/LinksModal";
-import { SettingsModal } from "../settings/SettingsModal";
+} from 'react-icons/md';
+import { MyWorkoutsModal } from '@/components/features/goals/MyWorkoutsModal';
+import { LinksModal } from '@/components/features/links/LinksModal';
+import { SettingsModal } from '@/components/features/settings/SettingsModal';
 
 export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);

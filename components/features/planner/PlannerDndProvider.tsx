@@ -1,7 +1,7 @@
 import React from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, DragOverlay } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { usePlannerDnd } from '../../../hooks/usePlannerDnd';
+import { usePlannerDnd } from '@/hooks/usePlannerDnd';
 import { DragPreviewCard } from './DragPreviewCard';
 
 export function PlannerDndProvider({ children }: { children: React.ReactNode }) {

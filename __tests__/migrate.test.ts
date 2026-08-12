@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { importLegacy } from '../lib/migrate';
+import { importLegacy } from '@/lib/migrate';
 
 describe('migrate', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGoals } from '../../../hooks/usePlannerStore';
+import { useGoals } from '@/hooks/usePlannerSelectors';
 import { GoalChip } from './GoalChip';
 import styles from './GoalStrip.module.scss';
 

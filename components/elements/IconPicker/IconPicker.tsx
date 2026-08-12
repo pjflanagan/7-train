@@ -2,7 +2,7 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { ACTIVITY_ICONS } from '../../../lib/icons';
+import { ACTIVITY_ICONS } from '@/lib/icons';
 import styles from './IconPicker.module.scss';
 
 export interface IconPickerProps {

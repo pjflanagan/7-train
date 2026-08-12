@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { MdDelete } from 'react-icons/md';
-import { usePlannerStore } from '../../../lib/store';
-import { useLinks } from '../../../hooks/usePlannerStore';
-import { Modal } from '../../elements/Modal/Modal';
-import { ConfirmDialog } from '../../elements/ConfirmDialog/ConfirmDialog';
-import { Button } from '../../elements/Button/Button';
-import { IconButton } from '../../elements/IconButton/IconButton';
-import { TextInput } from '../../elements/TextInput/TextInput';
-import { HelpfulLink } from '../../../lib/types';
+import { usePlannerStore } from '@/lib/store';
+import { useLinks } from '@/hooks/usePlannerSelectors';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
+import { Button } from '@/components/elements/Button/Button';
+import { IconButton } from '@/components/elements/IconButton/IconButton';
+import { TextInput } from '@/components/elements/TextInput/TextInput';
+import { HelpfulLink } from '@/lib/types';
 import styles from './LinksModal.module.scss';
 
 export interface LinksModalProps {

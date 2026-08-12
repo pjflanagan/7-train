@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WorkoutTypeSchema, WorkoutType } from '../../../lib/types';
-import { Modal } from '../../elements/Modal/Modal';
-import { Tabs, TabConfig } from '../../elements/Tabs/Tabs';
-import { TextInput } from '../../elements/TextInput/TextInput';
-import { NumberInput } from '../../elements/NumberInput/NumberInput';
-import { Select } from '../../elements/Select/Select';
-import { Checkbox } from '../../elements/Checkbox/Checkbox';
-import { Button } from '../../elements/Button/Button';
-import { IconButton } from '../../elements/IconButton/IconButton';
-import { ColorPicker } from '../../elements/ColorPicker/ColorPicker';
-import { IconPicker } from '../../elements/IconPicker/IconPicker';
-import { TagInput } from '../../elements/TagInput/TagInput';
+import { WorkoutTypeSchema, WorkoutType } from '@/lib/types';
+import { Modal } from '@/components/elements/Modal/Modal';
+import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
+import { TextInput } from '@/components/elements/TextInput/TextInput';
+import { NumberInput } from '@/components/elements/NumberInput/NumberInput';
+import { Select } from '@/components/elements/Select/Select';
+import { Checkbox } from '@/components/elements/Checkbox/Checkbox';
+import { Button } from '@/components/elements/Button/Button';
+import { IconButton } from '@/components/elements/IconButton/IconButton';
+import { ColorPicker } from '@/components/elements/ColorPicker/ColorPicker';
+import { IconPicker } from '@/components/elements/IconPicker/IconPicker';
+import { TagInput } from '@/components/elements/TagInput/TagInput';
 import { MdDelete, MdAdd } from 'react-icons/md';
 import styles from './GoalFormModal.module.scss';
-import { usePlannerStore } from '../../../lib/store';
+import { usePlannerStore } from '@/lib/store';
 
 export interface GoalFormModalProps {
   isOpen: boolean;

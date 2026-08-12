@@ -1,12 +1,12 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarItem } from '../../../lib/types';
-import { useGoal } from '../../../hooks/usePlannerStore';
-import { usePlannerStore } from '../../../lib/store';
-import { getIconByKey } from '../../../lib/icons';
-import { Select } from '../../elements/Select/Select';
-import { InlineNumberInput } from '../../elements/InlineNumberInput/InlineNumberInput';
+import { CalendarItem } from '@/lib/types';
+import { useGoal } from '@/hooks/usePlannerSelectors';
+import { usePlannerStore } from '@/lib/store';
+import { getIconByKey } from '@/lib/icons';
+import { Select } from '@/components/elements/Select/Select';
+import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { MdClose } from 'react-icons/md';
 import styles from './ScheduledCard.module.scss';
 
