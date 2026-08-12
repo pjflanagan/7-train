@@ -24,7 +24,7 @@ export const MyWorkoutsModal: React.FC<MyWorkoutsModalProps> = ({ isOpen, onClos
         <div className={styles.container}>
           <div className={styles.header}>
             <Button variant="primary" onClick={() => setIsAddOpen(true)}>
-              <MdAdd /> Add Goal
+              <MdAdd /> Add workout
             </Button>
           </div>
           

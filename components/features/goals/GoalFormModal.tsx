@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WorkoutTypeSchema, WorkoutType } from '@/lib/types';
 import { Modal } from '@/components/elements/Modal/Modal';
@@ -35,7 +35,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   const addGoal = usePlannerStore((s) => s.addGoal);
   const updateGoal = usePlannerStore((s) => s.updateGoal);
   
-  const { control, handleSubmit, reset, register, formState: { errors } } = useForm<WorkoutType>({
+  const { control, handleSubmit, reset, register, setValue, formState: { errors } } = useForm<WorkoutType>({
     resolver: zodResolver(WorkoutTypeSchema),
     defaultValues: goal || {
       id: '',
@@ -55,6 +55,14 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
     control,
     name: 'links'
   });
+
+  const metric = useWatch({ control, name: 'metric' });
+
+  useEffect(() => {
+    if (metric === 'times') {
+      setValue('unit', 'times');
+    }
+  }, [metric, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,7 +98,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={goal ? 'Edit goal' : 'Add goal'} maxWidth="600px">
+    <Modal isOpen={isOpen} onClose={onClose} title={goal ? 'Edit workout' : 'Add workout'} maxWidth="600px">
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         
@@ -98,10 +106,21 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           {activeTab === 'basic' && (
             <div className={styles.section}>
               <TextInput
-                label="Goal name"
+                label="Workout name"
                 {...register('name')}
                 error={errors.name?.message}
                 placeholder="e.g. Running, Lifting"
+              />
+              <Controller
+                control={control}
+                name="optional"
+                render={({ field }) => (
+                  <Checkbox
+                    label="Optional (does not count towards weekly progress)"
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               <div className={styles.row}>
                 <Select label="Metric" {...register('metric')} error={errors.metric?.message}>
@@ -109,17 +128,22 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   <option value="duration">Duration</option>
                   <option value="times">Times</option>
                 </Select>
-                <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
+                {metric !== 'times' && (
+                  <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
+                )}
               </div>
-              <NumberInput label="Weekly target (optional)" {...register('target', { valueAsNumber: true })} error={errors.target?.message} />
               <Controller
                 control={control}
-                name="optional"
+                name="target"
                 render={({ field }) => (
-                  <Checkbox 
-                    label="Optional (does not count towards weekly progress)" 
-                    checked={field.value} 
-                    onChange={field.onChange} 
+                  <NumberInput
+                    label="Weekly target (optional)"
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      field.onChange(raw === '' ? null : Number(raw));
+                    }}
+                    error={errors.target?.message}
                   />
                 )}
               />
@@ -128,7 +152,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
 
           {activeTab === 'types' && (
             <div className={styles.section}>
-              <p className={styles.hint}>Add sub-types of workouts for this goal to classify your sessions.</p>
+              <p className={styles.hint}>Add sub-types of workouts for this workout to classify your sessions.</p>
               <Controller
                 control={control}
                 name="workoutTypes"
@@ -145,7 +169,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
 
           {activeTab === 'links' && (
             <div className={styles.section}>
-              <p className={styles.hint}>Add helpful links related to this goal.</p>
+              <p className={styles.hint}>Add helpful links related to this workout.</p>
               <div className={styles.linksList}>
                 {linkFields.map((field, index) => (
                   <div key={field.id} className={styles.linkRow}>

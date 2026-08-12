@@ -22,7 +22,7 @@ export const GoalLinksPickerModal: React.FC<GoalLinksPickerModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={`${goal.name} Links`} maxWidth="400px">
       <div className={styles.list}>
         {links.length === 0 ? (
-          <p className={styles.empty}>No links added for this goal.</p>
+          <p className={styles.empty}>No links added for this workout.</p>
         ) : (
           links.map((link) => (
             <a

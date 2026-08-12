@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useNote } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
@@ -10,11 +10,23 @@ export function DayNotes({ day, weekStart }: { day: typeof DAYS[number]; weekSta
   const setNote = usePlannerStore(state => state.setNote);
   const [prevNote, setPrevNote] = useState(note);
   const [localNote, setLocalNote] = useState(note || '');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   if (note !== prevNote) {
     setPrevNote(note);
     setLocalNote(note || '');
   }
+
+  const resize = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useLayoutEffect(() => {
+    resize();
+  }, [localNote]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -27,10 +39,12 @@ export function DayNotes({ day, weekStart }: { day: typeof DAYS[number]; weekSta
 
   return (
     <Textarea
+      ref={textareaRef}
       value={localNote}
       onChange={(e) => setLocalNote(e.target.value)}
       placeholder="Notes..."
       className={styles.notes}
+      rows={1}
     />
   );
 }

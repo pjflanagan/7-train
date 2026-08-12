@@ -40,7 +40,7 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
   return (
     <DndContext autoScroll={false} sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       {children}
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeId ? <DragPreviewCard typeId={preview.typeId} tag={preview.tag} /> : null}
       </DragOverlay>
     </DndContext>

@@ -55,9 +55,18 @@
 }
 
 .subtagSelect {
-  width: 100%;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.25rem;
+  align-self: flex-start;
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: auto;
+    font-size: 0.68rem;
+    line-height: 1;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background-image: none;
+  }
 }
 
 .valueRow {
