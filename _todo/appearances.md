@@ -25,12 +25,3 @@ We can make the header logo as an SVG. It should be a 7 on a purple circle.
 - [ ] Modals should be silver like a subway car and slightly sweep in from the right and and head to the left on close
 
 - [ ] The loading modal should be a metrocard swipe animation, it heads to the left and when it is all the way across we are loaded
-
-## Appearance Changes
-
-General
-- Too many line separators
-
-Week Day Header
-- Use short name (MON, TUE)
-- Weather in top right instead of underneath

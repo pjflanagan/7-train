@@ -9,6 +9,11 @@
   --text-muted: #a3a3a3;
   --text-dim: #737373;
   
+  /* Header stripes - alternating dark greens with MTA green rule */
+  --header-stripe-a: #061b0e;
+  --header-stripe-b: #04150a;
+  --header-rule: var(--header-stripe-b);
+
   /* Accent Colors */
   --accent-primary: black;
   --accent-success: #10b981;

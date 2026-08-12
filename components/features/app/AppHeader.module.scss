@@ -3,15 +3,27 @@
 @use '@/styles/breakpoints' as *;
 
 .header {
-  background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  // Vertical stripes alternating between two very dark greens.
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--header-stripe-a) 0 6px,
+    var(--header-stripe-b) 6px 12px
+  );
+  border-bottom: 6px solid var(--header-rule);
+  padding: 16px;
+  z-index: 10;
+}
+
+.headerBar {
+  max-width: 640px;
+  margin: 0 auto;
+  background-color: var(--bg-primary);
   padding: 0.65rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  z-index: 10;
 }
 
 .brandSection {

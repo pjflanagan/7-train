@@ -19,31 +19,33 @@ export const AppHeader: React.FC = () => {
   return (
     <>
       <header className={styles.header}>
-        <div className={styles.brandSection}>
-          <div className={styles.brandLogoBadge}>7</div>
-          <div className={styles.brandTitles}>
-            <h1>
-              <span className={styles.wordTrain}>Train</span>
-            </h1>
+        <div className={styles.headerBar}>
+          <div className={styles.brandSection}>
+            <div className={styles.brandLogoBadge}>7</div>
+            <div className={styles.brandTitles}>
+              <h1>
+                <span className={styles.wordTrain}>Train</span>
+              </h1>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.headerActions}>
-          <button
-            className={styles.btnMyWeek}
-            onClick={() => setIsMyWeekOpen(true)}
-          >
-            <MdFitnessCenter size={16} /> My Workouts
-          </button>
-          <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
-            <MdLink size={20} />
-          </IconButton>
-          <IconButton
-            aria-label="Settings"
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            <MdSettings size={20} />
-          </IconButton>
+          <div className={styles.headerActions}>
+            <button
+              className={styles.btnMyWeek}
+              onClick={() => setIsMyWeekOpen(true)}
+            >
+              <MdFitnessCenter size={16} /> My Workouts
+            </button>
+            <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
+              <MdLink size={20} />
+            </IconButton>
+            <IconButton
+              aria-label="Settings"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <MdSettings size={20} />
+            </IconButton>
+          </div>
         </div>
       </header>
 
