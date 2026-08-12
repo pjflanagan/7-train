@@ -10,6 +10,8 @@ import { usePlannerStore } from '@/lib/store';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useInfiniteWeeks, PAGE_SIZE } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider';
+import { MobileDayFeed } from './MobileDayFeed';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useInitWeather } from '@/hooks/useWeather';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
@@ -74,12 +76,22 @@ function WeekFeed() {
 
 export function PlannerPage() {
   const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
+  const isMobile = useIsMobile();
   useInitWeather();
 
   if (!isHydrated) {
     return (
       <AppShell>
         <Spinner />
+      </AppShell>
+    );
+  }
+
+  // Phones get the read-only day feed: no drag-and-drop, no week chrome.
+  if (isMobile) {
+    return (
+      <AppShell>
+        <MobileDayFeed />
       </AppShell>
     );
   }

@@ -35,18 +35,21 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
           {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
         </span>
         <span className={styles.name}>{goal.name}</span>
-        <span className={styles.tally}>
-          {progress?.current || 0} /
-          <InlineNumberInput
-            value={goal.target || 0}
-            onCommit={(val) => setGoalTarget(goal.id, val)}
-            className={styles.targetInput}
-            aria-label={`${goal.name} target`}
-          />
-          {goal.unit}
-        </span>
+        {/* Optional workouts have no weekly target, so there is no tally to
+            run against and no progress to draw. */}
+        {!goal.optional && (
+          <span className={styles.tally}>
+            {progress?.current || 0} /
+            <InlineNumberInput
+              value={goal.target || 0}
+              onCommit={(val) => setGoalTarget(goal.id, val)}
+              className={styles.targetInput}
+              aria-label={`${goal.name} target`}
+            />
+            {goal.unit}
+          </span>
+        )}
       </div>
-      <ProgressBar percent={progress?.percent || 0} color={goal.color} className={styles.progressBar} />
       {goal.workoutTypes && goal.workoutTypes.length > 0 && (
         <div className={styles.tags}>
           {goal.workoutTypes.map(tag => (
@@ -60,6 +63,10 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
             />
           ))}
         </div>
+      )}
+      {/* The bar closes the chip, under the sub-type pills it summarises. */}
+      {!goal.optional && (
+        <ProgressBar percent={progress?.percent || 0} color={goal.color} className={styles.progressBar} />
       )}
     </div>
   );

@@ -54,8 +54,11 @@
   font-weight: 600;
 }
 
+// Last in the chip: pushed to the bottom so bars line up across chips of
+// differing sub-tag counts.
 .progressBar {
   height: 5px;
+  margin-top: auto;
 }
 
 .tags {

@@ -57,12 +57,21 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   });
 
   const metric = useWatch({ control, name: 'metric' });
+  const isOptional = useWatch({ control, name: 'optional' });
 
   useEffect(() => {
     if (metric === 'times') {
       setValue('unit', 'times');
     }
   }, [metric, setValue]);
+
+  // An optional workout has no weekly target; drop any value carried over from
+  // before the box was ticked so nothing stale gets saved.
+  useEffect(() => {
+    if (isOptional) {
+      setValue('target', null);
+    }
+  }, [isOptional, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -132,21 +141,23 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
                 )}
               </div>
-              <Controller
-                control={control}
-                name="target"
-                render={({ field }) => (
-                  <NumberInput
-                    label="Weekly target (optional)"
-                    value={field.value ?? ''}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      field.onChange(raw === '' ? null : Number(raw));
-                    }}
-                    error={errors.target?.message}
-                  />
-                )}
-              />
+              {!isOptional && (
+                <Controller
+                  control={control}
+                  name="target"
+                  render={({ field }) => (
+                    <NumberInput
+                      label="Weekly target (optional)"
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        field.onChange(raw === '' ? null : Number(raw));
+                      }}
+                      error={errors.target?.message}
+                    />
+                  )}
+                />
+              )}
             </div>
           )}
 

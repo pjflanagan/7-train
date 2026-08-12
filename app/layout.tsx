@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.scss';
@@ -12,6 +12,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: '7 Train',
   description: 'Plan your weekly workouts',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#101014',
 };
 
 export default function RootLayout({

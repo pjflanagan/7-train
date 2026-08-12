@@ -1,4 +1,5 @@
 @use '@/styles/mixins' as *;
+@use '@/styles/breakpoints' as bp;
 
 .header {
   position: relative;
@@ -60,5 +61,10 @@
 
   &:hover {
     background-color: var(--accent-primary-hover);
+  }
+
+  // Mobile is read-only, so the workout editor has no place in the header.
+  @include bp.respond-to(mobile) {
+    display: none;
   }
 }

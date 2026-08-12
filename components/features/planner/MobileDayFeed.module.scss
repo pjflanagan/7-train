@@ -1,0 +1,22 @@
+.scroller {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  // Keep the browser from fighting the manual offset correction on prepend.
+  overflow-anchor: none;
+}
+
+.loadMore {
+  flex: 0 0 auto;
+  padding: 1rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}

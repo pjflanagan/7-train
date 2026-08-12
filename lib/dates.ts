@@ -51,6 +51,13 @@ export function addWeeks(weekStartKey: string, n: number): string {
   return formatDateLocal(date);
 }
 
+/** Shift a YYYY-MM-DD date key by `n` days (negative shifts backwards). */
+export function addDays(dateKey: string, n: number): string {
+  const date = parseDateLocal(dateKey);
+  date.setDate(date.getDate() + n);
+  return formatDateLocal(date);
+}
+
 /** Whole weeks between two week keys: positive when `b` is later than `a`. */
 export function weeksBetween(a: string, b: string): number {
   const ms = parseDateLocal(b).getTime() - parseDateLocal(a).getTime();
@@ -76,6 +83,28 @@ export function dateForDay(
   const date = parseDateLocal(weekStartKey);
   date.setDate(date.getDate() + orderedDays(weekStartsOn).indexOf(day));
   return date;
+}
+
+/** The day name of a date. DAYS is Monday-first, getDay() is Sunday-first. */
+export function dayNameForDate(date: Date): DayName {
+  return DAYS[(date.getDay() + 6) % 7];
+}
+
+/** "Today" / "Tomorrow" / "Yesterday", else "Mon, Mar 3". */
+export function dayHeaderLabel(dateKey: string, todayKey: string): string {
+  const delta = Math.round(
+    (parseDateLocal(dateKey).getTime() - parseDateLocal(todayKey).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+  if (delta === 0) return 'Today';
+  if (delta === 1) return 'Tomorrow';
+  if (delta === -1) return 'Yesterday';
+
+  return parseDateLocal(dateKey).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 export function dayIndex(dayName: string): number {

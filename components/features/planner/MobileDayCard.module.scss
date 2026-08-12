@@ -1,0 +1,101 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+// Today is the landing spot, so it reads as the active day.
+.isToday {
+  background-color: var(--bg-secondary);
+  border-left: 3px solid var(--accent-primary);
+}
+
+// The past is a record; it recedes.
+.isPast {
+  opacity: 0.55;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-main);
+}
+
+.isToday .title {
+  color: var(--accent-primary);
+}
+
+.empty {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+}
+
+.icon {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+}
+
+.itemName {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.subType {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+// Value hugs the right edge so a column of workouts stays scannable.
+.value {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  margin-left: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.note {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}

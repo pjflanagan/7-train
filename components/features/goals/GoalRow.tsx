@@ -55,7 +55,7 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
         <div className={styles.content}>
           <div className={styles.name}>{goal.name}</div>
           <div className={styles.target}>
-            Target: {goal.target || 0} {goal.unit}
+            {goal.optional ? 'Optional' : `Target: ${goal.target || 0} ${goal.unit}`}
           </div>
         </div>
 
