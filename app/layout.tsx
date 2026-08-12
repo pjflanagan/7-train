@@ -1,7 +1,16 @@
 import type { Metadata } from 'next';
+import { Permanent_Marker } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.scss';
-import { SubwayTileBackground } from '@/components/elements/SubwayTileBackground/SubwayTileBackground';
+
+// Self-hosted at build time and exposed as a CSS variable so SCSS modules can
+// reach it without importing anything.
+const permanentMarker = Permanent_Marker({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-marker',
+});
 
 export const metadata: Metadata = {
   title: '7 Train',
@@ -14,9 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={permanentMarker.variable}>
       <body>
-        <SubwayTileBackground />
         {children}
         <Toaster />
       </body>

@@ -41,11 +41,11 @@
   overflow-anchor: none;
 }
 
+// Weeks run edge to edge and butt directly against each other, so the tiled
+// sections read as one continuous wall down the feed.
 .container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  padding: 1rem;
 }
 
 // Zero-height probes that trigger loading another week when scrolled near.

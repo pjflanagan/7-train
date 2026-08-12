@@ -3,16 +3,26 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  background-color: var(--bg-secondary);
-  border-radius: var(--border-radius-lg);
-  padding: 1rem;
-  border: 1px solid transparent;
+
+  // The tiles belong to the section, so they scroll with it natively — no
+  // scroll listener, no repainting, nothing to jolt. The section's height is
+  // snapped to a whole tile unit in JS so the bond carries into the next week.
+  background-color: var(--tile-grout);
+  background-image: var(--tile-pattern);
+  background-repeat: repeat;
+
+  h2 {
+    color: var(--bg-primary)
+  }
 }
 
-// The week containing today reads as the anchor of the feed.
-.isCurrent {
-  border-color: var(--header-rule, var(--border-color));
+// Holds the padding and spacing so its height stays purely content-driven —
+// the measurement the tile-unit snapping is based on.
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .headerRow {
@@ -22,9 +32,12 @@
   flex-wrap: wrap;
 }
 
+// "This week", "Next week", "Week of ..." — hand-marker lettering against the tile.
 .header {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-family: var(--font-marker), 'Permanent Marker', cursive;
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .range {
