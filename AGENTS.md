@@ -36,6 +36,11 @@ Welcome, Agent. This codebase is a Next.js (App Router) + TypeScript application
    - Never perform side effects directly in UI components; dispatch actions to the store.
    - Be mindful of hydration mismatches: wrap client-side logic requiring `window` or `localStorage` behind a `useHydrated` gate.
 
-5. **Next.js & React:**
+5. **UI Copy:**
+   - **Never use title case.** All user-facing text — buttons, headings, modal titles, labels, placeholders, menu items, toasts — is sentence case: capitalize the first word and proper nouns only.
+   - "My workouts", not "My Workouts". "Add goal", not "Add Goal". "Weekly target (optional)", not "Weekly Target (Optional)".
+   - Acronyms keep their casing ("Export CSV"), as do proper nouns ("New York").
+
+6. **Next.js & React:**
    - Use `'use client'` at the top of feature components that rely on state, hooks, or context.
    - The `/app` directory contains the route components (`layout.tsx`, `page.tsx`, `api/`).

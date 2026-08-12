@@ -27,7 +27,7 @@ export const AppHeader: React.FC = () => {
               className={styles.btnMyWeek}
               onClick={() => setIsMyWeekOpen(true)}
             >
-              <MdFitnessCenter size={16} /> My Workouts
+              <MdFitnessCenter size={16} /> My workouts
             </button>
             <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
               <MdLink size={20} />

@@ -17,7 +17,10 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
   const scheduledSubTags = useScheduledSubTags(weekStart, goal.id);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `goal-${goal.id}`,
+    // Every week renders its own strip, so the id has to carry the week —
+    // duplicate draggable ids make dnd-kit resolve the drag to whichever copy
+    // registered last (the bottom-most week).
+    id: `goal-${weekStart}-${goal.id}`,
     data: { kind: 'goal', typeId: goal.id },
   });
 
@@ -51,6 +54,7 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
               key={tag}
               tag={tag}
               typeId={goal.id}
+              weekStart={weekStart}
               color={goal.color}
               isScheduled={scheduledSubTags.has(tag)}
             />

@@ -42,3 +42,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+// While a drag is in flight the planner must not scroll under the pointer —
+// the drop targets would move out from under it. Set by PlannerDndProvider.
+html.is-dragging,
+html.is-dragging body {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+html.is-dragging [data-scroll-lock] {
+  overflow: hidden !important;
+  touch-action: none;
+}

@@ -20,7 +20,7 @@ export const MyWorkoutsModal: React.FC<MyWorkoutsModalProps> = ({ isOpen, onClos
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="My Workouts" maxWidth="600px">
+      <Modal isOpen={isOpen} onClose={onClose} title="My workouts" maxWidth="600px">
         <div className={styles.container}>
           <div className={styles.header}>
             <Button variant="primary" onClick={() => setIsAddOpen(true)}>

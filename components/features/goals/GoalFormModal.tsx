@@ -25,7 +25,7 @@ export interface GoalFormModalProps {
 
 const TABS: TabConfig[] = [
   { id: 'basic', label: 'Basic' },
-  { id: 'types', label: 'Workout Types' },
+  { id: 'types', label: 'Workout types' },
   { id: 'links', label: 'Links' },
   { id: 'appearance', label: 'Appearance' }
 ];
@@ -90,7 +90,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={goal ? 'Edit Goal' : 'Add Goal'} maxWidth="600px">
+    <Modal isOpen={isOpen} onClose={onClose} title={goal ? 'Edit goal' : 'Add goal'} maxWidth="600px">
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         
@@ -98,7 +98,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           {activeTab === 'basic' && (
             <div className={styles.section}>
               <TextInput
-                label="Goal Name"
+                label="Goal name"
                 {...register('name')}
                 error={errors.name?.message}
                 placeholder="e.g. Running, Lifting"
@@ -111,7 +111,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                 </Select>
                 <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
               </div>
-              <NumberInput label="Weekly Target (Optional)" {...register('target', { valueAsNumber: true })} error={errors.target?.message} />
+              <NumberInput label="Weekly target (optional)" {...register('target', { valueAsNumber: true })} error={errors.target?.message} />
               <Controller
                 control={control}
                 name="optional"
@@ -149,7 +149,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
               <div className={styles.linksList}>
                 {linkFields.map((field, index) => (
                   <div key={field.id} className={styles.linkRow}>
-                    <TextInput placeholder="Link Title" {...register(`links.${index}.title` as const)} />
+                    <TextInput placeholder="Link title" {...register(`links.${index}.title` as const)} />
                     <TextInput placeholder="URL" {...register(`links.${index}.url` as const)} />
                     <IconButton type="button" variant="danger" onClick={() => removeLink(index)}>
                       <MdDelete />

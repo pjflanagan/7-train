@@ -1,10 +1,37 @@
 import React from 'react';
+import { useGoal } from '@/hooks/usePlannerSelectors';
+import { getIconByKey } from '@/lib/icons';
 import styles from './DragPreviewCard.module.scss';
 
-export function DragPreviewCard({ name }: { name: string }) {
+export interface DragPreviewCardProps {
+  /** The workout type being dragged, when the drag carries one. */
+  typeId?: string;
+  /** Sub-tag, for a sub-tag drag — shown instead of the bare goal name. */
+  tag?: string;
+}
+
+/** What rides under the cursor: the goal's icon, name, and colour. */
+export function DragPreviewCard({ typeId, tag }: DragPreviewCardProps) {
+  const goal = useGoal(typeId ?? '');
+
+  if (!goal) return <div className={styles.preview}>{tag ?? 'Workout'}</div>;
+
+  const Icon = getIconByKey(goal.icon);
+
   return (
-    <div className={styles.preview}>
-      {name}
+    <div
+      className={styles.preview}
+      style={{ borderColor: goal.color, backgroundColor: `${goal.color}26` }}
+    >
+      <span className={styles.iconBadge} style={{ backgroundColor: goal.color }}>
+        <Icon className={styles.icon} />
+      </span>
+      <span className={styles.name}>{goal.name}</span>
+      {tag && (
+        <span className={styles.tag} style={{ backgroundColor: goal.color }}>
+          {tag}
+        </span>
+      )}
     </div>
   );
 }

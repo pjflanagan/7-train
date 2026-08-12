@@ -55,7 +55,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Helpful Links" maxWidth="400px">
+      <Modal isOpen={isOpen} onClose={onClose} title="Helpful links" maxWidth="400px">
         <div className={styles.container}>
           <div className={styles.list}>
             {links.length === 0 ? (
@@ -84,7 +84,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
           <div className={styles.addForm}>
             <div className={styles.inputs}>
               <TextInput 
-                placeholder="Link Title" 
+                placeholder="Link title" 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
               />
@@ -106,7 +106,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
 
       <ConfirmDialog
         isOpen={!!linkToDelete}
-        title="Delete Link"
+        title="Delete link"
         message={`Are you sure you want to delete "${linkToDelete?.title}"?`}
         confirmLabel="Delete"
         isDestructive={true}

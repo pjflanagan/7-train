@@ -86,7 +86,12 @@ export function dayLabel(dayName: string): string {
   return dayName.charAt(0).toUpperCase() + dayName.slice(1);
 }
 
-/** "This week" / "Next week" / "Last week", else a dated label. */
+/** Three-letter, upper-case day label for the planner grid: MON, TUE, ... */
+export function shortDayLabel(dayName: string): string {
+  return dayName.slice(0, 3).toUpperCase();
+}
+
+/** "This week" / "Next week" / "Last week", else "Week of Mar 3". */
 export function weekLabel(weekStartKey: string, currentWeekStartKey: string): string {
   const delta = weeksBetween(currentWeekStartKey, weekStartKey);
   if (delta === 0) return 'This week';
@@ -94,6 +99,6 @@ export function weekLabel(weekStartKey: string, currentWeekStartKey: string): st
   if (delta === -1) return 'Last week';
 
   const start = parseDateLocal(weekStartKey);
-  return start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `Week of ${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
 }
 

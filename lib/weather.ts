@@ -21,7 +21,7 @@ export function getWeatherDetails(code: number): WeatherDetails {
     return { icon: LuSun, desc: 'Sunny', color: '#f59e0b' };
   }
   if (code >= 1 && code <= 3) {
-    return { icon: LuCloud, desc: 'Partly Cloudy', color: '#94a3b8' };
+    return { icon: LuCloud, desc: 'Partly cloudy', color: '#94a3b8' };
   }
   if (code === 45 || code === 48) {
     return { icon: LuCloudFog, desc: 'Foggy', color: '#64748b' };

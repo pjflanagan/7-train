@@ -6,7 +6,7 @@ import { DAYS } from '@/lib/constants';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from './WeatherPill';
-import { dateForDay, dayLabel, formatDateLocal, orderedDays } from '@/lib/dates';
+import { dateForDay, formatDateLocal, orderedDays, shortDayLabel } from '@/lib/dates';
 import styles from './WeekDayHeader.module.scss';
 
 export interface WeekDayHeaderProps {
@@ -31,7 +31,7 @@ export function WeekDayHeader({ weekStart, todayKey }: WeekDayHeaderProps) {
 
         return (
           <div key={day} className={clsx(styles.day, isToday && styles.isToday)}>
-            <span className={styles.dayName}>{dayLabel(day)}</span>
+            <span className={styles.dayName}>{shortDayLabel(day)}</span>
             <span className={styles.date}>{date.getDate()}</span>
             {forecast && (
               <span className={styles.weather}>

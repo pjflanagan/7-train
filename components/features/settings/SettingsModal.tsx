@@ -50,7 +50,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const getConfirmDetails = () => {
     switch (confirmAction) {
       case 'reset':
-        return { title: 'Factory Reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
+        return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
       default:
         return { title: '', message: '', isDestructive: false };
     }
@@ -87,7 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </Select>
             </div>
             <div className={styles.row}>
-              <span className={styles.text}>Weather Location</span>
+              <span className={styles.text}>Weather location</span>
               <span className={styles.text} style={{ color: 'var(--text-muted)' }}>
                 {weatherData ? weatherData.location.city : 'Location TBD'}
               </span>
@@ -103,10 +103,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Danger Zone</h3>
+            <h3 className={styles.sectionTitle}>Danger zone</h3>
             <div className={styles.row}>
               <span className={styles.text}>Factory reset to default data</span>
-              <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset App</Button>
+              <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset app</Button>
             </div>
           </div>
 

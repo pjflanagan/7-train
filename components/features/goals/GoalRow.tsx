@@ -88,7 +88,7 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
 
       <ConfirmDialog
         isOpen={isDeleteOpen}
-        title="Delete Goal"
+        title="Delete goal"
         message={`Are you sure you want to delete ${goal.name}? This will also remove all related calendar items.`}
         isDestructive
         confirmLabel="Delete"

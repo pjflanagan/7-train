@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   
   let lat = searchParams.get('lat');
   let lon = searchParams.get('lon');
-  let city = 'Detected Location';
+  let city = 'Detected location';
 
   if (!lat || !lon) {
     const headLat = request.headers.get('x-vercel-ip-latitude');
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
           if (ipData.latitude && ipData.longitude) {
             lat = String(ipData.latitude);
             lon = String(ipData.longitude);
-            city = ipData.city || 'Detected Location';
+            city = ipData.city || 'Detected location';
           }
         }
       } catch {

@@ -28,7 +28,6 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
       className={clsx(styles.column, isOver && styles.isOver, isToday && styles.isToday)}
       ref={setNodeRef}
     >
-      <DayNotes day={day} weekStart={weekStart} />
       <div className={styles.itemsList}>
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           {items.map(item => (
@@ -36,6 +35,7 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
           ))}
         </SortableContext>
       </div>
+      <DayNotes day={day} weekStart={weekStart} />
     </div>
   );
 }
