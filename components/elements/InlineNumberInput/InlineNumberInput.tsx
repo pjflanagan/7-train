@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import styles from './InlineNumberInput.module.scss';
 
@@ -19,11 +19,13 @@ export const InlineNumberInput: React.FC<InlineNumberInputProps> = ({
   onKeyDown,
   ...props
 }) => {
+  const [prevValue, setPrevValue] = useState<number>(value);
   const [localValue, setLocalValue] = useState<string>(value.toString());
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocalValue(value.toString());
-  }, [value]);
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;

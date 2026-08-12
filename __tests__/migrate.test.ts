@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { importLegacy } from '../lib/migrate';
-import { ACTIVITY_ICONS } from '../lib/icons';
 
 describe('migrate', () => {
   beforeEach(() => {

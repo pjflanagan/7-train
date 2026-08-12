@@ -5,10 +5,12 @@ import styles from './Select.module.scss';
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  error?: string;
 }
 
 export const Select: React.FC<SelectProps> = ({ 
   label, 
+  error,
   className, 
   id,
   ...props 
@@ -19,7 +21,12 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className={clsx(styles.wrapper, className)}>
       {label && <label htmlFor={selectId} className={styles.label}>{label}</label>}
-      <select id={selectId} className={styles.select} {...props} />
+      <select 
+        id={selectId} 
+        className={clsx(styles.select, error && styles.hasError)} 
+        {...props} 
+      />
+      {error && <span className={styles.errorMessage}>{error}</span>}
     </div>
   );
 };

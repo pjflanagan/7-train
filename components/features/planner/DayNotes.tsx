@@ -8,11 +8,13 @@ import styles from './DayNotes.module.scss';
 export function DayNotes({ day, week }: { day: typeof DAYS[number]; week: 1 | 2 }) {
   const note = useNote(day, week);
   const setNote = usePlannerStore(state => state.setNote);
+  const [prevNote, setPrevNote] = useState(note);
   const [localNote, setLocalNote] = useState(note || '');
 
-  useEffect(() => {
+  if (note !== prevNote) {
+    setPrevNote(note);
     setLocalNote(note || '');
-  }, [note]);
+  }
 
   useEffect(() => {
     const handler = setTimeout(() => {

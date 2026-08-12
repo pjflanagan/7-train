@@ -29,7 +29,13 @@ export const Modal: React.FC<ModalProps> = ({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
+    let active = true;
+    setTimeout(() => {
+      if (active) setMounted(true);
+    }, 0);
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {

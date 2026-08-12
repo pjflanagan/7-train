@@ -37,8 +37,6 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
     transition,
   };
 
-  const Icon = getIconByKey(goal.icon);
-
   return (
     <>
       <div 
@@ -51,7 +49,7 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
         </div>
         
         <div className={styles.iconWrapper} style={{ backgroundColor: goal.color }}>
-          <Icon size={20} color="#fff" />
+          {React.createElement(getIconByKey(goal.icon), { size: 20, color: "#fff" })}
         </div>
 
         <div className={styles.content}>

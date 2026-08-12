@@ -55,8 +55,9 @@ export const useWeatherStore = create<WeatherStore>((set) => ({
 
       const json = await res.json();
       set({ data: json, loading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Error fetching weather', loading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error fetching weather';
+      set({ error: message, loading: false });
     }
   }
 }));

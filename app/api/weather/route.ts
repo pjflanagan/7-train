@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         if (geoData.city) city = geoData.city;
         else if (geoData.locality) city = geoData.locality;
       }
-    } catch (e) {
+    } catch {
       // Ignore geo errors
     }
   }
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       unit: '°C',
       days
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch weather' }, { status: 500 });
   }
 }

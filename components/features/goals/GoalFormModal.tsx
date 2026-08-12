@@ -38,7 +38,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   const { control, handleSubmit, reset, register, formState: { errors } } = useForm<WorkoutType>({
     resolver: zodResolver(WorkoutTypeSchema),
     defaultValues: goal || {
-      id: `type-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: '',
       name: '',
       icon: 'run',
       metric: 'distance',
@@ -74,7 +74,9 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           links: []
         });
       }
-      setActiveTab('basic');
+      setTimeout(() => {
+        setActiveTab('basic');
+      }, 0);
     }
   }, [isOpen, goal, reset]);
 

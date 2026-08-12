@@ -53,7 +53,6 @@ describe('weekRollover', () => {
   it('clears everything if >= 2 weeks passed', () => {
     const lastViewedStr = '2023-10-02';
     const today = new Date('2023-10-18T12:00:00'); // Wed, 2 weeks later
-    const mondayStr = formatDateLocal(getMonday(today)); // '2023-10-16'
 
     const state: PlannerState = {
       goals: [],

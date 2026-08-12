@@ -13,7 +13,6 @@ export function GoalChip({ goal, week }: { goal: WorkoutType; week: 1 | 2 }) {
   const { progressMap } = useWeekProgress(week);
   const setGoalTarget = usePlannerStore(state => state.setGoalTarget);
   const progress = progressMap[goal.id];
-  const Icon = getIconByKey(goal.icon);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `goal-${goal.id}`,
@@ -30,7 +29,7 @@ export function GoalChip({ goal, week }: { goal: WorkoutType; week: 1 | 2 }) {
       }}
     >
       <div className={styles.header} {...attributes} {...listeners} style={{ cursor: 'grab' }}>
-        <Icon className={styles.icon} style={{ color: goal.color }} />
+        {React.createElement(getIconByKey(goal.icon), { className: styles.icon, style: { color: goal.color } })}
         <span className={styles.name}>{goal.name}</span>
       </div>
       <div className={styles.targetSection}>

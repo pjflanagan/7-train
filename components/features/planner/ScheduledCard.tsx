@@ -28,8 +28,6 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
 
   if (!goal) return null;
 
-  const Icon = getIconByKey(goal.icon);
-
   const style = {
     borderColor: goal.color,
     backgroundColor: `${goal.color}10`,
@@ -45,7 +43,7 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
       ref={setNodeRef}
     >
       <div className={styles.header} {...attributes} {...listeners} style={{ cursor: 'grab' }}>
-        <Icon className={styles.icon} style={{ color: goal.color }} />
+        {React.createElement(getIconByKey(goal.icon), { className: styles.icon, style: { color: goal.color } })}
         <span className={styles.title}>{goal.name}</span>
       </div>
       

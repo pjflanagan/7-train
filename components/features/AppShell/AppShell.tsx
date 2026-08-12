@@ -1,5 +1,4 @@
 import React from 'react';
-import clsx from 'clsx';
 import styles from './AppShell.module.scss';
 import { AppHeader } from '../AppHeader/AppHeader';
 

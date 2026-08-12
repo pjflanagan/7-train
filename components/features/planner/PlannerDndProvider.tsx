@@ -16,7 +16,7 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
   let dragName = 'Item';
   if (activeData) {
      if (activeData.kind === 'goal') dragName = 'Goal';
-     if (activeData.kind === 'subtag') dragName = activeData.tag;
+     if (activeData.kind === 'subtag') dragName = activeData.tag || 'Subtag';
   }
 
   return (

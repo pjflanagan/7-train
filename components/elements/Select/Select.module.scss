@@ -31,3 +31,14 @@
     cursor: not-allowed;
   }
 }
+
+.hasError {
+  border-color: var(--accent-error);
+  &:focus { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-error); }
+}
+
+.errorMessage {
+  font-size: 0.75rem;
+  color: var(--accent-error);
+  margin-top: 0.125rem;
+}

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { PlannerState, WorkoutType, CalendarItem, HelpfulLink } from './types';
 import { DEFAULT_WORKOUT_TYPES, DEFAULT_CALENDAR_ITEMS, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
@@ -42,7 +42,7 @@ const initialState: PlannerState = {
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
       
       addGoal: (goal) => set((state) => ({ goals: [...state.goals, goal] })),
@@ -151,7 +151,7 @@ export const usePlannerStore = create<PlannerStore>()(
       name: 'workout-week',
       version: 1,
       migrate: migrateStore,
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed
         if (!localStorage.getItem('workout-week')) {
           const legacy = importLegacy();
