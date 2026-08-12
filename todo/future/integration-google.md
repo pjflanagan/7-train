@@ -11,4 +11,4 @@ I want users to be able to use this locally. But if they choose to sign in with 
 
 ## Google Sheets
 
-- Past events get recorded to a spreadsheet in Google Sheets as well\
+- Past events get recorded to a spreadsheet in Google Sheets as well

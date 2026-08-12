@@ -164,6 +164,24 @@ $(document).ready(function() {
     renderLinksModalList();
   });
 
+  // Open My Week modal
+  $('#my-week-btn').on('click', function() {
+    $('#my-week-modal-overlay').addClass('active');
+  });
+
+  // Close My Week modal
+  function closeMyWeekModal() {
+    $('#my-week-modal-overlay').removeClass('active');
+  }
+
+  $('#close-my-week-modal, #close-my-week-modal-btn').on('click', function() {
+    closeMyWeekModal();
+  });
+
+  $('#add-goal-btn-my-week').on('click', function() {
+    WorkoutApp.WorkoutTypes.openAddModal();
+  });
+
   // Close modals on overlay click (if clicking precisely on the overlay background)
   $('#workout-modal-overlay').on('click', function(e) {
     if (e.target === this) {
@@ -183,12 +201,19 @@ $(document).ready(function() {
     }
   });
 
+  $('#my-week-modal-overlay').on('click', function(e) {
+    if (e.target === this) {
+      closeMyWeekModal();
+    }
+  });
+
   // Close modal with Escape key
   $(document).on('keydown', function(e) {
     if (e.key === 'Escape') {
       WorkoutApp.WorkoutTypes.closeModal();
       closeSettingsModal();
       closeLinksModal();
+      closeMyWeekModal();
     }
   });
 

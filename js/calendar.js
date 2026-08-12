@@ -143,24 +143,36 @@
               self.updateItemValue(item.id, 1);
             }
 
-            const showSubtitle = !!item.workoutType;
+            const hasSubtypes = type.workoutTypes && type.workoutTypes.length > 0;
 
             const $card = $(`
-              <div class="scheduled-card" data-id="${item.id}" style="border-left: 4px solid ${type.color}">
-                <div class="scheduled-card-header" style="${(isTimesMetric && !showSubtitle) ? 'margin-bottom: 0;' : ''}">
+              <div class="scheduled-card" data-id="${item.id}" style="background-color: ${type.color}; border: 1px solid rgba(0,0,0,0.15);">
+                <div class="scheduled-card-header" style="margin-bottom: 0.35rem;">
                   <div class="scheduled-info">
-                    <span class="material-icons card-type-icon" style="color: ${type.color}">${type.icon}</span>
-                    <div class="card-titles">
-                      <span class="card-type-name">${type.name}</span>
-                      ${showSubtitle ? `<span class="card-type-subtitle">${item.workoutType}</span>` : ''}
-                    </div>
+                    <span class="material-icons card-type-icon">${type.icon}</span>
+                    <span class="card-type-name">${type.name}</span>
                   </div>
                   <button class="remove-scheduled-btn" title="Remove activity">
                     <span class="material-icons">close</span>
                   </button>
                 </div>
-                ${isTimesMetric ? '' : `
-                  <div class="scheduled-card-body">
+
+                <div class="scheduled-card-body" style="display: flex; flex-direction: column; gap: 0.25rem;">
+                  <!-- Dropdown selector if category has subtags -->
+                  ${hasSubtypes ? `
+                    <div class="scheduled-type-select-group">
+                      <select class="scheduled-type-select">
+                        ${!item.workoutType ? `<option value="" disabled selected>Select type...</option>` : ''}
+                        ${type.workoutTypes.map(tag => `
+                          <option value="${tag}" ${tag === item.workoutType ? 'selected' : ''}>${tag}</option>
+                        `).join('')}
+                      </select>
+                      <span class="material-icons" style="font-size: 14px; color: rgba(255,255,255,0.8); pointer-events: none; margin-left: 0.15rem; flex-shrink: 0;">arrow_drop_down</span>
+                    </div>
+                  ` : (item.workoutType ? `<div class="card-type-subtitle" style="font-size: 0.65rem; color: rgba(255,255,255,0.85); font-weight: 500; margin-bottom: 0.25rem;">${item.workoutType}</div>` : '')}
+
+                  <!-- Value/Unit input if not times metric -->
+                  ${isTimesMetric ? '' : `
                     <div class="value-input-group">
                       <input type="number" 
                              class="scheduled-value-input" 
@@ -170,10 +182,27 @@
                              title="Planned amount" />
                       <span class="unit-label">${type.unit}</span>
                     </div>
-                  </div>
-                `}
+                  `}
+                </div>
               </div>
             `);
+
+            // Event listener for dropdown type change
+            if (hasSubtypes) {
+              $card.find('.scheduled-type-select').on('change', function() {
+                const newTag = $(this).val();
+                const itemsList = WorkoutApp.Storage.getCalendarItems();
+                const calendarItem = itemsList.find(i => i.id === item.id);
+                if (calendarItem) {
+                  calendarItem.workoutType = newTag;
+                  WorkoutApp.Storage.saveCalendarItems(itemsList);
+                  
+                  // Refresh both components to update progress
+                  self.render();
+                  WorkoutApp.WorkoutTypes.render();
+                }
+              });
+            }
 
             // Inline value update events (only for distance/duration, since times doesn't have an input)
             if (!isTimesMetric) {

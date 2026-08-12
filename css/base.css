@@ -70,7 +70,7 @@ body {
 /* --- Main Layout Grid --- */
 .app-container {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-columns: 1fr;
   flex: 1;
   min-height: 0; /* Important for scroll containers */
   overflow: hidden;
@@ -87,6 +87,41 @@ body {
   flex-wrap: wrap;
   gap: 1rem;
   z-index: 10;
+}
+
+/* --- Glowing My Week Button --- */
+.btn-my-week {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #a855f7 100%);
+  color: white;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--border-radius-sm);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  transition: var(--transition-smooth);
+  animation: pulse-glow 2s infinite alternate;
+  margin-left: 1.25rem;
+}
+
+.btn-my-week:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4), 0 0 15px rgba(168, 85, 247, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.7), 0 0 30px rgba(168, 85, 247, 0.5);
+  }
 }
 
 .brand-section {

@@ -136,6 +136,41 @@
   transition: var(--transition-smooth);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: grab; /* Shows hand cursor on hover */
+  color: white;
+}
+
+.scheduled-card .card-type-icon {
+  color: white !important;
+}
+
+.scheduled-card .card-type-name {
+  color: white !important;
+}
+
+.scheduled-card .card-type-subtitle {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.scheduled-card .remove-scheduled-btn {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.scheduled-card .remove-scheduled-btn:hover {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.scheduled-card .value-input-group {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.scheduled-card .value-input-group:focus-within {
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.scheduled-card .unit-label {
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 .scheduled-card:hover {
@@ -209,6 +244,41 @@
   opacity: 0.35 !important;
   transform: scale(0.96);
   box-shadow: none !important;
+}
+
+.scheduled-type-select-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--border-radius-sm);
+  padding: 0.15rem 0.35rem;
+  transition: var(--transition-smooth);
+}
+
+.scheduled-type-select-group:focus-within {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.scheduled-type-select {
+  background: transparent;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 0.725rem;
+  font-weight: 700;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.scheduled-type-select option {
+  background-color: var(--bg-secondary);
+  color: white;
 }
 
 .value-input-group {
@@ -433,4 +503,105 @@ body.is-dragging .calendar-day-items::before {
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 0.05rem;
+}
+
+/* --- Horizontal Week Goals Scroller --- */
+.week-goals-scroller {
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.week-goals-list-horizontal {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Small goal card inside horizontal scroller */
+.small-goal-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 0.4rem 0.65rem;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 150px;
+  max-width: 200px;
+  flex-shrink: 0;
+  white-space: normal;
+  transition: var(--transition-smooth);
+}
+
+.small-goal-card:hover {
+  border-color: var(--accent-color, var(--border-focus));
+  transform: translateY(-1px);
+}
+
+.small-goal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.small-goal-icon-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.small-goal-icon-badge .material-icons {
+  font-size: 11px;
+}
+
+.small-goal-name {
+  font-weight: 700;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.small-goal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.small-goal-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.small-goal-progress-bar-bg {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.small-goal-progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.small-goal-subtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }

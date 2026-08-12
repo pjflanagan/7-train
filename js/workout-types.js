@@ -190,17 +190,75 @@
     },
 
     /**
-     * Renders the left sidebar list of workout goals and their corresponding progress.
+     * Renders both the 'My Week' Goal Definition modal list and the horizontal week-by-week goals lists.
      */
     render: function() {
-      const $list = $('#goals-list');
-      $list.empty();
-
       const types = WorkoutApp.Storage.getWorkoutTypes();
-      const items = WorkoutApp.Storage.getCalendarItems().filter(item => (item.week || 1) === 1);
-      const progressMap = WorkoutApp.Progress.calculateProgress(types, items);
 
-      // Render weekly progress trackers on the calendar
+      // 1. Render 'My Week' modal goal list (no progress metrics)
+      const $modalList = $('#my-week-goals-list');
+      $modalList.empty();
+
+      if (types.length === 0) {
+        $modalList.html(`
+          <div class="empty-goals-message">
+            <span class="material-icons">info_outline</span>
+            <p>No workout goals created yet. Click "Add Goal" above to define your weekly routine!</p>
+          </div>
+        `);
+      } else {
+        types.forEach(type => {
+          const targetMetaHTML = type.optional ? '' : `<div class="goal-meta">${type.target} ${type.unit}</div>`;
+
+          const $card = $(`
+            <div class="goal-card" data-id="${type.id}" style="--accent-color: ${type.color}">
+              <div class="goal-drag-handle" data-id="${type.id}">
+                <span class="material-icons drag-icon" title="Drag indicator to reorder">drag_indicator</span>
+                <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
+                  <span class="material-icons">${type.icon}</span>
+                </div>
+                <div class="goal-details">
+                  <div class="goal-title-row">
+                    <span class="goal-name">${type.name}</span>
+                    ${type.optional ? '<span class="optional-badge">Optional</span>' : ''}
+                  </div>
+                  ${targetMetaHTML}
+                </div>
+              </div>
+
+              ${type.workoutTypes && type.workoutTypes.length > 0 ? `
+                <div class="goal-subtags-container">
+                  ${type.workoutTypes.map(tag => `
+                    <div style="border: 1px solid ${type.color}40; background-color: ${type.color}08; color: ${type.color}; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700; white-space: nowrap;">
+                      <span class="subtag-name">${tag}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              <div class="goal-actions">
+                <button class="goal-action-btn edit-goal-btn" title="Edit workout goal">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="goal-action-btn delete-goal-btn" title="Delete Workout Goal">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </div>
+          `);
+
+          $card.find('.edit-goal-btn').on('click', () => this.openEditModal(type.id));
+          $card.find('.delete-goal-btn').on('click', () => {
+            if (confirm(`Are you sure you want to delete "${type.name}"? This will also remove any planned instances of this workout.`)) {
+              this.deleteWorkoutType(type.id);
+            }
+          });
+
+          $modalList.append($card);
+        });
+      }
+
+      // 2. Render weekly progress trackers on the calendar & populate horizontal lists
       [1, 2].forEach(weekNum => {
         const weekItems = WorkoutApp.Storage.getCalendarItems().filter(item => (item.week || 1) === weekNum);
         const weekProgressMap = WorkoutApp.Progress.calculateProgress(types, weekItems);
@@ -215,87 +273,120 @@
         } else {
           $tracker.hide();
         }
-      });
 
-      if (types.length === 0) {
-        $list.html(`
-          <div class="empty-goals-message">
-            <span class="material-icons">info_outline</span>
-            <p>No workout goals created yet. Click "+ Add workout goal" above to define your weekly routine!</p>
-          </div>
-        `);
-        return;
-      }
+        // Render Horizontal small goal cards for dragging & progress
+        const $horizontalList = $(`#week-${weekNum}-goals-list-horizontal`);
+        $horizontalList.empty();
 
-      types.forEach(type => {
-        const p = progressMap[type.id];
-        const isDone = p.isDone;
-        const percent = p.percent;
+        if (types.length === 0) {
+          $horizontalList.html(`
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No goals defined yet. Open 'My Week' above to get started!</span>
+          `);
+          return;
+        }
 
-        const targetMetaHTML = type.optional ? '' : `<div class="goal-meta">${type.target} ${type.unit}</div>`;
-        const progressSectionHTML = type.optional ? `
-            <div class="goal-progress-section">
-              <div class="goal-progress-labels">
-                <span class="progress-current">Logged: ${p.current} ${type.unit}</span>
-              </div>
-            </div>
-        ` : `
-            <div class="goal-progress-section">
-              <div class="goal-progress-labels">
-                <span class="progress-current">${p.current} / ${p.target} ${type.unit}</span>
-                <span class="progress-percent">${percent}%</span>
-              </div>
-              <div class="goal-progress-bar-bg">
-                <div class="goal-progress-bar-fill" style="width: ${percent}%; background-color: ${type.color}"></div>
-              </div>
-            </div>
-        `;
+        types.forEach(type => {
+          const p = weekProgressMap[type.id];
+          const isDone = p.isDone;
+          const percent = p.percent;
 
-        const $card = $(`
-          <div class="goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}">
-            <div class="goal-drag-handle draggable-workout" data-id="${type.id}">
-              <span class="material-icons drag-icon" title="Drag to planner (or drag indicator to reorder)">drag_indicator</span>
-              <div class="workout-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
-                <span class="material-icons">${type.icon}</span>
-              </div>
-              <div class="goal-details">
-                <div class="goal-title-row">
-                  <span class="goal-name">${type.name}</span>
-                  ${type.optional ? '<span class="optional-badge">Optional</span>' : ''}
+          const progressLabelsHTML = type.optional 
+            ? `<span>Logged: ${p.current} ${type.unit}</span>`
+            : `
+              <span class="progress-current" style="display: inline-flex; align-items: center; gap: 0.15rem;">
+                <span>${p.current}</span>
+                <span>/</span>
+                <input type="number" 
+                       class="small-goal-target-input" 
+                       data-id="${type.id}" 
+                       value="${type.target}" 
+                       min="0.1" 
+                       step="any" 
+                       style="width: 45px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.05rem 0.2rem; color: white; text-align: center; font-size: 0.65rem; font-weight: 700; outline: none;" />
+                <span style="font-size: 0.65rem; color: var(--text-muted);">${type.unit}</span>
+              </span>
+              <span>${percent}%</span>
+            `;
+
+          const $smallCard = $(`
+            <div class="small-goal-card ${isDone ? 'completed' : ''}" data-id="${type.id}" style="--accent-color: ${type.color}; border-left: 3px solid ${type.color};">
+              <div class="small-goal-header draggable-workout" data-id="${type.id}">
+                <div class="small-goal-icon-badge" style="background-color: ${type.color}15; color: ${type.color}">
+                  <span class="material-icons" style="font-size: 11px;">${type.icon}</span>
                 </div>
-                ${targetMetaHTML}
+                <span class="small-goal-name">${type.name}</span>
+                ${type.optional ? '<span class="optional-badge" style="font-size: 0.5rem; padding: 0.1rem 0.25rem;">Opt</span>' : ''}
               </div>
-            </div>
 
-            ${progressSectionHTML}
-
-            ${type.workoutTypes && type.workoutTypes.length > 0 ? `
-              <div class="goal-subtags-container">
-                ${type.workoutTypes.map(tag => `
-                  <div class="draggable-subtag" data-id="${type.id}" data-tag="${tag}" style="border: 1px solid ${type.color}40; background-color: ${type.color}08; color: ${type.color}">
-                    <span class="material-icons subtag-drag-icon">drag_indicator</span>
-                    <span class="subtag-name">${tag}</span>
+              <div class="small-goal-progress">
+                <div class="small-goal-progress-labels" style="align-items: center;">
+                  ${progressLabelsHTML}
+                </div>
+                ${type.optional ? '' : `
+                  <div class="small-goal-progress-bar-bg">
+                    <div class="small-goal-progress-bar-fill" style="width: ${percent}%; background-color: ${type.color}"></div>
                   </div>
-                `).join('')}
+                `}
               </div>
-            ` : ''}
 
-            <div class="goal-actions">
-              <button class="goal-action-btn edit-goal-btn" title="Edit workout goal">
-                <span class="material-icons">edit</span>
-              </button>
-              <button class="goal-action-btn delete-goal-btn" title="Delete Workout Goal">
-                <span class="material-icons">delete</span>
-              </button>
+              ${type.workoutTypes && type.workoutTypes.length > 0 ? `
+                <div class="small-goal-subtags">
+                  ${type.workoutTypes.map(tag => `
+                    <div class="draggable-subtag" data-id="${type.id}" data-tag="${tag}" style="border: 1px solid ${type.color}40; background-color: ${type.color}08; color: ${type.color}; cursor: grab; display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.6rem; font-weight: 700; white-space: nowrap;">
+                      <span class="material-icons subtag-drag-icon" style="font-size: 8px;">drag_indicator</span>
+                      <span class="subtag-name">${tag}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
             </div>
-          </div>
-        `);
+          `);
 
-        // Attach action events
-        $card.find('.edit-goal-btn').on('click', () => this.openEditModal(type.id));
-        $card.find('.delete-goal-btn').on('click', () => this.deleteWorkoutType(type.id));
+          // Event listeners for inline target input
+          if (!type.optional) {
+            $smallCard.find('.small-goal-target-input').on('input', function() {
+              const valStr = $(this).val();
+              if (valStr === '') return;
 
-        $list.append($card);
+              const val = parseFloat(valStr);
+              if (!isNaN(val) && val > 0) {
+                const typesList = WorkoutApp.Storage.getWorkoutTypes();
+                const targetType = typesList.find(t => t.id === type.id);
+                if (targetType) {
+                  targetType.target = val;
+                  WorkoutApp.Storage.saveWorkoutTypes(typesList);
+
+                  // Update active progress UI instantly
+                  const activePercent = Math.round((p.current / val) * 100);
+                  $smallCard.find('.small-goal-progress-bar-fill').css('width', `${Math.min(100, activePercent)}%`);
+                  $smallCard.find('.small-goal-progress-labels span:last-child').text(`${activePercent}%`);
+                }
+              }
+            });
+
+            $smallCard.find('.small-goal-target-input').on('change', function() {
+              const valStr = $(this).val();
+              let val = parseFloat(valStr);
+              if (isNaN(val) || val <= 0) {
+                val = 1;
+                $(this).val(val);
+              }
+
+              const typesList = WorkoutApp.Storage.getWorkoutTypes();
+              const targetType = typesList.find(t => t.id === type.id);
+              if (targetType) {
+                targetType.target = val;
+                WorkoutApp.Storage.saveWorkoutTypes(typesList);
+              }
+
+              // Full render to refresh all progress bars and dependencies
+              WorkoutApp.WorkoutTypes.render();
+              WorkoutApp.Calendar.render();
+            });
+          }
+
+          $horizontalList.append($smallCard);
+        });
       });
 
       // Re-initialize drag-and-drop handles for goals
@@ -368,11 +459,11 @@
     },
 
     /**
-     * Initializes the jQuery UI Sortable plugin on the sidebar goals list.
+     * Initializes the jQuery UI Sortable plugin on the My Week goals list.
      */
     initSortableGoals: function() {
       const self = this;
-      $('#goals-list').sortable({
+      $('#my-week-goals-list').sortable({
         items: '.goal-card',
         handle: '.drag-icon', // Use the drag indicator icon to reorder
         placeholder: 'goal-card-placeholder',
@@ -393,13 +484,13 @@
     },
 
     /**
-     * Reconstructs and saves goals based on their current visual order in the sidebar.
+     * Reconstructs and saves goals based on their current visual order.
      */
     saveGoalsOrderFromDOM: function() {
       const types = WorkoutApp.Storage.getWorkoutTypes();
       const newTypes = [];
 
-      $('#goals-list .goal-card').each(function() {
+      $('#my-week-goals-list .goal-card').each(function() {
         const typeId = $(this).data('id');
         const type = types.find(t => t.id === typeId);
         if (type) {
