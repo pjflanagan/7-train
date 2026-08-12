@@ -7,10 +7,35 @@
   border-radius: var(--border-radius-md);
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+
+  &:hover {
+    color: var(--accent-error);
+    background-color: rgba(239, 68, 68, 0.1);
+  }
 }
 
 .icon {

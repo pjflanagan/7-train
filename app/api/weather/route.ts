@@ -19,7 +19,27 @@ export async function GET(request: Request) {
       lon = headLon;
       if (headCity) city = decodeURIComponent(headCity);
     } else {
-      return NextResponse.json({ error: 'Location required' }, { status: 400 });
+      // Running locally: attempt coarse IP geolocation, default to New York if blocked/fail
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/', { next: { revalidate: 3600 } });
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          if (ipData.latitude && ipData.longitude) {
+            lat = String(ipData.latitude);
+            lon = String(ipData.longitude);
+            city = ipData.city || 'Detected Location';
+          }
+        }
+      } catch {
+        // Ignore ipapi errors
+      }
+
+      // Final default if ipapi failed or coordinates were not resolved
+      if (!lat || !lon) {
+        lat = '40.7128';
+        lon = '-74.0060';
+        city = 'New York';
+      }
     }
   } else {
     // If coords were provided by client, try a quick reverse geocode

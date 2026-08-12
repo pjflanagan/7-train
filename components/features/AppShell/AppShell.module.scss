@@ -1,8 +1,8 @@
 @use '@/styles/breakpoints' as *;
 
 .appContainer {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0; 
   overflow: hidden;
@@ -19,7 +19,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
   
   @include respond-to(mobile) {
     overflow: visible;
