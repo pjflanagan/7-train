@@ -21,7 +21,7 @@
 }
 
 .brandLogoBadge {
-  background: #a855f7;
+  background: #B933AD;
   color: #fff;
   font-weight: bold;
   width: 32px;
@@ -65,4 +65,131 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.wordTrain {
+  display: inline-block;
+  // Play the font cycle once for 0.4 seconds on page load
+  animation: font-cycle 0.8s ease-in-out 2;
+}
+
+.brandSection {
+  cursor: pointer;
+  
+  // On hover of the brand section (logo), play the animation infinitely
+  &:hover {
+    .wordTrain {
+      animation: font-cycle 0.8s linear infinite;
+    }
+  }
+}
+
+@keyframes font-cycle {
+  /* 0% to 15%: Flip Number / Retro Split-Flap */
+  0%, 15% {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #ffffff;
+    background-color: #111111;
+    padding: 0 4px;
+    border-radius: 2px;
+    text-shadow: 0px 1px 0px #333333, 0px 2px 0px #000000;
+  }
+  
+  /* 16% to 30%: Digital LED (Monospace / Green Neon) */
+  16%, 30% {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #39ff14; /* Neon green */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14;
+  }
+  
+  /* 31% to 45%: Graffiti Bubble (Comic cursive / bold pink outline) */
+  31%, 45% {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: lowercase;
+    letter-spacing: -3px;
+    color: #ff007f; /* Hot pink */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: 
+      -1.5px -1.5px 0 #000,  
+       1.5px -1.5px 0 #000,
+      -1.5px  1.5px 0 #000,
+       1.5px  1.5px 0 #000,
+       3px 3px 0px #00ffff; /* Cyberpunk cyan shadow */
+  }
+  
+  /* 46% to 60%: Dots Matrix (Monospace dotted spacing / bright amber) */
+  46%, 60% {
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    color: #ffcc00; /* Dot yellow */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: 
+      2px 2px 0px #000000,
+      -1px -1px 0px #ffffff;
+  }
+  
+  /* 61% to 75%: Graffiti Tag (Georgia italic / purple marker style) */
+  61%, 75% {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: bold;
+    text-transform: lowercase;
+    letter-spacing: 1px;
+    color: #b933ad; /* MTA Purple */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: 
+      2px 2px 0px rgba(0, 0, 0, 0.4),
+      0 0 8px rgba(185, 51, 173, 0.8);
+  }
+  
+  /* 76% to 90%: Tile Mosaic (Thick slate borders / blocky look) */
+  76%, 90% {
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    color: #e2e8f0;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: 
+      1px 1px 0px #475569,
+      2px 2px 0px #475569,
+      3px 3px 0px #cbd5e1,
+      4px 4px 0px #1e293b,
+      5px 5px 0px #1e293b;
+  }
+
+  /* 91% to 100%: Default clean Helvetica style */
+  91%, 100% {
+    font-family: inherit;
+    font-style: normal;
+    font-weight: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    color: inherit;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    text-shadow: none;
+  }
 }

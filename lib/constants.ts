@@ -3,24 +3,17 @@ import { WorkoutType, CalendarItem, HelpfulLink } from './types';
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
 export const PRESET_COLORS = [
-  '#ef4444', // Red
-  '#f97316', // Orange
-  '#f59e0b', // Amber
-  '#eab308', // Yellow
-  '#84cc16', // Lime
-  '#22c55e', // Green
-  '#10b981', // Emerald
-  '#14b8a6', // Teal
-  '#06b6d4', // Cyan
-  '#0ea5e9', // Light Blue
-  '#3b82f6', // Blue
-  '#6366f1', // Indigo
-  '#8b5cf6', // Violet
-  '#a855f7', // Purple
-  '#d946ef', // Fuchsia
-  '#ec4899', // Pink
-  '#f43f5e', // Rose
-  '#64748b'  // Slate
+  '#EE352E', // Tomato Red (1, 2, 3)
+  '#00933C', // Apple Green (4, 5, 6)
+  '#B933AD', // Raspberry Purple (7)
+  '#0039A6', // Blue (A, C, E)
+  '#FF6319', // Orange (B, D, F, M)
+  '#6CBE45', // Lime Green (G)
+  '#996633', // Terracotta Brown (J, Z)
+  '#A7A9AC', // Light Slate Gray (L)
+  '#FCCC0A', // Sunflower Yellow (N, Q, R, W)
+  '#808183', // Dark Slate Gray (S Shuttles)
+  '#00ADD0'  // Turquoise / Teal (T Second Ave)
 ];
 
 export const DEFAULT_LINKS: HelpfulLink[] = [
@@ -39,7 +32,7 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     metric: 'distance',
     unit: 'miles',
     target: 10,
-    color: '#ff4d4d',
+    color: '#EE352E', // MTA Red (1, 2, 3)
     workoutTypes: ['Long Run', 'Tempo Run', 'Intervals']
   },
   {
@@ -49,7 +42,7 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     metric: 'times',
     unit: 'times',
     target: 3,
-    color: '#a855f7',
+    color: '#B933AD', // MTA Purple (7)
     workoutTypes: ['Chest Day', 'Leg Day', 'Arms']
   },
   {
@@ -59,7 +52,7 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     metric: 'distance',
     unit: 'miles',
     target: 25,
-    color: '#10b981',
+    color: '#00933C', // MTA Apple Green (4, 5, 6)
     workoutTypes: ['Road Bike', 'Mountain Bike']
   },
   {
@@ -69,7 +62,7 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     metric: 'duration',
     unit: 'mins',
     target: 90,
-    color: '#06b6d4',
+    color: '#0039A6', // MTA Blue (A, C, E)
     workoutTypes: ['Laps', 'Technique']
   },
   {
@@ -79,7 +72,7 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     metric: 'duration',
     unit: 'mins',
     target: 60,
-    color: '#f59e0b',
+    color: '#FF6319', // MTA Orange (B, D, F, M)
     workoutTypes: ['Vinyasa', 'Hatha']
   }
 ];
