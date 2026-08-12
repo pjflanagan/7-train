@@ -1,0 +1,29 @@
+@use "../../../styles/mixins" as *;
+
+.wrapper { display: flex; flex-direction: column; gap: 0.25rem; }
+.label { font-size: 0.875rem; font-weight: 500; color: var(--text-main); }
+
+.textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+  @include focus-ring();
+
+  &:focus { border-color: var(--accent-primary); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.hasError {
+  border-color: var(--accent-error);
+  &:focus { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-error); }
+}
+
+.errorMessage { font-size: 0.75rem; color: var(--accent-error); margin-top: 0.125rem; }

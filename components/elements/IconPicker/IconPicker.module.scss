@@ -1,0 +1,33 @@
+@use "../../../styles/mixins" as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 0.5rem;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  @include focus-ring();
+
+  &:hover {
+    background-color: var(--border-focus);
+    color: var(--text-main);
+  }
+
+  &.selected {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+}

@@ -1,0 +1,71 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+
+  &:hover {
+    color: var(--accent-error);
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.icon {
+  font-size: 1.25rem;
+}
+
+.title {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.subtagSelect {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+}
+
+.valueRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.valueInput {
+  width: 50px;
+  text-align: right;
+  padding: 0.25rem;
+}
+
+.unit {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

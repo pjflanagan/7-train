@@ -1,0 +1,27 @@
+@use '@/styles/breakpoints' as *;
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; 
+  overflow: hidden;
+  height: 100dvh;
+  
+  @include respond-to(mobile) {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  
+  @include respond-to(mobile) {
+    overflow: visible;
+  }
+}

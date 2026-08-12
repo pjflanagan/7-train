@@ -1,0 +1,76 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+@use '@/styles/breakpoints' as *;
+
+.header {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.65rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.brandSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brandLogoBadge {
+  background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.brandTitles h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.btnMyWeek {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #a855f7 100%);
+  color: white;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--border-radius-sm);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  transition: var(--transition-smooth);
+  animation: pulse-glow 2s infinite alternate;
+  margin-left: 1.25rem;
+  @include focus-ring();
+  
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+  }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4), 0 0 15px rgba(168, 85, 247, 0.2); }
+  100% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.7), 0 0 30px rgba(168, 85, 247, 0.5); }
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
