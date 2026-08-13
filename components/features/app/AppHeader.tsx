@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import styles from './AppHeader.module.scss';
+import { Button } from '@/components/elements/Button/Button';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
 import { MdBookmark, MdFitnessCenter } from 'react-icons/md';
@@ -23,14 +24,15 @@ export const AppHeader: React.FC = () => {
 
           <div className={styles.headerActions}>
             <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
-              <MdBookmark size={20} />
+              <MdBookmark />
             </IconButton>
-            <button
-              className={styles.btnMyWeek}
+            <Button
+              variant="primary"
+              className={styles.myWorkouts}
               onClick={() => setIsMyWeekOpen(true)}
             >
-              <MdFitnessCenter size={16} /> My workouts
-            </button>
+              <MdFitnessCenter /> My workouts
+            </Button>
             <ProfileMenu />
           </div>
         </div>

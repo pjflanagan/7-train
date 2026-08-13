@@ -1,44 +1,66 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  @include field-wrapper();
 }
 
 .label {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  @include field-label();
+}
+
+.control {
+  position: relative;
+  display: flex;
+  min-width: 0;
 }
 
 .select {
-  width: 100%;
-  padding: 0.5rem;
-  background-color: var(--bg-secondary);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
-  @include focus-ring();
+  @include field-control();
 
-  &:focus {
-    border-color: var(--accent-primary);
-  }
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  // Room for the chevron, which sits over the right-hand edge.
+  padding-right: var(--space-6);
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  // The dropdown itself is drawn by the OS; give it the theme's surface so it
+  // doesn't flash white over a dark modal.
+  option {
+    background-color: var(--bg-elevated);
+    color: var(--text-main);
   }
+}
+
+.sm {
+  min-height: var(--control-sm);
+  padding: var(--space-1) var(--space-5) var(--space-1) var(--space-2);
+  font-size: var(--font-xs);
+}
+
+.md {
+  min-height: var(--control-md);
+}
+
+.chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: var(--icon-sm);
+  // Clicks belong to the select underneath.
+  pointer-events: none;
+}
+
+.sm ~ .chevron {
+  right: var(--space-1);
+  font-size: var(--font-xs);
 }
 
 .hasError {
-  border-color: var(--accent-error);
-  &:focus { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-error); }
+  @include field-invalid();
 }
 
 .errorMessage {
-  font-size: 0.75rem;
-  color: var(--accent-error);
-  margin-top: 0.125rem;
+  @include field-error();
 }

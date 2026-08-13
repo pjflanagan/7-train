@@ -1,42 +1,44 @@
 .container {
   display: flex;
   flex-direction: column;
+  gap: var(--space-6);
 }
 
+// No inner scroll: the modal body scrolls, so a long list runs to the footer
+// instead of stopping short of it.
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-height: 250px;
-  overflow-y: auto;
-  margin-bottom: 1.5rem;
+  gap: var(--space-2);
 }
 
 .empty {
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--text-muted);
   text-align: center;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
 }
 
 .linkRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--radius-sm);
 }
 
 .linkInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  min-width: 0;
   overflow: hidden;
 }
 
 .linkTitle {
+  font-size: var(--font-md);
   font-weight: 500;
   color: var(--text-main);
   text-decoration: none;
@@ -50,7 +52,7 @@
 }
 
 .linkUrl {
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -60,12 +62,25 @@
 .addForm {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding-top: 1rem;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border-color);
+}
+
+.formTitle {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 .inputs {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
+}
+
+.addButton {
+  align-self: flex-end;
 }

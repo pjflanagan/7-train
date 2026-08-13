@@ -1,10 +1,11 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .iconButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--border-radius-sm);
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
   background: transparent;
@@ -18,9 +19,25 @@
   }
 }
 
-.sm { padding: 0.25rem; font-size: 1rem; }
-.md { padding: 0.5rem; font-size: 1.25rem; }
-.lg { padding: 0.75rem; font-size: 1.5rem; }
+// Square by construction, so they sit at the same heights as the buttons and
+// inputs beside them.
+.sm {
+  width: var(--control-sm);
+  height: var(--control-sm);
+  font-size: var(--icon-sm);
+}
+
+.md {
+  width: var(--control-md);
+  height: var(--control-md);
+  font-size: var(--icon-md);
+}
+
+.lg {
+  width: var(--control-lg);
+  height: var(--control-lg);
+  font-size: var(--icon-lg);
+}
 
 .ghost {
   &:hover:not(:disabled) {
@@ -33,7 +50,8 @@
   background-color: var(--bg-tertiary);
   border-color: var(--border-color);
   &:hover:not(:disabled) {
-    background-color: var(--border-focus);
+    background-color: var(--bg-elevated);
+    border-color: var(--border-focus);
     color: var(--text-main);
   }
 }
@@ -41,6 +59,6 @@
 .danger {
   color: var(--accent-error);
   &:hover:not(:disabled) {
-    background-color: rgba(239, 68, 68, 0.1);
+    background-color: var(--accent-error-soft);
   }
 }

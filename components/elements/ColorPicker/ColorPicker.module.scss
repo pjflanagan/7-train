@@ -1,9 +1,9 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
+  gap: var(--space-2);
 }
 
 .colorButton {
@@ -12,7 +12,7 @@
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s, border-color 0.1s;
+  transition: transform 0.1s, box-shadow 0.1s;
   @include focus-ring();
 
   &:hover {
@@ -20,8 +20,7 @@
   }
 
   &.selected {
-    border-color: var(--text-main);
     transform: scale(1.1);
-    box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--text-main);
+    box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--accent-primary);
   }
 }

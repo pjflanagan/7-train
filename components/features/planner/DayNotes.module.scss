@@ -10,12 +10,12 @@
     min-height: unset;
     max-height: none;
     margin: 0;
-    padding: 0.2rem 0.3rem;
+    padding: var(--space-05) var(--space-1);
     background: transparent;
     border: none;
     border-radius: 0;
     box-shadow: none;
-    font-size: 0.75rem;
+    font-size: var(--font-xs);
     line-height: 1.4;
     resize: none;
     overflow: hidden;

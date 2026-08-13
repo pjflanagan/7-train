@@ -1,53 +1,107 @@
+@use '@/styles/mixins' as *;
+@use '@/styles/breakpoints' as bp;
+
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background-color: var(--overlay-scrim);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
-  padding: 1rem;
+  padding: var(--space-4);
+
+  @include bp.respond-to(mobile) {
+    padding: var(--space-2);
+  }
 }
 
 .dialog {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--box-shadow-premium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   width: 100%;
-  max-height: calc(100vh - 2rem);
+  // dvh rather than vh: on mobile the browser chrome eats into vh, which is
+  // what pushed the footer out of reach.
+  max-height: calc(100dvh - var(--space-8));
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   animation: modal-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @include bp.respond-to(mobile) {
+    max-height: calc(100dvh - var(--space-4));
+  }
+}
+
+// Header, body and footer share one horizontal inset so everything in the
+// dialog lines up on the same two edges.
+.header,
+.content,
+.footer {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+
+  @include bp.respond-to(mobile) {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
 }
 
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--border-color);
-  min-height: 64px;
+}
+
+.title {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+  margin: 0;
+  min-width: 0;
 }
 
 .closeWrapper {
   margin-left: auto;
+  flex: 0 0 auto;
 }
 
-.title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0;
-}
-
+// The body is the only part that scrolls, and it scrolls all the way to the
+// footer — no inner scroll container should clip its content short.
 .content {
-  padding: 1.5rem;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+  @include scroll-area();
+
+  @include bp.respond-to(mobile) {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+}
+
+// Actions stay pinned below the scroll so they are reachable no matter how
+// long the body gets.
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 @keyframes modal-enter {
@@ -58,5 +112,11 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog {
+    animation: none;
   }
 }

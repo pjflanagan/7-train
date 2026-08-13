@@ -11,9 +11,9 @@
 
 .loadMore {
   flex: 0 0 auto;
-  padding: 1rem 1.25rem;
+  padding: var(--space-4);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   background: none;

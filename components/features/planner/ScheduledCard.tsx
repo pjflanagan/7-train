@@ -46,7 +46,7 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
       ref={setNodeRef}
     >
       <div className={styles.headerRow}>
-        <div className={styles.header} {...attributes} {...listeners} style={{ cursor: 'grab', flex: 1 }}>
+        <div className={styles.header} {...attributes} {...listeners}>
           {React.createElement(getIconByKey(goal.icon), { className: styles.icon, style: { color: goal.color } })}
           <span className={styles.title}>{goal.name}</span>
         </div>
@@ -64,11 +64,15 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
 
       {goal.workoutTypes && goal.workoutTypes.length > 0 && (
         <Select
+          size="sm"
           className={styles.subtagSelect}
+          aria-label={`${goal.name} type`}
           value={item.workoutType || ''}
           onChange={(e) => setItemSubType(item.id, e.target.value)}
         >
-          <option value="">Select type...</option>
+          {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
+              carries what the control is for. */}
+          <option value="">-</option>
           {goal.workoutTypes.map(t => (
             <option key={t} value={t}>{t}</option>
           ))}

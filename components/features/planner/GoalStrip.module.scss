@@ -6,7 +6,7 @@
 
 .strip {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   overflow-x: auto;
   // The chips keep their own width and page sideways instead of stacking.
   flex-wrap: nowrap;
@@ -26,8 +26,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--control-sm);
+  height: var(--control-sm);
   padding: 0;
   border-radius: 50%;
   border: 1px solid var(--border-color);
@@ -35,17 +35,20 @@
   color: var(--text-main);
   cursor: pointer;
   line-height: 0;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
   @include mixins.focus-ring();
 
   &:hover {
-    background-color: var(--border-focus);
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
   }
 }
 
 .left {
-  left: -6px;
+  left: calc(var(--space-1) * -1.5);
 }
 
 .right {
-  right: -6px;
+  right: calc(var(--space-1) * -1.5);
 }

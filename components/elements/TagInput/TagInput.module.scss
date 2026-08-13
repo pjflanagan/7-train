@@ -1,15 +1,14 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .container {
+  @include field-control();
+
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  transition: border-color 0.2s;
-  min-height: 42px;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  cursor: text;
 
   &:focus-within {
     border-color: var(--accent-primary);
@@ -17,18 +16,20 @@
 }
 
 .tag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
+  gap: var(--space-1);
+  padding: var(--space-05) var(--space-1) var(--space-05) var(--space-2);
   background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   color: var(--text-main);
-  font-size: 0.875rem;
-  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+  line-height: 1.4;
+  border-radius: var(--radius-pill);
 }
 
 .removeBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: none;
@@ -47,14 +48,16 @@
 
 .input {
   flex: 1;
-  min-width: 120px;
+  min-width: 7.5rem;
+  align-self: stretch;
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 0.875rem;
+  font-family: inherit;
+  font-size: var(--font-md);
   outline: none;
 
   &::placeholder {
-    color: var(--text-muted);
+    color: var(--text-dim);
   }
 }

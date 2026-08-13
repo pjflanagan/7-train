@@ -37,7 +37,7 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
       className={styles.chip} 
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      <div className={styles.header} {...attributes} {...listeners} style={{ cursor: 'grab' }}>
+      <div className={styles.header} {...attributes} {...listeners}>
         <span className={styles.iconBadge} style={{ backgroundColor: goal.color }}>
           {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
         </span>

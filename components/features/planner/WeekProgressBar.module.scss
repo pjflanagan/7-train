@@ -1,30 +1,30 @@
 .container {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  flex: 0 1 220px;
-  min-width: 90px;
+  gap: var(--space-2);
+  flex: 0 1 13.75rem;
+  min-width: 5.5rem;
 }
 
 .track {
   flex: 1 1 auto;
   height: 6px;
   min-width: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: var(--bg-tertiary);
   overflow: hidden;
 }
 
 .fill {
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: var(--accent-primary);
   transition: width 0.25s ease;
 }
 
 .label {
   flex: 0 0 auto;
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;

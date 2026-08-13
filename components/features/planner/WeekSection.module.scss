@@ -3,8 +3,8 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.25rem;
+  gap: var(--space-3);
+  padding: var(--space-5);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -14,14 +14,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-width: 0;
   // Never wraps: the progress bar stays on the title's line and shrinks first.
   flex: 1 1 auto;
@@ -30,7 +30,7 @@
 
 .header {
   flex: 0 0 auto;
-  font-size: 0.95rem;
+  font-size: var(--font-lg);
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--text-main);
@@ -39,13 +39,13 @@
 .board {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   @include mixins.scroll-area();
   overflow-x: auto;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(120px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(7, minmax(7.5rem, 1fr));
+  gap: var(--space-2);
 }

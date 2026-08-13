@@ -12,6 +12,8 @@ export interface ModalProps {
   onClose: () => void;
   title?: React.ReactNode;
   children: React.ReactNode;
+  /** Actions pinned below the body, outside the scrolling area. */
+  footer?: React.ReactNode;
   className?: string;
   maxWidth?: string;
 }
@@ -21,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
+  footer,
   className,
   maxWidth = '500px'
 }) => {
@@ -124,6 +127,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className={styles.content}>
           {children}
         </div>
+        {footer && <div className={styles.footer}>{footer}</div>}
       </div>
     </div>,
     document.body

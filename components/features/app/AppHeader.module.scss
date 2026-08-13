@@ -1,4 +1,3 @@
-@use '@/styles/mixins' as *;
 @use '@/styles/breakpoints' as bp;
 
 .header {
@@ -10,19 +9,23 @@
 }
 
 .headerBar {
-  max-width: 1280px;
+  max-width: 80rem;
   margin: 0 auto;
-  padding: 0.75rem 1.25rem;
+  padding: var(--space-3) var(--space-5);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
+
+  @include bp.respond-to(mobile) {
+    padding: var(--space-3) var(--space-4);
+  }
 }
 
 .brandSection {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .brandLogo {
@@ -31,7 +34,7 @@
 }
 
 .brandSection h1 {
-  font-size: 1.05rem;
+  font-size: var(--font-lg);
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0;
@@ -40,30 +43,13 @@
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
-.btnMyWeek {
-  background-color: var(--accent-primary);
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--border-radius-sm);
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: var(--transition-smooth);
-  @include focus-ring();
-
-  &:hover {
-    background-color: var(--accent-primary-hover);
-  }
-
-  // Mobile is read-only, so the workout editor has no place in the header.
+// Mobile is read-only, so the workout editor has no place in the header.
+// Scoped through the row rather than written bare: Button sets its own
+// `display`, and the two would otherwise be decided by stylesheet order.
+.headerActions .myWorkouts {
   @include bp.respond-to(mobile) {
     display: none;
   }

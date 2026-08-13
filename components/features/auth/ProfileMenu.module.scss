@@ -7,14 +7,14 @@
   justify-content: center;
   padding: 2px;
   border: 1px solid var(--border-color);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: transparent;
   cursor: pointer;
   transition: var(--transition-smooth);
   @include focus-ring();
 
   &:hover {
-    border-color: var(--border-focus);
+    border-color: var(--accent-primary);
   }
 }
 
@@ -25,7 +25,7 @@
   right: 0;
   width: 9px;
   height: 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: var(--accent-warning);
   border: 2px solid var(--bg-secondary);
 }

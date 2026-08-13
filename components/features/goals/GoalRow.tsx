@@ -49,7 +49,7 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
         </div>
         
         <div className={styles.iconWrapper} style={{ backgroundColor: goal.color }}>
-          {React.createElement(getIconByKey(goal.icon), { size: 20, color: "#fff" })}
+          {React.createElement(getIconByKey(goal.icon), { size: 20, color: 'var(--text-on-accent)' })}
         </div>
 
         <div className={styles.content}>

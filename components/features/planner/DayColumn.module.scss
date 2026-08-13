@@ -1,10 +1,10 @@
 .column {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 120px;
-  padding: 0.35rem;
-  border-radius: var(--border-radius-md);
+  gap: var(--space-1);
+  min-width: 7.5rem;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   transition: var(--transition-smooth);
 }
@@ -14,7 +14,7 @@
 .itemsList {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   flex: 1 1 auto;
   min-height: 12rem;
 }
