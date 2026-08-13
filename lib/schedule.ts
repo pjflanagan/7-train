@@ -1,0 +1,115 @@
+/**
+ * Time of day for scheduled items, and how long each one is expected to take.
+ *
+ * A planner item only ever knew which day it was on. Google Calendar needs a
+ * start and an end, so every item now carries a start time in minutes from
+ * local midnight, and a duration we either read off the goal or estimate.
+ */
+
+import { CalendarItem, WorkoutType } from './types';
+
+/** Times snap to quarter hours, both when dragged and when read back from Google. */
+export const SLOT_MINUTES = 15;
+
+/** Where an item lands when nothing has said otherwise. */
+export const DEFAULT_START_MINUTES = 7 * 60;
+
+/** Latest start we allow, so a workout never runs past midnight unseen. */
+export const MAX_START_MINUTES = 23 * 60 + 45;
+
+/** How long a workout with no better signal is assumed to run. */
+const FALLBACK_DURATION_MINUTES = 45;
+
+/** Minutes per mile, by goal icon. Rough, and only ever used as an estimate. */
+const PACE_PER_MILE: Record<string, number> = {
+  run: 9,
+  walk: 18,
+  hike: 25,
+  bike: 4,
+  swim: 35,
+  ski: 6,
+  row: 6,
+};
+
+const KM_PER_MILE = 0.621371;
+
+export function snapToSlot(minutes: number): number {
+  return Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES;
+}
+
+export function clampStartMinutes(minutes: number): number {
+  return Math.min(MAX_START_MINUTES, Math.max(0, snapToSlot(minutes)));
+}
+
+/** The start time of an item, falling back to the default slot. */
+export function startMinutesOf(item: CalendarItem): number {
+  return clampStartMinutes(item.startMinutes ?? DEFAULT_START_MINUTES);
+}
+
+/** "7:00 AM", in the viewer's locale. */
+export function formatTimeOfDay(minutes: number): string {
+  const date = new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60);
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+/** "45 min" / "1h 30m", for the duration line on a card. */
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
+}
+
+function isMetricUnit(unit: string): boolean {
+  return /^k(m|ilomet)/i.test(unit.trim());
+}
+
+function isHourUnit(unit: string): boolean {
+  return /^h(r|our)/i.test(unit.trim());
+}
+
+/**
+ * How long the item should block out on the calendar.
+ *
+ * A `duration` goal already says so — its value _is_ the length, so the
+ * calendar reflects it exactly. Distance and count goals get an estimate: a
+ * per-mile pace for the goal's activity, or a flat session length.
+ */
+export function estimateDurationMinutes(
+  item: Pick<CalendarItem, 'value'>,
+  goal: WorkoutType | undefined
+): number {
+  if (!goal) return FALLBACK_DURATION_MINUTES;
+
+  const value = Number(item.value) || 0;
+
+  if (goal.metric === 'duration') {
+    const minutes = isHourUnit(goal.unit) ? value * 60 : value;
+    // Exact, not estimated — only the floor and the quarter-hour snap apply.
+    return Math.max(SLOT_MINUTES, snapToSlot(minutes));
+  }
+
+  if (goal.metric === 'distance' && value > 0) {
+    const pace = PACE_PER_MILE[goal.icon] ?? PACE_PER_MILE.run;
+    const miles = isMetricUnit(goal.unit) ? value * KM_PER_MILE : value;
+    return Math.max(SLOT_MINUTES, snapToSlot(miles * pace));
+  }
+
+  return FALLBACK_DURATION_MINUTES;
+}
+
+/** True when the duration is the goal's own number rather than a guess. */
+export function isExactDuration(goal: WorkoutType | undefined): boolean {
+  return goal?.metric === 'duration';
+}
+
+/** Sort a day's items by start time, keeping insertion order for ties. */
+export function byStartTime(items: CalendarItem[]): CalendarItem[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort(
+      (a, b) =>
+        startMinutesOf(a.item) - startMinutesOf(b.item) || a.index - b.index
+    )
+    .map(({ item }) => item);
+}

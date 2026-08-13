@@ -29,7 +29,14 @@ export const CalendarItemSchema = z.object({
   /** YYYY-MM-DD of the day the containing week starts on. */
   weekStart: z.string(),
   value: z.number(),
-  workoutType: z.string().nullable().optional()
+  workoutType: z.string().nullable().optional(),
+  /**
+   * Start of the workout, in minutes from local midnight, snapped to 15.
+   * Absent on items created before times existed; treat as the default slot.
+   */
+  startMinutes: z.number().int().min(0).max(1439).optional(),
+  /** The Google Calendar event this item is mirrored to, once it has one. */
+  googleEventId: z.string().nullable().optional()
 });
 export type CalendarItem = z.infer<typeof CalendarItemSchema>;
 
@@ -59,6 +66,10 @@ export const PlannerStateSchema = z.object({
   lastViewedMonday: z.string().nullable(),
   tempUnit: z.enum(['C', 'F']).optional().default('F'),
   /** 0 = Sunday ... 6 = Saturday. */
-  weekStartsOn: z.number().int().min(0).max(6).optional().default(1)
+  weekStartsOn: z.number().int().min(0).max(6).optional().default(1),
+  /** The `Workouts` calendar we created in Google, once we have made one. */
+  googleCalendarId: z.string().nullable().optional().default(null),
+  /** The spreadsheet history is exported to, so repeat exports overwrite it. */
+  googleSheetId: z.string().nullable().optional().default(null)
 });
 export type PlannerState = z.infer<typeof PlannerStateSchema>;

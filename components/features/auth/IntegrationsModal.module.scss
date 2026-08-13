@@ -89,6 +89,15 @@
   color: var(--text-main);
 }
 
+// Status sits beside the button rather than under it, so the row keeps its
+// height whether or not sync has anything to say.
+.action {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+
 .footer {
   display: flex;
   justify-content: flex-end;

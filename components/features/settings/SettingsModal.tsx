@@ -8,6 +8,7 @@ import { Modal } from '@/components/elements/Modal/Modal';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { Button } from '@/components/elements/Button/Button';
 import { Select } from '@/components/elements/Select/Select';
+import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
 import { useWeather, useWeatherStore } from '@/hooks/useWeather';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
@@ -20,7 +21,14 @@ export interface SettingsModalProps {
 
 type ConfirmAction = 'reset' | 'import' | null;
 
+const TABS: TabConfig[] = [
+  { id: 'general', label: 'General' },
+  { id: 'data', label: 'Data' },
+  { id: 'danger', label: 'Danger zone' }
+];
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState('general');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [importStatus, setImportStatus] = useState<{ message: string; isError: boolean } | null>(null);
   const pendingFile = useRef<File | null>(null);
@@ -93,74 +101,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Settings" maxWidth="500px">
+        <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         <div className={styles.container}>
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>General</h3>
-            <div className={styles.row}>
-              <span className={styles.text}>Week starts on</span>
-              <Select
-                value={String(weekStartsOn)}
-                onChange={(e) => setWeekStartsOn(Number(e.target.value) as WeekStartsOn)}
-              >
-                {WEEK_START_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </Select>
+          {activeTab === 'general' && (
+            <div className={styles.section}>
+              <div className={styles.row}>
+                <span className={styles.text}>Week starts on</span>
+                <Select
+                  value={String(weekStartsOn)}
+                  onChange={(e) => setWeekStartsOn(Number(e.target.value) as WeekStartsOn)}
+                >
+                  {WEEK_START_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Temperature unit</span>
+                <Select
+                  value={tempUnit}
+                  onChange={(e) => handleTempUnitChange(e.target.value as 'C' | 'F')}
+                >
+                  <option value="F">Fahrenheit (°F)</option>
+                  <option value="C">Celsius (°C)</option>
+                </Select>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Weather location</span>
+                <span className={styles.text} style={{ color: 'var(--text-muted)' }}>
+                  {weatherData ? weatherData.location.city : 'Location TBD'}
+                </span>
+              </div>
             </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Temperature unit</span>
-              <Select
-                value={tempUnit}
-                onChange={(e) => handleTempUnitChange(e.target.value as 'C' | 'F')}
-              >
-                <option value="F">Fahrenheit (°F)</option>
-                <option value="C">Celsius (°C)</option>
-              </Select>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Weather location</span>
-              <span className={styles.text} style={{ color: 'var(--text-muted)' }}>
-                {weatherData ? weatherData.location.city : 'Location TBD'}
-              </span>
-            </div>
-          </div>
+          )}
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Data &amp; History</h3>
-            <div className={styles.row}>
-              <span className={styles.text}>Export history to CSV format</span>
-              <Button onClick={exportData} variant="secondary">Export CSV</Button>
+          {activeTab === 'data' && (
+            <div className={styles.section}>
+              <div className={styles.row}>
+                <span className={styles.text}>Export history to CSV format</span>
+                <Button onClick={exportData} variant="secondary">Export CSV</Button>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Save a full backup, including goals and settings</span>
+                <Button onClick={exportBackup} variant="secondary">Export backup</Button>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Restore everything from a backup file</span>
+                <Button onClick={() => fileInput.current?.click()} variant="secondary">Import backup</Button>
+              </div>
+              {importStatus && (
+                <span className={`${styles.status} ${importStatus.isError ? styles.error : ''}`}>
+                  {importStatus.message}
+                </span>
+              )}
+              <input
+                ref={fileInput}
+                type="file"
+                accept="application/json,.json"
+                className={styles.hiddenInput}
+                onChange={handleFileChosen}
+              />
             </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Save a full backup, including goals and settings</span>
-              <Button onClick={exportBackup} variant="secondary">Export backup</Button>
-            </div>
-            <div className={styles.row}>
-              <span className={styles.text}>Restore everything from a backup file</span>
-              <Button onClick={() => fileInput.current?.click()} variant="secondary">Import backup</Button>
-            </div>
-            {importStatus && (
-              <span className={`${styles.status} ${importStatus.isError ? styles.error : ''}`}>
-                {importStatus.message}
-              </span>
-            )}
-            <input
-              ref={fileInput}
-              type="file"
-              accept="application/json,.json"
-              className={styles.hiddenInput}
-              onChange={handleFileChosen}
-            />
-          </div>
+          )}
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Danger zone</h3>
-            <div className={styles.row}>
-              <span className={styles.text}>Factory reset to default data</span>
-              <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset app</Button>
+          {activeTab === 'danger' && (
+            <div className={styles.section}>
+              <div className={styles.row}>
+                <span className={styles.text}>Factory reset to default data</span>
+                <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset app</Button>
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </Modal>

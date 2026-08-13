@@ -8,6 +8,7 @@ import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { MdClose } from 'react-icons/md';
+import { TimeChip } from './TimeChip';
 import styles from './ScheduledCard.module.scss';
 
 export function ScheduledCard({ item }: { item: CalendarItem }) {
@@ -59,6 +60,8 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
         </button>
       </div>
       
+      <TimeChip item={item} goal={goal} />
+
       {goal.workoutTypes && goal.workoutTypes.length > 0 && (
         <Select
           className={styles.subtagSelect}

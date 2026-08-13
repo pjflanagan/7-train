@@ -13,6 +13,7 @@ import { PlannerDndProvider } from './PlannerDndProvider';
 import { MobileDayFeed } from './MobileDayFeed';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useInitWeather } from '@/hooks/useWeather';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
@@ -78,6 +79,7 @@ export function PlannerPage() {
   const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
   const isMobile = useIsMobile();
   useInitWeather();
+  useCalendarSync();
 
   if (!isHydrated) {
     return (

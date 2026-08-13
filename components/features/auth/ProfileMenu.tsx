@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MdPersonOutline, MdSettings } from 'react-icons/md';
+import { MdLogout, MdSettings, MdSync } from 'react-icons/md';
 import { FcGoogle } from 'react-icons/fc';
+import { signOut } from 'next-auth/react';
 import { Avatar } from '@/components/elements/Avatar/Avatar';
 import { Menu, MenuItem } from '@/components/elements/Menu/Menu';
-import { AccountModal } from '@/components/features/auth/AccountModal';
+import { IntegrationsModal } from '@/components/features/auth/IntegrationsModal';
 import { SettingsModal } from '@/components/features/settings/SettingsModal';
 import { useGoogleAccount, useIsGoogleAuthConfigured } from '@/hooks/useAuth';
 import styles from './ProfileMenu.module.scss';
 
-type OpenModal = 'account' | 'settings' | null;
+type OpenModal = 'integrations' | 'settings' | null;
 
 /** Header avatar. Opens the account dropdown, which is also the way into settings. */
 export const ProfileMenu: React.FC = () => {
@@ -46,18 +47,32 @@ export const ProfileMenu: React.FC = () => {
       >
         {isGoogleAuthConfigured && (
           <MenuItem
-            icon={isSignedIn ? <MdPersonOutline /> : <FcGoogle />}
-            onClick={() => open('account')}
+            icon={isSignedIn ? <MdSync /> : <FcGoogle />}
+            onClick={() => open('integrations')}
           >
-            {isSignedIn ? 'Account' : 'Sign in with Google'}
+            {isSignedIn ? 'Integrations' : 'Sign in with Google'}
           </MenuItem>
         )}
         <MenuItem icon={<MdSettings />} onClick={() => open('settings')}>
           Settings
         </MenuItem>
+        {isGoogleAuthConfigured && isSignedIn && (
+          <MenuItem
+            icon={<MdLogout />}
+            onClick={() => {
+              setIsOpen(false);
+              signOut();
+            }}
+          >
+            Logout
+          </MenuItem>
+        )}
       </Menu>
 
-      <AccountModal isOpen={openModal === 'account'} onClose={() => setOpenModal(null)} />
+      <IntegrationsModal
+        isOpen={openModal === 'integrations'}
+        onClose={() => setOpenModal(null)}
+      />
       <SettingsModal isOpen={openModal === 'settings'} onClose={() => setOpenModal(null)} />
     </>
   );

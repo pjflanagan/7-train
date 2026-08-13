@@ -2,34 +2,68 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { signIn, signOut } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { FcGoogle } from 'react-icons/fc';
 import { Avatar } from '@/components/elements/Avatar/Avatar';
-import { Badge } from '@/components/elements/Badge/Badge';
 import { Button } from '@/components/elements/Button/Button';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { connectGoogleIntegration, useGoogleAccount } from '@/hooks/useAuth';
-import { GOOGLE_INTEGRATION_LIST, isIntegrationConnected } from '@/lib/google';
-import styles from './AccountModal.module.scss';
+import { useCalendarSyncStatus } from '@/hooks/useCalendarSyncStatus';
+import { useSheetsExport } from '@/hooks/useSheetsExport';
+import {
+  GOOGLE_INTEGRATIONS,
+  GOOGLE_INTEGRATION_LIST,
+  GoogleIntegrationId,
+  isIntegrationConnected,
+} from '@/lib/google';
+import styles from './IntegrationsModal.module.scss';
 
-export interface AccountModalProps {
+export interface IntegrationsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const SYNC_LABEL: Record<string, string> = {
+  off: '',
+  pulling: 'Reading your calendar…',
+  syncing: 'Sending changes…',
+  synced: 'Up to date',
+  error: 'Sync failed',
+};
+
 /**
- * Signing in, signing out, and the Google integrations the account has granted.
- * Granting access and using it are separate steps — nothing syncs yet, the
- * scopes are the groundwork.
+ * The Google account and what it is wired up to. Connecting an integration is
+ * a consent step; what each one then does lives in its own row.
  */
-export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) => {
+export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, onClose }) => {
   const { name, email, image, isSignedIn, isLoading, scopes, needsReauth } = useGoogleAccount();
+  const { status, resync } = useCalendarSyncStatus();
+  const { exportToSheets, isExporting } = useSheetsExport();
+
+  const renderAction = (id: GoogleIntegrationId) => {
+    if (id === 'calendar') {
+      return (
+        <div className={styles.action}>
+          <span className={styles.muted}>{SYNC_LABEL[status]}</span>
+          <Button variant="secondary" onClick={resync} disabled={status === 'pulling'}>
+            Sync now
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <Button variant="secondary" onClick={() => exportToSheets()} disabled={isExporting}>
+        {isExporting ? 'Exporting…' : 'Export now'}
+      </Button>
+    );
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isSignedIn ? 'Account' : 'Sign in'}
+      title={isSignedIn ? 'Integrations' : 'Sign in'}
       maxWidth="440px"
     >
       <div className={styles.container}>
@@ -57,10 +91,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
             )}
 
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Google integrations</h3>
+              <h3 className={styles.sectionTitle}>Google</h3>
               <p className={styles.note}>
-                Connecting grants access now so syncing can be turned on later. Nothing is
-                written to your Google account yet.
+                Your calendar holds the workouts once it is connected, so a change made in
+                Google Calendar shows up here. Goals stay on this device.
               </p>
 
               {GOOGLE_INTEGRATION_LIST.map((integration) => (
@@ -70,7 +104,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                     <span className={styles.muted}>{integration.description}</span>
                   </div>
                   {isIntegrationConnected(scopes, integration) ? (
-                    <Badge variant="success">Connected</Badge>
+                    renderAction(integration.id)
                   ) : (
                     <Button
                       variant="secondary"
@@ -81,12 +115,14 @@ export const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose }) =
                   )}
                 </div>
               ))}
-            </div>
 
-            <div className={styles.footer}>
-              <Button variant="secondary" onClick={() => signOut()}>
-                Sign out
-              </Button>
+              {isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar) &&
+                status === 'error' && (
+                  <p className={styles.note}>
+                    The last sync did not go through. Your plan is safe on this device —
+                    try again, or reconnect the calendar.
+                  </p>
+                )}
             </div>
           </>
         ) : (

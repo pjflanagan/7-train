@@ -72,6 +72,13 @@
   font-weight: 500;
 }
 
+.time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
 .subType {
   font-size: 0.75rem;
   color: var(--text-muted);

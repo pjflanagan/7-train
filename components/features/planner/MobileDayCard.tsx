@@ -12,6 +12,7 @@ import {
   getWeekStartKey,
   parseDateLocal,
 } from '@/lib/dates';
+import { formatTimeOfDay, startMinutesOf } from '@/lib/schedule';
 import styles from './MobileDayCard.module.scss';
 
 export interface MobileDayCardProps {
@@ -69,6 +70,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
               >
                 <Icon className={styles.icon} style={{ color: goal.color }} />
                 <span className={styles.itemName}>
+                  <span className={styles.time}>{formatTimeOfDay(startMinutesOf(item))}</span>
                   {goal.name}
                   {item.workoutType && (
                     <span className={styles.subType}>{item.workoutType}</span>

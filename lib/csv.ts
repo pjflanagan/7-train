@@ -56,8 +56,32 @@ export function entriesFromSchedule(
   return entries.sort((a, b) => a.date.localeCompare(b.date));
 }
 
+const HEADERS = ["Date", "Day", "Workout Category", "Workout Type/Subtype", "Value", "Unit", "Notes"];
+
+/**
+ * History as a grid of strings, header row first. Shared by the CSV download
+ * and the Sheets export so both records say exactly the same thing.
+ */
+export function historyRows(history: HistoryEntry[], types: WorkoutType[]): string[][] {
+  return [
+    HEADERS,
+    ...history.map(item => {
+      const type = item.typeId ? types.find(t => t.id === item.typeId) : null;
+      return [
+        item.date,
+        dayLabel(item.day),
+        type ? type.name : (item.typeId || ''),
+        item.workoutType || '',
+        item.value !== null && item.value !== undefined ? String(item.value) : '',
+        type ? type.unit : '',
+        item.notes || ''
+      ];
+    })
+  ];
+}
+
 export function exportCsv(history: HistoryEntry[], types: WorkoutType[]): string {
-  const headers = ["Date", "Day", "Workout Category", "Workout Type/Subtype", "Value", "Unit", "Notes"];
+  const headers = HEADERS;
 
   function escapeCSV(val: string | number | null | undefined): string {
     if (val === null || val === undefined) {

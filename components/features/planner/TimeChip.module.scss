@@ -1,0 +1,46 @@
+@use '@/styles/mixins' as *;
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.chip {
+  @include focus-ring();
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  // Vertical, because dragging it moves the workout through the day.
+  cursor: ns-resize;
+  touch-action: none;
+  transition: var(--transition-smooth);
+
+  &:hover {
+    border-color: var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+}
+
+.isDragging {
+  border-color: var(--border-focus);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.duration {
+  @include truncate();
+
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}

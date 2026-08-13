@@ -15,12 +15,20 @@ export type Backup = {
 
 /** Strip the store's action functions, keeping only the persisted data. */
 export function toBackup(state: PlannerState): Backup {
-  const { goals, items, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit, weekStartsOn } = state;
+  const {
+    goals, items, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit,
+    weekStartsOn, googleCalendarId, googleSheetId
+  } = state;
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    state: { goals, items, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit, weekStartsOn }
+    // The Google ids ride along so a restore onto the same account picks the
+    // existing calendar and spreadsheet back up instead of making new ones.
+    state: {
+      goals, items, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit,
+      weekStartsOn, googleCalendarId, googleSheetId
+    }
   };
 }
 

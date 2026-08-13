@@ -5,6 +5,14 @@ import { DEFAULT_WORKOUT_TYPES, getDefaultCalendarItems, DEFAULT_LINKS, DAYS } f
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weeklyTargetKey } from './progress';
+import {
+  byStartTime,
+  clampStartMinutes,
+  DEFAULT_START_MINUTES,
+  estimateDurationMinutes,
+  SLOT_MINUTES,
+  startMinutesOf
+} from './schedule';
 import { arrayMove } from '@dnd-kit/sortable';
 
 type DayName = typeof DAYS[number];
@@ -25,6 +33,20 @@ type PlannerStore = PlannerState & {
   removeItem: (id: string) => void;
   moveItem: (id: string, targetDay: DayName, targetWeekStart: string, newIndex?: number) => void;
   reorderDay: (day: DayName, weekStart: string, oldIndex: number, newIndex: number) => void;
+  /** Move an item through the day. Minutes from local midnight, snapped to 15. */
+  setItemTime: (id: string, startMinutes: number) => void;
+  /** Nudge a time by whole slots, the keyboard equivalent of dragging it. */
+  nudgeItemTime: (id: string, slots: number) => void;
+
+  setGoogleCalendarId: (calendarId: string | null) => void;
+  setGoogleSheetId: (sheetId: string | null) => void;
+  /** Record which Google event now mirrors each item, keyed by item id. */
+  setGoogleEventIds: (eventIds: Record<string, string>) => void;
+  /**
+   * Swap the whole schedule for what Google Calendar holds. Goals, notes and
+   * settings stay put: the calendar owns events only.
+   */
+  replaceCalendarItems: (items: CalendarItem[]) => void;
 
   setNote: (day: DayName, weekStart: string, note: string) => void;
   copyWeek: (fromWeekStart: string, toWeekStart: string) => void;
@@ -52,11 +74,29 @@ function buildInitialState(): PlannerState {
     lastViewedMonday: null,
     tempUnit: 'F',
     weekStartsOn: 1,
+    googleCalendarId: null,
+    googleSheetId: null,
   };
 }
 
 const newId = (prefix: string) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+
+/**
+ * Where a newly dropped workout lands: straight after the last one already on
+ * that day, or the default morning slot when the day is empty.
+ */
+function nextFreeSlot(state: PlannerState, day: DayName, weekStart: string): number {
+  const dayItems = state.items.filter(i => i.day === day && i.weekStart === weekStart);
+  if (dayItems.length === 0) return DEFAULT_START_MINUTES;
+
+  const latestEnd = dayItems.reduce((end, item) => {
+    const goal = state.goals.find(g => g.id === item.typeId);
+    return Math.max(end, startMinutesOf(item) + estimateDurationMinutes(item, goal));
+  }, DEFAULT_START_MINUTES);
+
+  return clampStartMinutes(latestEnd);
+}
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
@@ -96,7 +136,14 @@ export const usePlannerStore = create<PlannerStore>()(
       }),
 
       addItem: (item) => set((state) => ({
-        items: [...state.items, { ...item, id: newId('item') }]
+        items: [
+          ...state.items,
+          {
+            ...item,
+            id: newId('item'),
+            startMinutes: item.startMinutes ?? nextFreeSlot(state, item.day, item.weekStart)
+          }
+        ]
       })),
       updateItemValue: (id, value) => set((state) => ({
         items: state.items.map(i => i.id === id ? { ...i, value } : i)
@@ -117,7 +164,11 @@ export const usePlannerStore = create<PlannerStore>()(
         if (newIndex !== undefined) {
           const inTarget = (i: CalendarItem) =>
             i.day === targetDay && i.weekStart === targetWeekStart;
-          const targetDayItems = newItems.filter(inTarget);
+          const targetDayItems = byStartTime(newItems.filter(inTarget));
+          // Dropped between two workouts, so take the time of the one it
+          // displaced — the day stays in the order the drop implied.
+          const displaced = targetDayItems[newIndex];
+          if (displaced) updatedItem.startMinutes = startMinutesOf(displaced);
           targetDayItems.splice(newIndex, 0, updatedItem);
           newItems = [...newItems.filter(i => !inTarget(i)), ...targetDayItems];
         } else {
@@ -128,10 +179,40 @@ export const usePlannerStore = create<PlannerStore>()(
       }),
       reorderDay: (day, weekStart, oldIndex, newIndex) => set((state) => {
         const inDay = (i: CalendarItem) => i.day === day && i.weekStart === weekStart;
-        const dayItems = state.items.filter(inDay);
+        const dayItems = byStartTime(state.items.filter(inDay));
         const otherItems = state.items.filter(i => !inDay(i));
-        return { items: [...otherItems, ...arrayMove(dayItems, oldIndex, newIndex)] };
+
+        // Reordering swaps which workout sits in which slot; the day's set of
+        // times is unchanged, so nothing silently drifts into the evening.
+        const slots = dayItems.map(startMinutesOf);
+        const reordered = arrayMove(dayItems, oldIndex, newIndex).map((item, index) => ({
+          ...item,
+          startMinutes: slots[index]
+        }));
+
+        return { items: [...otherItems, ...reordered] };
       }),
+      setItemTime: (id, startMinutes) => set((state) => ({
+        items: state.items.map(i =>
+          i.id === id ? { ...i, startMinutes: clampStartMinutes(startMinutes) } : i
+        )
+      })),
+      nudgeItemTime: (id, slots) => set((state) => ({
+        items: state.items.map(i =>
+          i.id === id
+            ? { ...i, startMinutes: clampStartMinutes(startMinutesOf(i) + slots * SLOT_MINUTES) }
+            : i
+        )
+      })),
+
+      setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
+      setGoogleSheetId: (googleSheetId) => set({ googleSheetId }),
+      setGoogleEventIds: (eventIds) => set((state) => ({
+        items: state.items.map(i =>
+          eventIds[i.id] ? { ...i, googleEventId: eventIds[i.id] } : i
+        )
+      })),
+      replaceCalendarItems: (items) => set({ items }),
 
       setNote: (day, weekStart, note) => set((state) => {
         const key = noteKey(weekStart, day);
@@ -149,7 +230,10 @@ export const usePlannerStore = create<PlannerStore>()(
         const copiedItems = fromItems.map(i => ({
           ...i,
           id: newId('item'),
-          weekStart: toWeekStart
+          weekStart: toWeekStart,
+          // A copy is a new workout, not the same one twice, so it gets its own
+          // calendar event rather than pointing at the original's.
+          googleEventId: null
         }));
 
         const newNotes = { ...state.notes };

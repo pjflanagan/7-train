@@ -2,16 +2,18 @@ import { useMemo } from 'react';
 import { usePlannerStore, noteKey } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { WeekStartsOn } from '@/lib/dates';
+import { byStartTime } from '@/lib/schedule';
 
 type DayName = typeof DAYS[number];
 
 export const useGoals = () => usePlannerStore((state) => state.goals);
 export const useGoal = (id: string) => usePlannerStore((state) => state.goals.find(g => g.id === id));
 
+/** A day's items in the order they happen. */
 export const useDayItems = (day: DayName, weekStart: string) => {
   const items = usePlannerStore((state) => state.items);
   return useMemo(() => {
-    return items.filter(i => i.day === day && i.weekStart === weekStart);
+    return byStartTime(items.filter(i => i.day === day && i.weekStart === weekStart));
   }, [items, day, weekStart]);
 };
 
