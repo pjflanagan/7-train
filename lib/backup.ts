@@ -2,7 +2,7 @@ import { PlannerState, PlannerStateSchema } from './types';
 import { migrateStore } from './migrate';
 
 /** Bumped alongside the zustand `persist` version in `@/lib/store`. */
-export const BACKUP_VERSION = 3;
+export const BACKUP_VERSION = 4;
 
 const BACKUP_FORMAT = 'workout-week-backup';
 
@@ -17,7 +17,7 @@ export type Backup = {
 export function toBackup(state: PlannerState): Backup {
   const {
     activities, events, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit,
-    weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
+    use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
   } = state;
   return {
     format: BACKUP_FORMAT,
@@ -27,7 +27,7 @@ export function toBackup(state: PlannerState): Backup {
     // existing calendar and spreadsheet back up instead of making new ones.
     state: {
       activities, events, notes, weeklyTargets, links, history, lastViewedMonday, tempUnit,
-      weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
+      use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
     }
   };
 }

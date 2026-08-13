@@ -51,3 +51,6 @@ export const useWeekStartsOn = () =>
 
 export const useDefaultStartMinutes = () =>
   usePlannerStore((state) => state.defaultStartMinutes ?? DEFAULT_START_MINUTES);
+
+export const useUse24HourClock = () =>
+  usePlannerStore((state) => state.use24HourClock ?? false);

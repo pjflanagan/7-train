@@ -77,7 +77,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   const [paceDistanceInput, setPaceDistanceInput] = useState<number | ''>(1);
 
   useEffect(() => {
-    if (metric === 'times') {
+    if (metric === 'instance') {
       setValue('unit', 'times');
     }
     if (metric === 'duration') {
@@ -86,7 +86,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     // Only one of the two typical-length inputs is ever on screen; drop the
     // other so a metric switch cannot leave a stale estimate behind it.
     if (metric !== 'distance') setValue('paceMinutes', null);
-    if (metric !== 'times') setValue('typicalDurationMinutes', null);
+    if (metric !== 'instance') setValue('typicalDurationMinutes', null);
   }, [metric, setValue]);
 
   useEffect(() => {
@@ -188,7 +188,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                 <Select label="Metric" {...register('metric')} error={errors.metric?.message}>
                   <option value="distance">Distance</option>
                   <option value="duration">Duration</option>
-                  <option value="times">Times</option>
+                  <option value="instance">Times</option>
                 </Select>
                 {metric === 'distance' && (
                   <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles" />
@@ -211,7 +211,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   )}
                 />
               )}
-              {metric === 'times' && (
+              {metric === 'instance' && (
                 <div className={styles.field}>
                   <Controller
                     control={control}

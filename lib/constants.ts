@@ -66,7 +66,7 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     id: 'type-lift',
     name: 'Lift',
     icon: 'gym',
-    metric: 'times',
+    metric: 'instance',
     unit: 'times',
     target: 5,
     color: '#8E4EC6', // violet

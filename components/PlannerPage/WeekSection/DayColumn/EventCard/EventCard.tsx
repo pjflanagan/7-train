@@ -2,7 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ScheduledEvent } from '@/lib/types';
-import { useActivity } from '@/hooks/usePlannerSelectors';
+import { useActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
@@ -14,6 +14,7 @@ import styles from './EventCard.module.scss';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
   const activity = useActivity(event.typeId);
+  const use24Hour = useUse24HourClock();
   const updateEventValue = usePlannerStore(state => state.updateEventValue);
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
   const removeEvent = usePlannerStore(state => state.removeEvent);
@@ -40,8 +41,8 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   } as React.CSSProperties;
 
   const subTypes = activity.workoutTypes ?? [];
-  // A "times" activity is always one occurrence, so "1 times" is noise.
-  const hasValue = activity.metric !== 'times';
+  // An "instance" activity is always one occurrence, so "1 times" is noise.
+  const hasValue = activity.metric !== 'instance';
   // A duration activity's value is its length, so the number entry sits where the
   // length control would be instead of repeating it a line further down.
   const isDuration = activity.metric === 'duration';
@@ -71,7 +72,7 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
           // A duration activity's own value already says how long it runs, so
           // the header's time is just a label here, not a second control for
           // the same fact — dimmed to read as repeated rather than actionable.
-          <span className={styles.headerTime}>{formatTimeOfDay(startMinutesOf(event))}</span>
+          <span className={styles.headerTime}>{formatTimeOfDay(startMinutesOf(event), use24Hour)}</span>
         ) : (
           <TimeChip event={event} activity={activity} />
         )}

@@ -12,7 +12,7 @@ export const ActivitySchema = z.object({
   id: z.string(),
   name: z.string(),
   icon: z.custom<IconKey>((val) => typeof val === 'string' && val in ACTIVITY_ICONS),
-  metric: z.enum(['distance', 'duration', 'times']),
+  metric: z.enum(['distance', 'duration', 'instance']),
   unit: z.string(),
   target: z.number().nullable(),
   color: z.string(),
@@ -23,7 +23,7 @@ export const ActivitySchema = z.object({
    */
   paceMinutes: z.number().positive().nullable().optional(),
   /**
-   * Typical session length in minutes, on a `times` workout — there is no value
+   * Typical session length in minutes, on an `instance` workout — there is no value
    * to derive one from, so this is the whole estimate.
    */
   typicalDurationMinutes: z.number().int().positive().nullable().optional(),
@@ -90,6 +90,8 @@ export const PlannerStateSchema = z.object({
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),
   tempUnit: z.enum(['C', 'F']).optional().default('F'),
+  /** Whether times are shown as "17:30" instead of "5:30 PM". */
+  use24HourClock: z.boolean().optional().default(false),
   /**
    * When a newly added workout lands on an empty day, in minutes from local
    * midnight. Workouts added to a day that already has some still stack after

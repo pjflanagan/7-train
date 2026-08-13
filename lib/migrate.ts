@@ -18,7 +18,11 @@ function normalizeActivity(raw: unknown): Activity {
   }
   if (!activity.workoutTypes) activity.workoutTypes = [];
   if (!activity.links) activity.links = [];
-  if (activity.metric === 'times') activity.unit = 'times';
+  // Legacy imports predate the `instance` rename, so their raw metric is still `times`.
+  if ((activity.metric as string) === 'times') {
+    activity.metric = 'instance';
+    activity.unit = 'times';
+  }
   if (activity.metric === 'duration') activity.unit = 'mins';
   return ActivitySchema.parse(activity);
 }
@@ -90,10 +94,10 @@ export function importLegacy(): Partial<PlannerState> | null {
     }
   }
 
-  // enforce value=1 for times metric
+  // enforce value=1 for instance metric
   events = events.map(event => {
     const activity = activities.find(g => g.id === event.typeId);
-    if (activity && activity.metric === 'times') {
+    if (activity && activity.metric === 'instance') {
       return { ...event, value: 1 };
     }
     return event;
@@ -187,11 +191,34 @@ function migrateV2toV3(state: Record<string, unknown>): Record<string, unknown> 
   };
 }
 
+/**
+ * v3 -> v4: `times` was a confusing name to share with `duration` — both read
+ * as "how long," when this metric actually means "how many separate
+ * sessions." Renamed to `instance`; nothing else about the activity changes.
+ */
+function migrateV3toV4(state: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(state.activities)) return state;
+
+  const hasLegacyMetric = state.activities.some(
+    (raw) => (raw as Record<string, unknown>).metric === 'times'
+  );
+  if (!hasLegacyMetric) return state;
+
+  const activities = state.activities.map((raw) => {
+    const activity = { ...(raw as Record<string, unknown>) };
+    if (activity.metric === 'times') activity.metric = 'instance';
+    return activity;
+  });
+
+  return { ...state, activities };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
   let state = persistedState as Record<string, unknown>;
   if (version < 2) state = migrateV1toV2(state);
   if (version < 3) state = migrateV2toV3(state);
+  if (version < 4) state = migrateV3toV4(state);
   return state;
 }

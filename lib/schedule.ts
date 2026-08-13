@@ -12,7 +12,7 @@ import { ScheduledEvent, Activity } from './types';
 export const SLOT_MINUTES = 15;
 
 /** Where an event lands when nothing — not even a setting — has said otherwise. */
-export const DEFAULT_START_MINUTES = 7 * 60;
+export const DEFAULT_START_MINUTES = 17 * 60 + 30;
 
 /** Latest start we allow, so a workout never runs past midnight unseen. */
 export const MAX_START_MINUTES = 23 * 60 + 45;
@@ -51,10 +51,14 @@ export function startMinutesOf(event: ScheduledEvent): number {
   return clampStartMinutes(event.startMinutes ?? DEFAULT_START_MINUTES);
 }
 
-/** "7:00 AM", in the viewer's locale. */
-export function formatTimeOfDay(minutes: number): string {
+/** "7:00 AM", in the viewer's locale — or "19:00" when `use24Hour` is set. */
+export function formatTimeOfDay(minutes: number, use24Hour = false): string {
   const date = new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60);
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: !use24Hour
+  });
 }
 
 /** Earliest and latest a default start time may be set to. */
@@ -65,10 +69,10 @@ const START_OPTION_TO = 22 * 60;
  * The times offered as a default start, on the half hour. Quarter hours are
  * draggable per workout; a list of 73 of them is not a setting anyone reads.
  */
-export function startTimeOptions(): { value: number; label: string }[] {
+export function startTimeOptions(use24Hour = false): { value: number; label: string }[] {
   const options = [];
   for (let minutes = START_OPTION_FROM; minutes <= START_OPTION_TO; minutes += 30) {
-    options.push({ value: minutes, label: formatTimeOfDay(minutes) });
+    options.push({ value: minutes, label: formatTimeOfDay(minutes, use24Hour) });
   }
   return options;
 }
@@ -130,7 +134,7 @@ export function estimateDurationMinutes(
     return Math.max(SLOT_MINUTES, snapToSlot(value));
   }
 
-  if (activity.metric === 'times' && activity.typicalDurationMinutes) {
+  if (activity.metric === 'instance' && activity.typicalDurationMinutes) {
     return clampDuration(ceilToSlot(activity.typicalDurationMinutes));
   }
 

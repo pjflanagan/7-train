@@ -10,7 +10,7 @@ import { Button } from '@/components/elements/Button/Button';
 import { Select } from '@/components/elements/Select/Select';
 import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
 import { useWeather, useWeatherStore } from '@/hooks/useWeather';
-import { useDefaultStartMinutes, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { useDefaultStartMinutes, useUse24HourClock, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
 import { startTimeOptions } from '@/lib/schedule';
 import styles from './SettingsModal.module.scss';
@@ -20,7 +20,7 @@ export interface SettingsModalProps {
   onClose: () => void;
 }
 
-type ConfirmAction = 'reset' | 'import' | null;
+type ConfirmAction = 'reset' | 'clear' | 'import' | null;
 
 const TABS: TabConfig[] = [
   { id: 'general', label: 'General' },
@@ -40,6 +40,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const fetchWeather = useWeatherStore((s) => s.fetchWeather);
 
   const resetAll = usePlannerStore((state) => state.resetAll);
+  const clearAll = usePlannerStore((state) => state.clearAll);
 
   const tempUnit = usePlannerStore((state) => state.tempUnit ?? 'F');
   const setTempUnit = usePlannerStore((state) => state.setTempUnit);
@@ -47,7 +48,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setWeekStartsOn = usePlannerStore((state) => state.setWeekStartsOn);
   const defaultStartMinutes = useDefaultStartMinutes();
   const setDefaultStartMinutes = usePlannerStore((state) => state.setDefaultStartMinutes);
-  const startTimes = startTimeOptions();
+  const use24HourClock = useUse24HourClock();
+  const setUse24HourClock = usePlannerStore((state) => state.setUse24HourClock);
+  const startTimes = startTimeOptions(use24HourClock);
 
   const handleTempUnitChange = (unit: 'C' | 'F') => {
     setTempUnit(unit);
@@ -79,6 +82,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       case 'reset':
         resetAll();
         break;
+      case 'clear':
+        clearAll();
+        break;
       case 'import': {
         const file = pendingFile.current;
         pendingFile.current = null;
@@ -93,6 +99,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     switch (confirmAction) {
       case 'reset':
         return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
+      case 'clear':
+        return { title: 'Clear all data', message: 'Are you sure you want to erase everything? Every activity, event, note, target, link, and history entry will be gone, with nothing put back in their place. This cannot be undone.', isDestructive: true };
       case 'import':
         return { title: 'Import backup', message: 'Importing replaces everything currently in the app with the contents of the backup file. This cannot be undone.', isDestructive: true };
       default:
@@ -134,6 +142,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   {startTimes.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
+                </Select>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Clock</span>
+                <Select
+                  className={styles.control}
+                  value={use24HourClock ? '24' : '12'}
+                  onChange={(e) => setUse24HourClock(e.target.value === '24')}
+                >
+                  <option value="12">12-hour (5:30 PM)</option>
+                  <option value="24">24-hour (17:30)</option>
                 </Select>
               </div>
               <div className={styles.row}>
@@ -190,6 +209,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className={styles.row}>
                 <span className={styles.text}>Factory reset to default data</span>
                 <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset app</Button>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.text}>Erase everything, with nothing put back</span>
+                <Button onClick={() => setConfirmAction('clear')} variant="danger">Clear all data</Button>
               </div>
             </div>
           )}

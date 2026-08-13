@@ -70,12 +70,15 @@ type PlannerStore = PlannerState & {
   removeLink: (id: string) => void;
 
   setTempUnit: (unit: 'C' | 'F') => void;
+  setUse24HourClock: (use24Hour: boolean) => void;
   setWeekStartsOn: (weekStartsOn: WeekStartsOn) => void;
   /** Where a new workout lands on an otherwise empty day. */
   setDefaultStartMinutes: (startMinutes: number) => void;
   /** Replace every persisted field at once, used by backup import. */
   replaceAll: (state: PlannerState) => void;
   resetAll: () => void;
+  /** Wipes everything to a blank slate — no seeded activities or events, unlike `resetAll`. */
+  clearAll: () => void;
 };
 
 function buildInitialState(): PlannerState {
@@ -89,6 +92,7 @@ function buildInitialState(): PlannerState {
     history: [],
     lastViewedMonday: null,
     tempUnit: 'F',
+    use24HourClock: false,
     weekStartsOn: 1,
     defaultStartMinutes: DEFAULT_START_MINUTES,
     googleCalendarId: null,
@@ -389,16 +393,23 @@ export const usePlannerStore = create<PlannerStore>()(
       removeLink: (id) => set((state) => ({ links: state.links.filter(l => l.id !== id) })),
 
       setTempUnit: (tempUnit) => set({ tempUnit }),
+      setUse24HourClock: (use24HourClock) => set({ use24HourClock }),
       setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
       setDefaultStartMinutes: (startMinutes) => set({
         defaultStartMinutes: clampStartMinutes(startMinutes)
       }),
       replaceAll: (state) => set(state),
-      resetAll: () => set(buildInitialState())
+      resetAll: () => set(buildInitialState()),
+      clearAll: () => set({
+        ...buildInitialState(),
+        activities: [],
+        events: [],
+        links: []
+      })
     }),
     {
       name: 'workout-week',
-      version: 3,
+      version: 4,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

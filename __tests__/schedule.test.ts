@@ -40,10 +40,10 @@ describe('estimateDurationMinutes', () => {
     expect(minutes).toBe(45);
   });
 
-  it('reads a duration activity measured in hours as hours', () => {
+  it('reads a duration activity value as minutes, unrounded to the slot', () => {
     const minutes = estimateDurationMinutes(
-      event({ value: 1.5 }),
-      activity({ metric: 'duration', unit: 'hours' })
+      event({ value: 90 }),
+      activity({ metric: 'duration', unit: 'mins' })
     );
     expect(minutes).toBe(90);
   });
@@ -101,13 +101,13 @@ describe('estimateDurationMinutes', () => {
   it('uses the typical session length for a count activity', () => {
     const minutes = estimateDurationMinutes(
       event({ value: 1 }),
-      activity({ metric: 'times', unit: 'times', typicalDurationMinutes: 50 })
+      activity({ metric: 'instance', unit: 'times', typicalDurationMinutes: 50 })
     );
     expect(minutes).toBe(60);
   });
 
   it('falls back to a flat session for a count activity', () => {
-    expect(estimateDurationMinutes(event({ value: 1 }), activity({ metric: 'times' }))).toBe(45);
+    expect(estimateDurationMinutes(event({ value: 1 }), activity({ metric: 'instance' }))).toBe(45);
   });
 
   it('never returns less than one slot', () => {
@@ -148,7 +148,7 @@ describe('durationMinutesOf', () => {
 
 describe('start times', () => {
   it('defaults an event with no time to the morning slot', () => {
-    expect(startMinutesOf(event())).toBe(7 * 60);
+    expect(startMinutesOf(event())).toBe(17 * 60 + 30);
   });
 
   it('snaps to quarter hours and stays inside the day', () => {

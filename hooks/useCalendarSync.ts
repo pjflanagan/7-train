@@ -97,7 +97,7 @@ function draftFor(
     end: wallClock(dateKey, start + duration),
     timeZone,
     description:
-      activity.metric === 'times' ? undefined : `${event.value} ${activity.unit}`,
+      activity.metric === 'instance' ? undefined : `${event.value} ${activity.unit}`,
   };
 }
 

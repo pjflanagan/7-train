@@ -49,12 +49,12 @@ function roundToMagnitude(value: number): number {
  * days against one rest day — a sixth a session. Spread the same six workout
  * days across more measurable activities and each gets a bigger slice: three
  * activities means each shows up roughly every other workout day, so a
- * session is closer to half the week's target. Times-based activities (reps,
+ * session is closer to half the week's target. Instance activities (reps,
  * sessions) don't compete for calendar days the way a distance/duration
  * activity's split target does, so they don't count toward the split.
  */
 function sessionShare(activities: Activity[]): number {
-  const measurable = activities.filter(a => !a.optional && a.metric !== 'times').length;
+  const measurable = activities.filter(a => !a.optional && a.metric !== 'instance').length;
   return Math.min(1, Math.max(measurable, 1) / 6);
 }
 
@@ -62,7 +62,9 @@ function sessionShare(activities: Activity[]): number {
  * Where a freshly dropped event's value starts: this activity's share of the
  * week's effective target — see `sessionShare` — rounded to a number that
  * reads as a plan rather than an exact division. Falls back to a bare 1 when
- * the activity has no target to divide (optional activities, a fresh 0).
+ * the activity has no target to divide (optional activities, a fresh 0). A
+ * `times` activity's target already counts sessions one at a time, so every
+ * event is one instance of it — never a fraction of the week's target.
  */
 export function defaultEventValue(
   activity: Activity,
@@ -70,6 +72,7 @@ export function defaultEventValue(
   weeklyTargets: WeeklyTargets | undefined,
   activities: Activity[]
 ): number {
+  if (activity.metric === 'instance') return 1;
   const target = getEffectiveTarget(activity, weekStart, weeklyTargets);
   if (target <= 0) return 1;
   return roundToMagnitude(target * sessionShare(activities)) || 1;

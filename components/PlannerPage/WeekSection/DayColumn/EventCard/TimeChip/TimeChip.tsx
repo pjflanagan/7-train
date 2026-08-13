@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import clsx from 'clsx';
 import { usePlannerStore } from '@/lib/store';
+import { useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { ScheduledEvent, Activity } from '@/lib/types';
 import {
   clampDuration,
@@ -40,6 +41,7 @@ export function TimeChip({ event, activity }: TimeChipProps) {
   const nudgeEventDuration = usePlannerStore((state) => state.nudgeEventDuration);
   const [dragging, setDragging] = useState<'time' | 'duration' | null>(null);
   const dragRef = useRef<{ startY: number; minutes: number } | null>(null);
+  const use24Hour = useUse24HourClock();
 
   const startMinutes = startMinutesOf(event);
   const duration = durationMinutesOf(event, activity);
@@ -115,9 +117,9 @@ export function TimeChip({ event, activity }: TimeChipProps) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onKeyDown={(e) => arrowKeys(e, nudgeEventTime)}
-        aria-label={`Start time ${formatTimeOfDay(startMinutes)}. Drag or use arrow keys to change.`}
+        aria-label={`Start time ${formatTimeOfDay(startMinutes, use24Hour)}. Drag or use arrow keys to change.`}
       >
-        {formatTimeOfDay(startMinutes)}
+        {formatTimeOfDay(startMinutes, use24Hour)}
       </button>
       <button
         type="button"

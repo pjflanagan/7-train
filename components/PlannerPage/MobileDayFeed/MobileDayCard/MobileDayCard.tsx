@@ -2,7 +2,7 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { useDayEvents, useActivities, useNote, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { useDayEvents, useActivities, useNote, useWeekStartsOn, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
 import { getIconByKey } from '@/lib/icons';
@@ -27,6 +27,7 @@ export interface MobileDayCardProps {
  */
 export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
   const weekStartsOn = useWeekStartsOn();
+  const use24Hour = useUse24HourClock();
   const date = parseDateLocal(dateKey);
   const day = dayNameForDate(date);
   const weekStart = getWeekStartKey(date, weekStartsOn);
@@ -70,14 +71,14 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
               >
                 <Icon className={styles.icon} />
                 <span className={styles.eventName}>
-                  <span className={styles.time}>{formatTimeOfDay(startMinutesOf(event))}</span>
+                  <span className={styles.time}>{formatTimeOfDay(startMinutesOf(event), use24Hour)}</span>
                   {activity.name}
                   {event.workoutType && (
                     <span className={styles.subType}>{event.workoutType}</span>
                   )}
                 </span>
                 {/* A "times" activity is always one occurrence, so "1 times" is noise. */}
-                {activity.metric !== 'times' && event.value > 0 && (
+                {activity.metric !== 'instance' && event.value > 0 && (
                   <span className={styles.value}>
                     {event.value}
                     <span className={styles.unit}>{activity.unit}</span>
