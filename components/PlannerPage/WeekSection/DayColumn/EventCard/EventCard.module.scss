@@ -5,6 +5,9 @@
 .card {
   @include activity-tones-event();
 
+  // The identity row reflows against the card's own width, not the viewport's:
+  // a narrow week and a wide one both put cards in seven columns.
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   background-color: var(--activity-surface);
@@ -70,6 +73,14 @@
   white-space: nowrap;
 }
 
+// Whenever the select is the only name on the row — untyped, or too narrow for
+// both — it is the card's title and is set like one.
+@mixin reads-as-title() {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
 // Bare text riding alongside the title, not a field: the card is small enough
 // that a bordered control reads as chrome around a single word.
 .subtagSelect {
@@ -84,6 +95,30 @@
     font-size: var(--font-2xs);
     color: var(--text-muted);
   }
+}
+
+// Too narrow for both names: the workout type is the one that says what this
+// session actually is, so it takes the row and the icon carries the activity.
+// Only applied when there is a type to show — otherwise the card loses its name
+// and says nothing at all.
+@container (max-width: 9.5rem) {
+  .hasSubType .title {
+    display: none;
+  }
+
+  .hasSubType .subtagSelect select {
+    @include reads-as-title();
+  }
+}
+
+// Untyped, the select is carrying the activity's name, so it takes the title's
+// weight and colour and the title itself steps aside.
+.isUntyped .title {
+  display: none;
+}
+
+.isUntyped .subtagSelect select {
+  @include reads-as-title();
 }
 
 .valueRow {

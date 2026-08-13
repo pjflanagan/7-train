@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import clsx from 'clsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ScheduledEvent } from '@/lib/types';
@@ -13,6 +14,11 @@ import styles from './EventCard.module.scss';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
   const activity = useEventActivity(event);
+  // An untyped event reads as the activity itself rather than an empty slot —
+  // but inside the open list that same row is the "no type" choice, so it goes
+  // back to a dash while the list is up. A native select paints its options from
+  // this markup when it opens, so the swap has to happen on the way in.
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const updateEventValue = usePlannerStore(state => state.updateEventValue);
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
   const removeEvent = usePlannerStore(state => state.removeEvent);
@@ -80,7 +86,18 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
       </div>
 
       <div className={styles.body}>
-        <div className={styles.identity}>
+        {/* Narrow columns drop the activity name in favour of the workout type,
+            so the row carries the full name for hover and the icon for the eye. */}
+        <div
+          className={clsx(
+            styles.identity,
+            subTypes.length > 0 && styles.hasSubType,
+            // The select is already saying the activity's name; the title
+            // beside it would only say it twice.
+            subTypes.length > 0 && !event.workoutType && styles.isUntyped
+          )}
+          title={activity.name}
+        >
           {React.createElement(getIconByKey(activity.icon), { className: styles.icon })}
           <span className={styles.title}>{activity.name}</span>
           {subTypes.length > 0 && (
@@ -90,11 +107,17 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
               className={styles.subtagSelect}
               aria-label={`${activity.name} type`}
               value={event.workoutType || ''}
-              onChange={(e) => setEventSubType(event.id, e.target.value)}
+              onMouseDown={() => setIsPickerOpen(true)}
+              onKeyDown={() => setIsPickerOpen(true)}
+              onBlur={() => setIsPickerOpen(false)}
+              onChange={(e) => {
+                setIsPickerOpen(false);
+                setEventSubType(event.id, e.target.value);
+              }}
             >
-              {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
-                  carries what the control is for. */}
-              <option value="">-</option>
+              {/* No workout type chosen: the closed control names the activity,
+                  the open list offers a dash to clear back to it. */}
+              <option value="">{isPickerOpen ? '-' : activity.name}</option>
               {subTypes.map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
