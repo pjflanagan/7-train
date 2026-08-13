@@ -34,18 +34,45 @@ export function getEffectiveTarget(
 }
 
 /**
- * Where a freshly dropped event's value starts: a sixth of the week's
- * effective target, so a new session reads as one of roughly six sittings
- * rather than the whole week's target in one go. Falls back to a bare 1 when
+ * Rounds to the target's own magnitude rather than a fixed number of decimals,
+ * so 833.3 lands on 800 and 3.33 lands on 3 — precision that matches how
+ * exact the number actually looks at a glance.
+ */
+function roundToMagnitude(value: number): number {
+  if (value <= 0) return 0;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+  return Math.round(value / magnitude) * magnitude;
+}
+
+/**
+ * A week with one measurable activity splits it across roughly six workout
+ * days against one rest day — a sixth a session. Spread the same six workout
+ * days across more measurable activities and each gets a bigger slice: three
+ * activities means each shows up roughly every other workout day, so a
+ * session is closer to half the week's target. Times-based activities (reps,
+ * sessions) don't compete for calendar days the way a distance/duration
+ * activity's split target does, so they don't count toward the split.
+ */
+function sessionShare(activities: Activity[]): number {
+  const measurable = activities.filter(a => !a.optional && a.metric !== 'times').length;
+  return Math.min(1, Math.max(measurable, 1) / 6);
+}
+
+/**
+ * Where a freshly dropped event's value starts: this activity's share of the
+ * week's effective target — see `sessionShare` — rounded to a number that
+ * reads as a plan rather than an exact division. Falls back to a bare 1 when
  * the activity has no target to divide (optional activities, a fresh 0).
  */
 export function defaultEventValue(
   activity: Activity,
   weekStart: string,
-  weeklyTargets?: WeeklyTargets
+  weeklyTargets: WeeklyTargets | undefined,
+  activities: Activity[]
 ): number {
   const target = getEffectiveTarget(activity, weekStart, weeklyTargets);
-  return target > 0 ? Math.round((target / 6) * 100) / 100 : 1;
+  if (target <= 0) return 1;
+  return roundToMagnitude(target * sessionShare(activities)) || 1;
 }
 
 export function calculateProgress(

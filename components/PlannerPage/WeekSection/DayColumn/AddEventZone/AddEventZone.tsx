@@ -97,7 +97,7 @@ export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
                     typeId: activity.id,
                     day,
                     weekStart,
-                    value: defaultEventValue(activity, weekStart, weeklyTargets)
+                    value: defaultEventValue(activity, weekStart, weeklyTargets, activities)
                   });
                   setAnchor(null);
                 }}

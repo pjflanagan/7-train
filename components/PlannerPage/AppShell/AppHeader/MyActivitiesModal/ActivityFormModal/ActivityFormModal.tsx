@@ -80,6 +80,9 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     if (metric === 'times') {
       setValue('unit', 'times');
     }
+    if (metric === 'duration') {
+      setValue('unit', 'mins');
+    }
     // Only one of the two typical-length inputs is ever on screen; drop the
     // other so a metric switch cannot leave a stale estimate behind it.
     if (metric !== 'distance') setValue('paceMinutes', null);
@@ -187,8 +190,8 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   <option value="duration">Duration</option>
                   <option value="times">Times</option>
                 </Select>
-                {metric !== 'times' && (
-                  <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
+                {metric === 'distance' && (
+                  <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles" />
                 )}
               </div>
               {!isOptional && (
@@ -197,7 +200,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   name="target"
                   render={({ field }) => (
                     <NumberInput
-                      label="Weekly target"
+                      label={metric === 'duration' ? 'Weekly target (minutes)' : 'Weekly target'}
                       value={field.value ?? ''}
                       onChange={(e) => {
                         const raw = e.target.value;

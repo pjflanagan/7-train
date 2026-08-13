@@ -19,6 +19,7 @@ function normalizeActivity(raw: unknown): Activity {
   if (!activity.workoutTypes) activity.workoutTypes = [];
   if (!activity.links) activity.links = [];
   if (activity.metric === 'times') activity.unit = 'times';
+  if (activity.metric === 'duration') activity.unit = 'mins';
   return ActivitySchema.parse(activity);
 }
 

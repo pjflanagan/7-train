@@ -44,9 +44,9 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     id: 'type-bike',
     name: 'Bike',
     icon: 'bike',
-    metric: 'distance',
-    unit: 'miles',
-    target: 20,
+    metric: 'duration',
+    unit: 'mins',
+    target: 240,
     color: '#F76B15', // orange
     workoutTypes: []
   },
@@ -54,9 +54,11 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     id: 'type-swim',
     name: 'Swim',
     icon: 'swim',
-    metric: 'duration',
-    unit: 'mins',
-    target: 60,
+    metric: 'distance',
+    unit: 'yards',
+    target: 5000,
+    // 1:30 per 100 yards.
+    paceMinutes: 1.5 / 100,
     color: '#00A2C7', // cyan
     workoutTypes: []
   },
@@ -111,7 +113,7 @@ export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
       typeId: 'type-bike',
       day: 'wednesday',
       weekStart,
-      value: 12,
+      value: 60,
       workoutType: null
     },
     {
@@ -119,7 +121,7 @@ export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
       typeId: 'type-swim',
       day: 'thursday',
       weekStart,
-      value: 30,
+      value: 1000,
       workoutType: null
     },
     {

@@ -54,13 +54,13 @@ export function usePlannerDnd() {
     if (activeData.kind === 'activity' && overData.kind === 'column') {
       if (activeData.typeId && overData.day && overData.weekStart) {
         const activity = activities.find(a => a.id === activeData.typeId);
-        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets) : 1;
+        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets, activities) : 1;
         addEvent({ typeId: activeData.typeId, day: overData.day, weekStart: overData.weekStart, value });
       }
     } else if (activeData.kind === 'subtag' && overData.kind === 'column') {
       if (activeData.typeId && activeData.tag && overData.day && overData.weekStart) {
         const activity = activities.find(a => a.id === activeData.typeId);
-        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets) : 1;
+        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets, activities) : 1;
         addEvent({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, weekStart: overData.weekStart, value });
       }
     } else if (activeData.kind === 'event') {

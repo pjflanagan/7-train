@@ -107,10 +107,6 @@ function isMetricUnit(unit: string): boolean {
   return /^k(m|ilomet)/i.test(unit.trim());
 }
 
-function isHourUnit(unit: string): boolean {
-  return /^h(r|our)/i.test(unit.trim());
-}
-
 /**
  * How long the event should block out on the calendar.
  *
@@ -129,9 +125,9 @@ export function estimateDurationMinutes(
   const value = Number(event.value) || 0;
 
   if (activity.metric === 'duration') {
-    const minutes = isHourUnit(activity.unit) ? value * 60 : value;
+    // The unit is always minutes, so the value blocks out the calendar as-is.
     // Exact, not estimated — only the floor and the quarter-hour snap apply.
-    return Math.max(SLOT_MINUTES, snapToSlot(minutes));
+    return Math.max(SLOT_MINUTES, snapToSlot(value));
   }
 
   if (activity.metric === 'times' && activity.typicalDurationMinutes) {
