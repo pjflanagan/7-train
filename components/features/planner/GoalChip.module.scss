@@ -8,12 +8,19 @@
 
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: 0 var(--space-3) var(--space-2);
   min-width: 12rem;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
+  // The header runs edge to edge, so the chip rounds it off.
+  overflow: hidden;
+}
+
+// A goal with sub-types under its band is roughly twice the height of one
+// without, so it takes both rows of the rail while the plain ones pair up in a
+// single column.
+.hasBody {
+  grid-row: span 2;
 }
 
 // Darker than the chip below it, because the band is the grab point: dragging
@@ -26,11 +33,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0 calc(var(--space-3) * -1);
   padding: var(--space-1) var(--space-3);
   background-color: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  // A goal with nothing under it is the band alone, so the rule only belongs
+  // there when something follows it.
+  .hasBody & {
+    border-bottom: 1px solid var(--border-color);
+  }
   // The progress fill runs the full height of the band, so the band has to be
   // what rounds it off at either end.
   overflow: hidden;
@@ -120,4 +129,5 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
 }

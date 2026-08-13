@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import clsx from 'clsx';
 import { useDraggable } from '@dnd-kit/core';
 import { MdLink } from 'react-icons/md';
 import { WorkoutType } from '@/lib/types';
@@ -21,6 +22,9 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
   const scheduledSubTags = useScheduledSubTags(weekStart, goal.id);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
   const hasLinks = Boolean(goal.links && goal.links.length > 0);
+  // Sub-types are the only thing that ever went below the band, so without them
+  // the chip is the band and nothing else.
+  const hasBody = Boolean(goal.workoutTypes && goal.workoutTypes.length > 0);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     // Every week renders its own strip, so the id has to carry the week —
@@ -33,7 +37,7 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
   return (
     <div 
       ref={setNodeRef}
-      className={styles.chip} 
+      className={clsx(styles.chip, hasBody && styles.hasBody)}
       style={{ '--goal-color': goal.color, opacity: isDragging ? 0.5 : 1 } as React.CSSProperties}
     >
       <div className={styles.header} {...attributes} {...listeners}>
@@ -84,9 +88,9 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
           </span>
         )}
       </div>
-      {goal.workoutTypes && goal.workoutTypes.length > 0 && (
+      {hasBody && (
         <div className={styles.tags}>
-          {goal.workoutTypes.map(tag => (
+          {goal.workoutTypes?.map(tag => (
             <SubTagChip
               key={tag}
               tag={tag}

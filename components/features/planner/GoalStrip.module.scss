@@ -4,18 +4,21 @@
   position: relative;
 }
 
+// Two rows deep, filled column by column: a goal with sub-types takes both
+// rows, a bare one takes a single row and lets another sit under it. `dense`
+// backfills the gap a tall chip would otherwise leave beside it, so the rail
+// packs like masonry and most weeks fit without paging sideways.
 .strip {
-  display: flex;
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column dense;
+  grid-auto-columns: minmax(12rem, max-content);
+  align-content: start;
   gap: var(--space-2);
   overflow-x: auto;
-  // The chips keep their own width and page sideways instead of stacking.
-  flex-wrap: nowrap;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   @include mixins.hide-scrollbar();
-
-  > * {
-    flex: 0 0 auto;
-  }
 }
 
 .arrow {
