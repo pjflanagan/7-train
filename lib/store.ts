@@ -11,7 +11,6 @@ import {
   clampStartMinutes,
   DEFAULT_START_MINUTES,
   durationMinutesOf,
-  SLOT_MINUTES,
   startMinutesOf
 } from './schedule';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -36,12 +35,8 @@ type PlannerStore = PlannerState & {
   reorderDay: (day: DayName, weekStart: string, oldIndex: number, newIndex: number) => void;
   /** Move an event through the day. Minutes from local midnight, snapped to 15. */
   setEventTime: (id: string, startMinutes: number) => void;
-  /** Nudge a time by whole slots, the keyboard equivalent of dragging it. */
-  nudgeEventTime: (id: string, slots: number) => void;
   /** Set how long an event runs. Minutes, snapped to 15. */
   setEventDuration: (id: string, durationMinutes: number) => void;
-  /** Stretch or shrink a duration by whole slots, for the keyboard. */
-  nudgeEventDuration: (id: string, slots: number) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
   setGoogleSheetId: (sheetId: string | null) => void;
@@ -288,30 +283,10 @@ export const usePlannerStore = create<PlannerStore>()(
           i.id === id ? stamp({ ...i, startMinutes: clampStartMinutes(startMinutes) }) : i
         )
       })),
-      nudgeEventTime: (id, slots) => set((state) => ({
-        events: state.events.map(i =>
-          i.id === id
-            ? stamp({
-                ...i,
-                startMinutes: clampStartMinutes(startMinutesOf(i) + slots * SLOT_MINUTES)
-              })
-            : i
-        )
-      })),
       setEventDuration: (id, durationMinutes) => set((state) => ({
         events: state.events.map(i =>
           i.id === id ? stamp({ ...i, durationMinutes: clampDuration(durationMinutes) }) : i
         )
-      })),
-      nudgeEventDuration: (id, slots) => set((state) => ({
-        events: state.events.map(i => {
-          if (i.id !== id) return i;
-          const activity = state.activities.find(g => g.id === i.typeId);
-          return stamp({
-            ...i,
-            durationMinutes: clampDuration(durationMinutesOf(i, activity) + slots * SLOT_MINUTES)
-          });
-        })
       })),
 
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),

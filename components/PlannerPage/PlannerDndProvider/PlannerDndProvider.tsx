@@ -1,8 +1,9 @@
 import React from 'react';
-import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, DragOverlay } from '@dnd-kit/core';
+import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { usePlannerDnd } from '@/hooks/usePlannerDnd';
 import { usePlannerStore } from '@/lib/store';
+import { snapCenterToCursor } from '@/lib/dndModifiers';
 import { DragPreviewCard } from './DragPreviewCard/DragPreviewCard';
 
 export function PlannerDndProvider({ children }: { children: React.ReactNode }) {
@@ -35,12 +36,17 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
     <DndContext
       autoScroll={false}
       sensors={sensors}
+      // The overlay is re-centered on the pointer (see snapCenterToCursor), so
+      // hit-testing has to follow the same point rather than the source
+      // element's own translated rect — otherwise the drop target and the
+      // visible chip disagree about where the drag actually is.
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
       {children}
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
         {activeId ? <DragPreviewCard typeId={preview.typeId} tag={preview.tag} /> : null}
       </DragOverlay>
     </DndContext>

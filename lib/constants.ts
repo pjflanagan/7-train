@@ -60,7 +60,10 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     // 1:30 per 100 yards.
     paceMinutes: 1.5 / 100,
     color: '#00A2C7', // cyan
-    workoutTypes: []
+    workoutTypes: [],
+    links: [
+      { id: 'link-swim-howto', title: 'How to Swim', url: 'https://youtu.be/Rr_CnIfr5u8?si=rbdujpGZdmoIR_Ie' }
+    ]
   },
   {
     id: 'type-lift',

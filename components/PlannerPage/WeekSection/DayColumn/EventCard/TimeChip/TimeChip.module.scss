@@ -13,7 +13,6 @@
 
 .chip {
   @include focus-ring();
-  @include truncate();
 
   display: block;
   width: 100%;
@@ -27,23 +26,23 @@
   font-size: var(--font-2xs);
   font-variant-numeric: tabular-nums;
   line-height: 1.5;
-  // Vertical, because dragging moves the workout through the day or stretches
-  // how long it runs.
-  cursor: ns-resize;
-  touch-action: none;
+  cursor: text;
   transition: var(--transition-smooth);
 
-  &:hover {
+  &:hover,
+  &:focus {
     color: var(--text-main);
+  }
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
   }
 }
 
-.isDragging {
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-// The right half of the row, so the two read as columns down a day.
-.duration {
+// Scoped through the row so it outranks InlineNumberInput's own padding,
+// whichever stylesheet lands first — the right half of the row, so the two
+// read as columns down a day.
+.row .duration {
+  padding: 0;
   text-align: center;
 }
