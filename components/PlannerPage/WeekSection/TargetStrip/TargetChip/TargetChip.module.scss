@@ -104,9 +104,10 @@
 }
 
 // Scoped through the tally so it outranks the inline input's own width and
-// padding whichever stylesheet lands first.
+// padding whichever stylesheet lands first. Only a floor: the input's own
+// `size` attribute is what grows it past two digits.
 .tally .targetInput {
-  width: 2.4em;
+  min-width: 2.4em;
   padding: 0;
   text-align: center;
   color: var(--text-muted);

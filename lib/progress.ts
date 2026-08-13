@@ -33,6 +33,21 @@ export function getEffectiveTarget(
   return Number(override ?? activity.target) || 0;
 }
 
+/**
+ * Where a freshly dropped event's value starts: a sixth of the week's
+ * effective target, so a new session reads as one of roughly six sittings
+ * rather than the whole week's target in one go. Falls back to a bare 1 when
+ * the activity has no target to divide (optional activities, a fresh 0).
+ */
+export function defaultEventValue(
+  activity: Activity,
+  weekStart: string,
+  weeklyTargets?: WeeklyTargets
+): number {
+  const target = getEffectiveTarget(activity, weekStart, weeklyTargets);
+  return target > 0 ? Math.round((target / 6) * 100) / 100 : 1;
+}
+
 export function calculateProgress(
   types: Activity[],
   events: ScheduledEvent[],

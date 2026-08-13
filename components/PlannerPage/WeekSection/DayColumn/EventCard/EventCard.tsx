@@ -1,5 +1,4 @@
 import React from 'react';
-import clsx from 'clsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ScheduledEvent } from '@/lib/types';
@@ -10,6 +9,7 @@ import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { MdClose } from 'react-icons/md';
 import { TimeChip } from './TimeChip/TimeChip';
+import { formatTimeOfDay, startMinutesOf } from '@/lib/schedule';
 import styles from './EventCard.module.scss';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
@@ -47,7 +47,7 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   const isDuration = activity.metric === 'duration';
 
   const valueEntry = (
-    <div className={clsx(styles.valueRow, isDuration && styles.valueRowTrailing)}>
+    <div className={styles.valueRow}>
       <InlineNumberInput
         value={event.value || 0}
         onCommit={(val) => updateEventValue(event.id, val)}
@@ -67,8 +67,14 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
           reads as something to grab. Remove waits at the far end until the card
           is hovered, so a wall of x's never competes with the plan itself. */}
       <div className={styles.header} {...attributes} {...listeners}>
-        {React.createElement(getIconByKey(activity.icon), { className: styles.icon })}
-        <span className={styles.title}>{activity.name}</span>
+        {isDuration ? (
+          // A duration activity's own value already says how long it runs, so
+          // the header's time is just a label here, not a second control for
+          // the same fact — dimmed to read as repeated rather than actionable.
+          <span className={styles.headerTime}>{formatTimeOfDay(startMinutesOf(event))}</span>
+        ) : (
+          <TimeChip event={event} activity={activity} />
+        )}
         <button
           className={styles.removeButton}
           // The band drags, so the button keeps its own pointer events.
@@ -85,30 +91,29 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
       </div>
 
       <div className={styles.body}>
-        <TimeChip
-          event={event}
-          activity={activity}
-          trailing={isDuration && hasValue ? valueEntry : undefined}
-        />
+        <div className={styles.identity}>
+          {React.createElement(getIconByKey(activity.icon), { className: styles.icon })}
+          <span className={styles.title}>{activity.name}</span>
+          {subTypes.length > 0 && (
+            <Select
+              size="sm"
+              hideChevron
+              className={styles.subtagSelect}
+              aria-label={`${activity.name} type`}
+              value={event.workoutType || ''}
+              onChange={(e) => setEventSubType(event.id, e.target.value)}
+            >
+              {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
+                  carries what the control is for. */}
+              <option value="">-</option>
+              {subTypes.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </Select>
+          )}
+        </div>
 
-        {subTypes.length > 0 && (
-          <Select
-            size="sm"
-            className={styles.subtagSelect}
-            aria-label={`${activity.name} type`}
-            value={event.workoutType || ''}
-            onChange={(e) => setEventSubType(event.id, e.target.value)}
-          >
-            {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
-                carries what the control is for. */}
-            <option value="">-</option>
-            {subTypes.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </Select>
-        )}
-
-        {hasValue && !isDuration && valueEntry}
+        {hasValue && valueEntry}
       </div>
     </div>
   );

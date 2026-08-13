@@ -158,9 +158,38 @@ export const usePlannerStore = create<PlannerStore>()(
       ...buildInitialState(),
 
       addActivity: (activity) => set((state) => ({ activities: [...state.activities, activity] })),
-      updateActivity: (id, updates) => set((state) => ({
-        activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g)
-      })),
+      updateActivity: (id, updates) => set((state) => {
+        const current = state.activities.find(g => g.id === id);
+        const targetChanged = !!current && 'target' in updates && Number(updates.target) !== Number(current.target);
+        const metricChanged = !!current && 'metric' in updates && updates.metric !== current.metric;
+
+        // A changed default must not reshape weeks that already exist: every
+        // week without its own override gets the old baseline pinned down
+        // before the activity picks up its new one, so only weeks that don't
+        // exist yet ever see the new default.
+        let weeklyTargets = state.weeklyTargets;
+        if (current && (targetChanged || metricChanged)) {
+          const weekStarts = new Set<string>();
+          state.events.forEach(e => weekStarts.add(e.weekStart));
+          Object.keys(weeklyTargets || {}).forEach(key => weekStarts.add(key.split(':')[0]));
+
+          const pinned = { ...(weeklyTargets || {}) };
+          let changed = false;
+          weekStarts.forEach(weekStart => {
+            const key = weeklyTargetKey(weekStart, id);
+            if (pinned[key] === undefined) {
+              pinned[key] = Number(current.target) || 0;
+              changed = true;
+            }
+          });
+          if (changed) weeklyTargets = pinned;
+        }
+
+        return {
+          activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g),
+          weeklyTargets
+        };
+      }),
       deleteActivity: (id) => set((state) => {
         const weeklyTargets = { ...(state.weeklyTargets || {}) };
         Object.keys(weeklyTargets).forEach(key => {

@@ -12,12 +12,15 @@ export interface SelectProps
   error?: string;
   /** `sm` is the compact inline form used on cards; `md` matches the text inputs. */
   size?: 'sm' | 'md';
+  /** Drops the chevron, for selects styled to read as plain text rather than a field. */
+  hideChevron?: boolean;
 }
 
 export const Select: React.FC<SelectProps> = ({
   label,
   error,
   size = 'md',
+  hideChevron,
   className,
   id,
   ...props
@@ -33,10 +36,10 @@ export const Select: React.FC<SelectProps> = ({
       <div className={styles.control}>
         <select
           id={selectId}
-          className={clsx(styles.select, styles[size], error && styles.hasError)}
+          className={clsx(styles.select, styles[size], hideChevron && styles.noChevron, error && styles.hasError)}
           {...props}
         />
-        <MdKeyboardArrowDown className={styles.chevron} aria-hidden="true" />
+        {!hideChevron && <MdKeyboardArrowDown className={styles.chevron} aria-hidden="true" />}
       </div>
       {error && <span className={styles.errorMessage}>{error}</span>}
     </div>

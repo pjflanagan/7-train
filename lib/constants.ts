@@ -38,7 +38,7 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     unit: 'miles',
     target: 12,
     color: '#E5484D', // red
-    workoutTypes: ['Long run', 'Tempo run']
+    workoutTypes: ['Long', 'Tempo']
   },
   {
     id: 'type-bike',
@@ -96,7 +96,7 @@ export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
       day: 'monday',
       weekStart,
       value: 4,
-      workoutType: 'Tempo run'
+      workoutType: 'Tempo'
     },
     {
       id: 'event-2',

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ActivitySchema, Activity } from '@/lib/types';
-import { estimateDurationMinutes, formatDuration } from '@/lib/schedule';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
 import { TextInput } from '@/components/elements/TextInput/TextInput';
@@ -17,6 +16,7 @@ import { TagInput } from '@/components/elements/TagInput/TagInput';
 import { MdDelete, MdAdd } from 'react-icons/md';
 import styles from './ActivityFormModal.module.scss';
 import { usePlannerStore } from '@/lib/store';
+import { formatPaceMinutes, parsePaceMinutes } from '@/lib/schedule';
 
 export interface ActivityFormModalProps {
   isOpen: boolean;
@@ -68,7 +68,13 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   const metric = useWatch({ control, name: 'metric' });
   const unit = useWatch({ control, name: 'unit' });
   const isOptional = useWatch({ control, name: 'optional' });
-  const paceMinutes = useWatch({ control, name: 'paceMinutes' });
+
+  // Pace is entered as a minutes/distance ratio — e.g. "9 minutes / 1 mile" —
+  // rather than the single per-unit number the form actually saves, so it
+  // reads the way a pace is normally spoken. These two live outside
+  // react-hook-form and only ever get collapsed into `paceMinutes`.
+  const [paceMinutesInput, setPaceMinutesInput] = useState('');
+  const [paceDistanceInput, setPaceDistanceInput] = useState<number | ''>(1);
 
   useEffect(() => {
     if (metric === 'times') {
@@ -79,6 +85,16 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     if (metric !== 'distance') setValue('paceMinutes', null);
     if (metric !== 'times') setValue('typicalDurationMinutes', null);
   }, [metric, setValue]);
+
+  useEffect(() => {
+    if (metric !== 'distance') return;
+    const minutes = parsePaceMinutes(paceMinutesInput);
+    if (minutes === null || paceDistanceInput === '' || Number(paceDistanceInput) <= 0) {
+      setValue('paceMinutes', null);
+    } else {
+      setValue('paceMinutes', minutes / Number(paceDistanceInput));
+    }
+  }, [paceMinutesInput, paceDistanceInput, metric, setValue]);
 
   // An optional workout has no weekly target; drop any value carried over from
   // before the box was ticked so nothing stale gets saved.
@@ -92,6 +108,10 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     if (isOpen) {
       if (activity) {
         reset(activity);
+        // The stored ratio is minutes-per-one-unit, so that's the only pair
+        // that reconstructs it without inventing a distance the user never gave.
+        setPaceMinutesInput(activity.paceMinutes != null ? formatPaceMinutes(activity.paceMinutes) : '');
+        setPaceDistanceInput(1);
       } else {
         reset({
           id: `type-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -107,6 +127,8 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
           workoutTypes: [],
           links: []
         });
+        setPaceMinutesInput('');
+        setPaceDistanceInput(1);
       }
       setTimeout(() => {
         setActiveTab('basic');
@@ -169,31 +191,22 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
                 )}
               </div>
-              {metric === 'distance' && (
-                <div className={styles.field}>
-                  <Controller
-                    control={control}
-                    name="paceMinutes"
-                    render={({ field }) => (
-                      <NumberInput
-                        label={`Typical pace (mins per ${unit || 'unit'})`}
-                        value={field.value ?? ''}
-                        step="any"
-                        min={0}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          field.onChange(raw === '' ? null : Number(raw));
-                        }}
-                        error={errors.paceMinutes?.message}
-                      />
-                    )}
-                  />
-                  <p className={styles.hint}>
-                    {paceMinutes
-                      ? `Blocks out ${formatDuration(estimateDurationMinutes({ value: 3 }, { metric: 'distance', paceMinutes } as Activity))} for a 3 ${unit || 'unit'} session, rounded up to the nearest 15 mins.`
-                      : 'Used to work out how long each session blocks out on the calendar, rounded up to the nearest 15 mins.'}
-                  </p>
-                </div>
+              {!isOptional && (
+                <Controller
+                  control={control}
+                  name="target"
+                  render={({ field }) => (
+                    <NumberInput
+                      label="Weekly target"
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        field.onChange(raw === '' ? null : Number(raw));
+                      }}
+                      error={errors.target?.message}
+                    />
+                  )}
+                />
               )}
               {metric === 'times' && (
                 <div className={styles.field}>
@@ -217,22 +230,30 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   <p className={styles.hint}>How long each session blocks out on the calendar by default.</p>
                 </div>
               )}
-              {!isOptional && (
-                <Controller
-                  control={control}
-                  name="target"
-                  render={({ field }) => (
+              {metric === 'distance' && (
+                <div className={styles.field}>
+                  <div className={styles.row}>
+                    <TextInput
+                      label="Typical pace: minutes"
+                      value={paceMinutesInput}
+                      placeholder="7:30"
+                      inputMode="numeric"
+                      onChange={(e) => setPaceMinutesInput(e.target.value)}
+                      error={errors.paceMinutes?.message}
+                    />
                     <NumberInput
-                      label="Weekly target"
-                      value={field.value ?? ''}
+                      label={`/ ${unit || 'unit'}`}
+                      value={paceDistanceInput}
+                      step="any"
+                      min={0}
                       onChange={(e) => {
                         const raw = e.target.value;
-                        field.onChange(raw === '' ? null : Number(raw));
+                        setPaceDistanceInput(raw === '' ? '' : Number(raw));
                       }}
-                      error={errors.target?.message}
                     />
-                  )}
-                />
+                  </div>
+                  <p className={styles.hint}>Used to estimate activity duration.</p>
+                </div>
               )}
             </div>
           )}

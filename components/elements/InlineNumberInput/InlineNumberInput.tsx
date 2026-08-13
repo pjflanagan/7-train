@@ -70,6 +70,9 @@ export const InlineNumberInput: React.FC<InlineNumberInputProps> = ({
       type="text"
       className={clsx(styles.input, className)}
       value={localValue}
+      // Grows with what's typed, so a wide number like "5000" gets room
+      // rather than sitting clipped inside a box sized for two digits.
+      size={Math.max(2, localValue.length)}
       onChange={handleChange}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}

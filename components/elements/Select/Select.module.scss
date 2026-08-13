@@ -23,6 +23,10 @@
   // Room for the chevron, which sits over the right-hand edge.
   padding-right: var(--space-6);
 
+  &.noChevron {
+    padding-right: var(--space-2);
+  }
+
   // The dropdown itself is drawn by the OS; give it the theme's surface so it
   // doesn't flash white over a dark modal.
   option {

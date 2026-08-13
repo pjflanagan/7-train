@@ -81,6 +81,28 @@ export function formatDuration(minutes: number): string {
   return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
 }
 
+/** "7:30", from 7.5 minutes — pace reads as a clock split, not a decimal. */
+export function formatPaceMinutes(minutes: number): string {
+  const totalSeconds = Math.round(minutes * 60);
+  const wholeMinutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${wholeMinutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+/** "7:30" back to 7.5 minutes. A bare number is taken as whole minutes. */
+export function parsePaceMinutes(input: string): number | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const split = trimmed.match(/^(\d+):([0-5]?\d)$/);
+  if (split) {
+    return Number(split[1]) + Number(split[2]) / 60;
+  }
+
+  const whole = Number(trimmed);
+  return Number.isFinite(whole) ? whole : null;
+}
+
 function isMetricUnit(unit: string): boolean {
   return /^k(m|ilomet)/i.test(unit.trim());
 }

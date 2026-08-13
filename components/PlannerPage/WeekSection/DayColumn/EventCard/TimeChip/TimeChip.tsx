@@ -22,12 +22,6 @@ const PIXELS_PER_SLOT = 6;
 export interface TimeChipProps {
   event: ScheduledEvent;
   activity: Activity;
-  /**
-   * Takes the place of the length control. A duration activity's own value _is_ its
-   * length, so it puts its number entry here rather than showing both and
-   * letting them disagree.
-   */
-  trailing?: React.ReactNode;
 }
 
 /**
@@ -39,7 +33,7 @@ export interface TimeChipProps {
  * someone sets a length, it is the activity's own number for a duration activity and
  * an estimate otherwise.
  */
-export function TimeChip({ event, activity, trailing }: TimeChipProps) {
+export function TimeChip({ event, activity }: TimeChipProps) {
   const setEventTime = usePlannerStore((state) => state.setEventTime);
   const nudgeEventTime = usePlannerStore((state) => state.nudgeEventTime);
   const setEventDuration = usePlannerStore((state) => state.setEventDuration);
@@ -125,25 +119,23 @@ export function TimeChip({ event, activity, trailing }: TimeChipProps) {
       >
         {formatTimeOfDay(startMinutes)}
       </button>
-      {trailing ?? (
-        <button
-          type="button"
-          className={clsx(
-            styles.chip,
-            styles.duration,
-            dragging === 'duration' && styles.isDragging
-          )}
-          onPointerDown={handleDurationDown}
-          onPointerMove={handleDurationMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-          onKeyDown={(e) => arrowKeys(e, nudgeEventDuration)}
-          title={isExact ? undefined : 'Estimated'}
-          aria-label={`Length ${formatDuration(duration)}. Drag or use arrow keys to change.`}
-        >
-          {formatDuration(duration)}
-        </button>
-      )}
+      <button
+        type="button"
+        className={clsx(
+          styles.chip,
+          styles.duration,
+          dragging === 'duration' && styles.isDragging
+        )}
+        onPointerDown={handleDurationDown}
+        onPointerMove={handleDurationMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={(e) => arrowKeys(e, nudgeEventDuration)}
+        title={isExact ? undefined : 'Estimated'}
+        aria-label={`Length ${formatDuration(duration)}. Drag or use arrow keys to change.`}
+      >
+        {formatDuration(duration)}
+      </button>
     </div>
   );
 }

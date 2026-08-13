@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { DAYS } from '@/lib/constants';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
+import { defaultEventValue } from '@/lib/progress';
 import styles from './AddEventZone.module.scss';
 
 /** Roughly how wide the picker is, so it can be kept inside the viewport. */
@@ -26,6 +27,7 @@ export interface AddEventZoneProps {
  */
 export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
   const activities = usePlannerStore((state) => state.activities);
+  const weeklyTargets = usePlannerStore((state) => state.weeklyTargets);
   const addEvent = usePlannerStore((state) => state.addEvent);
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -91,7 +93,12 @@ export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
                 role="menuitem"
                 className={styles.option}
                 onClick={() => {
-                  addEvent({ typeId: activity.id, day, weekStart, value: 1 });
+                  addEvent({
+                    typeId: activity.id,
+                    day,
+                    weekStart,
+                    value: defaultEventValue(activity, weekStart, weeklyTargets)
+                  });
                   setAnchor(null);
                 }}
               >
