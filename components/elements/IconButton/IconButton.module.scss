@@ -56,9 +56,11 @@
   }
 }
 
+// Sits quiet until reached for. A destructive action shouting in red before
+// anyone has gone near it just makes the row look alarming.
 .danger {
-  color: var(--accent-error);
   &:hover:not(:disabled) {
+    color: var(--accent-error);
     background-color: var(--accent-error-soft);
   }
 }

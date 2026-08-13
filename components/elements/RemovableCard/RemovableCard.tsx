@@ -36,9 +36,9 @@ export function RemovableCard({
 }: RemovableCardProps) {
   // Cards are drag handles, so a badge has to keep its own pointer events from
   // starting a drag.
-  const badgeProps = (action: () => void) => ({
+  const badgeProps = (action: () => void, variant: string) => ({
     type: 'button' as const,
-    className: styles.badge,
+    className: clsx(styles.badge, variant),
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
     onClick: (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -51,11 +51,11 @@ export function RemovableCard({
       {children}
       <div className={styles.badges}>
         {onEdit && (
-          <button {...badgeProps(onEdit)} aria-label={editLabel} title={editLabel}>
+          <button {...badgeProps(onEdit, styles.edit)} aria-label={editLabel} title={editLabel}>
             <MdEdit />
           </button>
         )}
-        <button {...badgeProps(onRemove)} aria-label={label} title={label}>
+        <button {...badgeProps(onRemove, styles.remove)} aria-label={label} title={label}>
           <MdClose />
         </button>
       </div>

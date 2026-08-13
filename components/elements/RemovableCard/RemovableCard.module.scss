@@ -45,16 +45,24 @@ $overhang: 0.4rem;
   transition: var(--transition-smooth);
   @include mixins.focus-ring();
 
-  &:hover {
-    color: var(--bg-elevated);
-    background-color: var(--accent-error);
-    border-color: var(--accent-error);
-  }
-
   // Touch devices never hover, so it has to stay reachable there.
   @media (hover: none) {
     opacity: 1;
   }
+}
+
+// Each badge fills in with the colour of what it does: the accent for an edit,
+// the error red only where something is actually being taken away.
+.edit:hover {
+  color: var(--bg-elevated);
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.remove:hover {
+  color: var(--bg-elevated);
+  background-color: var(--accent-error);
+  border-color: var(--accent-error);
 }
 
 .wrapper:hover .badge,
