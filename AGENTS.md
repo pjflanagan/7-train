@@ -14,14 +14,26 @@ Welcome, Agent. This codebase is a Next.js (App Router) + TypeScript application
 
 ## Architectural Rules
 
-1. **Three-Layer Components:**
-   - `components/elements/`: Dumb UI primitives (e.g., Button, Modal, TextInput). They must not have domain logic.
-   - `components/features/`: Domain-aware components grouped by feature (e.g., `planner/`, `goals/`, `settings/`).
+1. **Component Layers:**
+   - `components/elements/`: Dumb UI primitives (e.g., Button, Modal, TextInput). They must not have domain logic. Flat — one folder per primitive.
+   - Domain components are **nested by render tree**, mirroring page > layout > component > sub-component. Each component owns a folder named after it, containing `X.tsx`, `X.module.scss`, and one sub-folder per component it renders:
+     ```
+     components/PlannerPage/            page (rendered by app/page.tsx)
+       AppShell/                        layout
+         AppHeader/
+           MyWorkoutsModal/ LinksModal/ ProfileMenu/…
+       WeekSection/
+         GoalStrip/GoalChip/SubTagChip/
+         DayColumn/ScheduledCard/TimeChip/
+       MobileDayFeed/MobileDayCard/
+     ```
+   - A component rendered by two different branches lives at their **lowest common ancestor**, not duplicated or hoisted to the root (e.g. `PlannerPage/WeatherPill/` is used by both `WeekDayHeader` and `MobileDayCard`).
+   - Moving a component means moving its folder: adding a child is a new sub-folder, never a new sibling.
    - `lib/` & `hooks/`: Pure logic, Zod schemas, Zustand store, and data-fetching hooks.
 
 2. **Imports:**
-   - Use the `@/` path alias for every cross-directory import (`@/lib/store`, `@/components/elements/Button/Button`). Never use `../` to climb out of a directory.
-   - Reserve relative imports for siblings within the same folder (`./DayNotes`, `./Foo.module.scss`).
+   - Use the `@/` path alias for anything outside your own subtree (`@/lib/store`, `@/components/elements/Button/Button`). Never use `../` to climb out of a directory.
+   - Reserve relative imports for your own folder and descendants (`./Foo.module.scss`, `./DayColumn/DayColumn`).
    - Import the store itself only from `@/lib/store`; `@/hooks/usePlannerSelectors` holds derived selector hooks and does not re-export it.
    - Single quotes for module specifiers.
 

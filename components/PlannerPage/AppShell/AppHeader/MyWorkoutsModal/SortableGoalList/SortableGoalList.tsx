@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { WorkoutType } from '@/lib/types';
-import { GoalRow } from './GoalRow';
+import { GoalRow } from './GoalRow/GoalRow';
 import styles from './SortableGoalList.module.scss';
 
 export interface SortableGoalListProps {

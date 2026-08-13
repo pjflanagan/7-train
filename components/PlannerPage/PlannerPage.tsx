@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { MdToday } from 'react-icons/md';
-import { AppShell } from '@/components/features/app/AppShell';
+import { AppShell } from './AppShell/AppShell';
 import { Spinner } from '@/components/elements/Spinner/Spinner';
-import { WeekSection } from './WeekSection';
+import { WeekSection } from './WeekSection/WeekSection';
 import { useHydrated } from '@/hooks/useHydrated';
 import { usePlannerStore } from '@/lib/store';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
-import { PlannerDndProvider } from './PlannerDndProvider';
-import { MobileDayFeed } from './MobileDayFeed';
+import { PlannerDndProvider } from './PlannerDndProvider/PlannerDndProvider';
+import { MobileDayFeed } from './MobileDayFeed/MobileDayFeed';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useInitWeather } from '@/hooks/useWeather';
 import { useCalendarSync } from '@/hooks/useCalendarSync';

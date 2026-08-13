@@ -6,8 +6,8 @@ import { FcGoogle } from 'react-icons/fc';
 import { signOut } from 'next-auth/react';
 import { Avatar } from '@/components/elements/Avatar/Avatar';
 import { Menu, MenuItem } from '@/components/elements/Menu/Menu';
-import { IntegrationsModal } from '@/components/features/auth/IntegrationsModal';
-import { SettingsModal } from '@/components/features/settings/SettingsModal';
+import { IntegrationsModal } from './IntegrationsModal/IntegrationsModal';
+import { SettingsModal } from './SettingsModal/SettingsModal';
 import { useGoogleAccount, useIsGoogleAuthConfigured } from '@/hooks/useAuth';
 import styles from './ProfileMenu.module.scss';
 

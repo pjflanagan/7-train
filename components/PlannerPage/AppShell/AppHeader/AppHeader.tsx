@@ -5,9 +5,9 @@ import { Button } from '@/components/elements/Button/Button';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
 import { MdBookmark, MdFitnessCenter } from 'react-icons/md';
-import { MyWorkoutsModal } from '@/components/features/goals/MyWorkoutsModal';
-import { LinksModal } from '@/components/features/links/LinksModal';
-import { ProfileMenu } from '@/components/features/auth/ProfileMenu';
+import { MyWorkoutsModal } from './MyWorkoutsModal/MyWorkoutsModal';
+import { LinksModal } from './LinksModal/LinksModal';
+import { ProfileMenu } from './ProfileMenu/ProfileMenu';
 
 export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);

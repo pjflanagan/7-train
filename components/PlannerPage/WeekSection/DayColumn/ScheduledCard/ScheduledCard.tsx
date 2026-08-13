@@ -9,7 +9,7 @@ import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { MdClose } from 'react-icons/md';
-import { TimeChip } from './TimeChip';
+import { TimeChip } from './TimeChip/TimeChip';
 import styles from './ScheduledCard.module.scss';
 
 export function ScheduledCard({ item }: { item: CalendarItem }) {

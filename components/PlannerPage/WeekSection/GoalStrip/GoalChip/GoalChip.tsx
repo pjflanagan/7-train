@@ -11,8 +11,8 @@ import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
-import { GoalLinksPickerModal } from '@/components/features/goals/GoalLinksPickerModal';
-import { SubTagChip } from './SubTagChip';
+import { GoalLinksPickerModal } from '@/components/PlannerPage/GoalLinksPickerModal/GoalLinksPickerModal';
+import { SubTagChip } from './SubTagChip/SubTagChip';
 import styles from './GoalChip.module.scss';
 
 export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: string }) {

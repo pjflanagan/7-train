@@ -5,7 +5,7 @@ import { usePlannerStore } from '@/lib/store';
 import { LuCalendarArrowDown, LuCalendarX } from 'react-icons/lu';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
-import { CopyWeekModal, type CopySource } from './CopyWeekModal';
+import { CopyWeekModal, type CopySource } from './CopyWeekModal/CopyWeekModal';
 import { useIsWeekEmpty, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { addWeeks, getWeekStartKey } from '@/lib/dates';
 import styles from './WeekActions.module.scss';

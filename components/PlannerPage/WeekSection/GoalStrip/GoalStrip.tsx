@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useGoals } from '@/hooks/usePlannerSelectors';
 import { useHorizontalOverflow } from '@/hooks/useHorizontalOverflow';
-import { GoalChip } from './GoalChip';
+import { GoalChip } from './GoalChip/GoalChip';
 import styles from './GoalStrip.module.scss';
 
 export function GoalStrip({ weekStart }: { weekStart: string }) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MobileDayCard } from './MobileDayCard';
+import { MobileDayCard } from './MobileDayCard/MobileDayCard';
 import { useInfiniteDays, DAY_PAGE_SIZE } from '@/hooks/useInfiniteDays';
 import { formatDateLocal } from '@/lib/dates';
 import styles from './MobileDayFeed.module.scss';

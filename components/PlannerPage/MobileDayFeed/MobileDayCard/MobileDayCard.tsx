@@ -4,7 +4,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { useDayItems, useGoals, useNote, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
-import { WeatherPill } from './WeatherPill';
+import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
 import { getIconByKey } from '@/lib/icons';
 import {
   dayHeaderLabel,

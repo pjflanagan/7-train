@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
-import { WeatherPill } from './WeatherPill';
+import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
 import { dateForDay, formatDateLocal, orderedDays, shortDayLabel } from '@/lib/dates';
 import styles from './WeekDayHeader.module.scss';
 

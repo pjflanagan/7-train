@@ -3,7 +3,7 @@ import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, Keyboard
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { usePlannerDnd } from '@/hooks/usePlannerDnd';
 import { usePlannerStore } from '@/lib/store';
-import { DragPreviewCard } from './DragPreviewCard';
+import { DragPreviewCard } from './DragPreviewCard/DragPreviewCard';
 
 export function PlannerDndProvider({ children }: { children: React.ReactNode }) {
   const { activeId, activeData, handleDragStart, handleDragEnd, handleDragCancel } =

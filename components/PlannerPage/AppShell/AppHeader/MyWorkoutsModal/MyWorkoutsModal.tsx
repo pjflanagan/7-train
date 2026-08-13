@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
-import { SortableGoalList } from './SortableGoalList';
-import { GoalFormModal } from './GoalFormModal';
+import { SortableGoalList } from './SortableGoalList/SortableGoalList';
+import { GoalFormModal } from './GoalFormModal/GoalFormModal';
 import { usePlannerStore } from '@/lib/store';
 import { MdAdd } from 'react-icons/md';
 import styles from './MyWorkoutsModal.module.scss';

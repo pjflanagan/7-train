@@ -1,8 +1,8 @@
-import { WeekProgressBar } from './WeekProgressBar';
-import { WeekActions } from './WeekActions';
-import { GoalStrip } from './GoalStrip';
-import { WeekDayHeader } from './WeekDayHeader';
-import { DayColumn } from './DayColumn';
+import { WeekProgressBar } from './WeekProgressBar/WeekProgressBar';
+import { WeekActions } from './WeekActions/WeekActions';
+import { GoalStrip } from './GoalStrip/GoalStrip';
+import { WeekDayHeader } from './WeekDayHeader/WeekDayHeader';
+import { DayColumn } from './DayColumn/DayColumn';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { orderedDays, weekLabel, formatDateLocal, dateForDay } from '@/lib/dates';
 import styles from './WeekSection.module.scss';
