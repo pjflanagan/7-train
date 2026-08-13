@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { usePlannerStore } from '@/lib/store';
 import { useCsvExport } from '@/hooks/useCsvExport';
+import { useBackup } from '@/hooks/useBackup';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { Button } from '@/components/elements/Button/Button';
@@ -17,11 +18,15 @@ export interface SettingsModalProps {
   onClose: () => void;
 }
 
-type ConfirmAction = 'reset' | null;
+type ConfirmAction = 'reset' | 'import' | null;
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [importStatus, setImportStatus] = useState<{ message: string; isError: boolean } | null>(null);
+  const pendingFile = useRef<File | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const { exportData } = useCsvExport();
+  const { exportBackup, importBackup } = useBackup();
   const { data: weatherData } = useWeather();
   const fetchWeather = useWeatherStore((s) => s.fetchWeather);
 
@@ -38,11 +43,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     fetchWeather();
   };
 
+  const handleFileChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    // Reset the input so choosing the same file again still fires a change.
+    event.target.value = '';
+    if (!file) return;
+    pendingFile.current = file;
+    setImportStatus(null);
+    setConfirmAction('import');
+  };
+
+  const runImport = async (file: File) => {
+    const error = await importBackup(file);
+    setImportStatus(
+      error
+        ? { message: error, isError: true }
+        : { message: 'Backup imported.', isError: false }
+    );
+  };
+
   const handleConfirm = () => {
     switch (confirmAction) {
       case 'reset':
         resetAll();
         break;
+      case 'import': {
+        const file = pendingFile.current;
+        pendingFile.current = null;
+        if (file) void runImport(file);
+        break;
+      }
     }
     setConfirmAction(null);
   };
@@ -51,6 +81,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     switch (confirmAction) {
       case 'reset':
         return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
+      case 'import':
+        return { title: 'Import backup', message: 'Importing replaces everything currently in the app with the contents of the backup file. This cannot be undone.', isDestructive: true };
       default:
         return { title: '', message: '', isDestructive: false };
     }
@@ -100,6 +132,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <span className={styles.text}>Export history to CSV format</span>
               <Button onClick={exportData} variant="secondary">Export CSV</Button>
             </div>
+            <div className={styles.row}>
+              <span className={styles.text}>Save a full backup, including goals and settings</span>
+              <Button onClick={exportBackup} variant="secondary">Export backup</Button>
+            </div>
+            <div className={styles.row}>
+              <span className={styles.text}>Restore everything from a backup file</span>
+              <Button onClick={() => fileInput.current?.click()} variant="secondary">Import backup</Button>
+            </div>
+            {importStatus && (
+              <span className={`${styles.status} ${importStatus.isError ? styles.error : ''}`}>
+                {importStatus.message}
+              </span>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              accept="application/json,.json"
+              className={styles.hiddenInput}
+              onChange={handleFileChosen}
+            />
           </div>
 
           <div className={styles.section}>

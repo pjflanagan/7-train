@@ -35,6 +35,8 @@ type PlannerStore = PlannerState & {
 
   setTempUnit: (unit: 'C' | 'F') => void;
   setWeekStartsOn: (weekStartsOn: WeekStartsOn) => void;
+  /** Replace every persisted field at once, used by backup import. */
+  replaceAll: (state: PlannerState) => void;
   resetAll: () => void;
 };
 
@@ -191,6 +193,7 @@ export const usePlannerStore = create<PlannerStore>()(
 
       setTempUnit: (tempUnit) => set({ tempUnit }),
       setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
+      replaceAll: (state) => set(state),
       resetAll: () => set(buildInitialState())
     }),
     {

@@ -31,6 +31,19 @@
   color: var(--text-main);
 }
 
+.hiddenInput {
+  display: none;
+}
+
+.status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.error {
+  color: var(--accent-error);
+}
+
 .unitSelect {
   width: 140px;
 }
