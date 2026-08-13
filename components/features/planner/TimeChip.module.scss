@@ -21,7 +21,7 @@
   border: none;
   border-radius: var(--radius-xs);
   background: none;
-  text-align: left;
+  text-align: center;
   color: var(--text-muted);
   font-family: inherit;
   font-size: var(--font-2xs);
@@ -45,5 +45,5 @@
 
 // The right half of the row, so the two read as columns down a day.
 .duration {
-  text-align: right;
+  text-align: center;
 }

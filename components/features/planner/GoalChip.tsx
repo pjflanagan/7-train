@@ -9,7 +9,6 @@ import { useScheduledSubTags } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
-import { ProgressBar } from '@/components/elements/ProgressBar/ProgressBar';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { GoalLinksPickerModal } from '@/components/features/goals/GoalLinksPickerModal';
 import { SubTagChip } from './SubTagChip';
@@ -38,6 +37,15 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
       style={{ '--goal-color': goal.color, opacity: isDragging ? 0.5 : 1 } as React.CSSProperties}
     >
       <div className={styles.header} {...attributes} {...listeners}>
+        {/* The tally's progress fills the band it is written on, so the week's
+            standing costs no vertical room of its own. */}
+        {!goal.optional && (
+          <span
+            className={styles.progressFill}
+            style={{ width: `${Math.min(100, Math.max(0, progress?.percent || 0))}%` }}
+            aria-hidden="true"
+          />
+        )}
         <span className={styles.iconBadge}>
           {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
         </span>
@@ -89,14 +97,6 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
             />
           ))}
         </div>
-      )}
-      {/* The bar closes the chip, under the sub-type pills it summarises. */}
-      {!goal.optional && (
-        <ProgressBar
-          percent={progress?.percent || 0}
-          color="var(--goal-solid)"
-          className={styles.progressBar}
-        />
       )}
       {hasLinks && (
         <GoalLinksPickerModal

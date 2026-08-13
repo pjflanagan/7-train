@@ -143,6 +143,15 @@ function startAtIndex(state: PlannerState, ordered: CalendarItem[], index: numbe
   return Math.min(startMinutesOf(moved), startMinutesOf(next));
 }
 
+/**
+ * Mark an item as edited now. Everything that changes what the workout *is*
+ * goes through here, so a future merge against an integration can compare
+ * timestamps and keep the newer side.
+ */
+function stamp(item: CalendarItem): CalendarItem {
+  return { ...item, updatedAt: new Date().toISOString() };
+}
+
 export const usePlannerStore = create<PlannerStore>()(
   persist(
     (set) => ({
@@ -183,18 +192,18 @@ export const usePlannerStore = create<PlannerStore>()(
       addItem: (item) => set((state) => ({
         items: [
           ...state.items,
-          {
+          stamp({
             ...item,
             id: newId('item'),
             startMinutes: item.startMinutes ?? nextFreeSlot(state, item.day, item.weekStart)
-          }
+          })
         ]
       })),
       updateItemValue: (id, value) => set((state) => ({
-        items: state.items.map(i => i.id === id ? { ...i, value } : i)
+        items: state.items.map(i => i.id === id ? stamp({ ...i, value }) : i)
       })),
       setItemSubType: (id, subType) => set((state) => ({
-        items: state.items.map(i => i.id === id ? { ...i, workoutType: subType } : i)
+        items: state.items.map(i => i.id === id ? stamp({ ...i, workoutType: subType }) : i)
       })),
       removeItem: (id) => set((state) => ({
         items: state.items.filter(i => i.id !== id)
@@ -204,7 +213,11 @@ export const usePlannerStore = create<PlannerStore>()(
         if (!item) return state;
 
         let newItems = state.items.filter(i => i.id !== id);
-        const updatedItem: CalendarItem = { ...item, day: targetDay, weekStart: targetWeekStart };
+        const updatedItem: CalendarItem = stamp({
+          ...item,
+          day: targetDay,
+          weekStart: targetWeekStart
+        });
 
         if (newIndex !== undefined) {
           const inTarget = (i: CalendarItem) =>
@@ -230,39 +243,41 @@ export const usePlannerStore = create<PlannerStore>()(
         // dropped after ends. The workouts it moved past keep their times
         // rather than trading slots with it.
         const reordered = arrayMove(dayItems, oldIndex, newIndex);
-        const moved = {
+        reordered[newIndex] = stamp({
           ...reordered[newIndex],
           startMinutes: startAtIndex(state, reordered, newIndex)
-        };
-        reordered[newIndex] = moved;
+        });
 
         return { items: [...otherItems, ...reordered] };
       }),
       setItemTime: (id, startMinutes) => set((state) => ({
         items: state.items.map(i =>
-          i.id === id ? { ...i, startMinutes: clampStartMinutes(startMinutes) } : i
+          i.id === id ? stamp({ ...i, startMinutes: clampStartMinutes(startMinutes) }) : i
         )
       })),
       nudgeItemTime: (id, slots) => set((state) => ({
         items: state.items.map(i =>
           i.id === id
-            ? { ...i, startMinutes: clampStartMinutes(startMinutesOf(i) + slots * SLOT_MINUTES) }
+            ? stamp({
+                ...i,
+                startMinutes: clampStartMinutes(startMinutesOf(i) + slots * SLOT_MINUTES)
+              })
             : i
         )
       })),
       setItemDuration: (id, durationMinutes) => set((state) => ({
         items: state.items.map(i =>
-          i.id === id ? { ...i, durationMinutes: clampDuration(durationMinutes) } : i
+          i.id === id ? stamp({ ...i, durationMinutes: clampDuration(durationMinutes) }) : i
         )
       })),
       nudgeItemDuration: (id, slots) => set((state) => ({
         items: state.items.map(i => {
           if (i.id !== id) return i;
           const goal = state.goals.find(g => g.id === i.typeId);
-          return {
+          return stamp({
             ...i,
             durationMinutes: clampDuration(durationMinutesOf(i, goal) + slots * SLOT_MINUTES)
-          };
+          });
         })
       })),
 

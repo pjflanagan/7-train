@@ -28,8 +28,8 @@ export function usePlannerDnd() {
 
   /**
    * A drag that ends without a drop — Escape, or the pointer being captured by
-   * a control inside the handle. Nothing moves, but the active id has to clear:
-   * the page is frozen while it is set, so leaving it behind locks scrolling.
+   * a control inside the handle. Nothing moves, but the active id has to clear
+   * or the drag preview is left hanging over the feed.
    */
   const handleDragCancel = () => {
     setActiveId(null);

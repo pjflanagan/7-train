@@ -87,6 +87,7 @@ export async function GET(request: Request) {
         eventId: event.id,
         start: event.start.dateTime,
         end: event.end.dateTime,
+        updated: event.updated,
       });
     }
 

@@ -1,0 +1,72 @@
+@use '@/styles/mixins' as mixins;
+
+// Deliberately wordless: it reads as a slot waiting to be filled, and a column
+// of seven "add workout" labels would be louder than the workouts themselves.
+.zone {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 4rem;
+  padding: 0;
+  background: none;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  @include mixins.focus-ring();
+
+  &:hover {
+    border-color: var(--accent-primary);
+    background-color: var(--accent-primary-soft);
+  }
+}
+
+// Pinned to the viewport, since a day column is narrower than this list and the
+// week board clips what overflows it.
+.panel {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-05);
+  max-height: 60vh;
+  padding: var(--space-1);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--font-sm);
+  text-align: left;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  @include mixins.focus-ring();
+
+  &:hover {
+    background-color: var(--bg-tertiary);
+  }
+}
+
+.optionIcon {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  font-size: var(--icon-md);
+}
+
+.optionLabel {
+  @include mixins.truncate();
+}

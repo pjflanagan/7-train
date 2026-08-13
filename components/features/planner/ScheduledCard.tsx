@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CalendarItem } from '@/lib/types';
@@ -41,6 +42,20 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
   const subTypes = goal.workoutTypes ?? [];
   // A "times" goal is always one occurrence, so "1 times" is noise.
   const hasValue = goal.metric !== 'times';
+  // A duration goal's value is its length, so the number entry sits where the
+  // length control would be instead of repeating it a line further down.
+  const isDuration = goal.metric === 'duration';
+
+  const valueEntry = (
+    <div className={clsx(styles.valueRow, isDuration && styles.valueRowTrailing)}>
+      <InlineNumberInput
+        value={item.value || 0}
+        onCommit={(val) => updateItemValue(item.id, val)}
+        className={styles.valueInput}
+      />
+      <span className={styles.unit}>{goal.unit}</span>
+    </div>
+  );
 
   return (
     <div
@@ -49,10 +64,11 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
       ref={setNodeRef}
     >
       {/* The band is the drag handle, so it sits darker than the card body and
-          reads as something to grab. The icon doubles as the remove button:
-          hovering it swaps the glyph for an x, so the band carries nothing but
-          the workout's name. */}
+          reads as something to grab. Remove waits at the far end until the card
+          is hovered, so a wall of x's never competes with the plan itself. */}
       <div className={styles.header} {...attributes} {...listeners}>
+        {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
+        <span className={styles.title}>{goal.name}</span>
         <button
           className={styles.removeButton}
           // The band drags, so the button keeps its own pointer events.
@@ -64,14 +80,16 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
           title="Remove item"
           aria-label="Remove item"
         >
-          {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
-          <MdClose size={16} className={styles.removeIcon} />
+          <MdClose size={14} />
         </button>
-        <span className={styles.title}>{goal.name}</span>
       </div>
 
       <div className={styles.body}>
-        <TimeChip item={item} goal={goal} />
+        <TimeChip
+          item={item}
+          goal={goal}
+          trailing={isDuration && hasValue ? valueEntry : undefined}
+        />
 
         {subTypes.length > 0 && (
           <Select
@@ -90,16 +108,7 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
           </Select>
         )}
 
-        {hasValue && (
-          <div className={styles.valueRow}>
-            <InlineNumberInput
-              value={item.value || 0}
-              onCommit={(val) => updateItemValue(item.id, val)}
-              className={styles.valueInput}
-            />
-            <span className={styles.unit}>{goal.unit}</span>
-          </div>
-        )}
+        {hasValue && !isDuration && valueEntry}
       </div>
     </div>
   );

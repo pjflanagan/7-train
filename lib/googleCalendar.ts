@@ -106,6 +106,8 @@ export interface GoogleEvent {
   summary?: string;
   description?: string;
   status?: string;
+  /** ISO stamp of Google's last write to the event. */
+  updated?: string;
   start?: { dateTime?: string; date?: string; timeZone?: string };
   end?: { dateTime?: string; date?: string; timeZone?: string };
   extendedProperties?: { private?: Record<string, string> };
@@ -250,4 +252,6 @@ export interface PulledEvent {
   value: number;
   start: string;
   end: string;
+  /** Google's own last-modified stamp for the event, ISO. */
+  updated?: string;
 }

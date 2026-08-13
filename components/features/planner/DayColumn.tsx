@@ -4,6 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useDayItems } from '@/hooks/usePlannerSelectors';
+import { AddWorkoutZone } from './AddWorkoutZone';
 import { DayNotes } from './DayNotes';
 import { ScheduledCard } from './ScheduledCard';
 import styles from './DayColumn.module.scss';
@@ -34,6 +35,7 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
             <ScheduledCard key={item.id} item={item} />
           ))}
         </SortableContext>
+        {items.length === 0 && <AddWorkoutZone day={day} weekStart={weekStart} />}
       </div>
       <DayNotes day={day} weekStart={weekStart} />
     </div>

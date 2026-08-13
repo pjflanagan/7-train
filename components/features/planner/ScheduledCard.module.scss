@@ -37,46 +37,37 @@
   padding: var(--space-2);
 }
 
-// The goal's icon until it is hovered, an x after: one slot, two meanings, so
-// the far side of the band stays free for the time.
+// Waits at the end of the band and only surfaces on hover, so a full week of
+// cards isn't a grid of delete buttons.
 .removeButton {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: var(--icon-sm);
-  height: var(--icon-sm);
+  margin-left: auto;
+  padding: 0;
   background: none;
   border: none;
-  color: var(--goal-ink);
-  cursor: pointer;
-  padding: 0;
   border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
   transition: var(--transition-smooth);
 
-  .removeIcon {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    opacity: 0;
-    transition: var(--transition-smooth);
+  &:hover {
+    color: var(--accent-error);
   }
 
-  // Touch devices never hover, so the x can only be reached by focus there;
-  // the icon stays put rather than flickering under a tap.
-  @media (hover: hover) {
-    &:hover .icon,
-    &:focus-visible .icon {
-      opacity: 0;
-    }
-
-    &:hover .removeIcon,
-    &:focus-visible .removeIcon {
-      opacity: 1;
-      color: var(--accent-error);
-    }
+  // Touch devices never hover, so it has to stay visible there rather than
+  // being unreachable.
+  @media (hover: none) {
+    opacity: 1;
   }
+}
+
+.card:hover .removeButton,
+.removeButton:focus-visible {
+  opacity: 1;
 }
 
 .icon {
@@ -87,6 +78,8 @@
 }
 
 .title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-weight: 600;
   font-size: var(--font-xs);
   line-height: 1.3;
@@ -96,18 +89,16 @@
   white-space: nowrap;
 }
 
-// A pill on the card rather than a full-width field: it is one glanceable
-// value, not a form.
+// Bare text across the card, not a field: the card is small enough that a
+// bordered control reads as chrome around a single word.
 .subtagSelect {
-  align-self: flex-start;
-  max-width: 100%;
+  width: 100%;
 
   select {
-    width: auto;
-    max-width: 100%;
-    background-color: var(--goal-inset);
-    border-color: color-mix(in srgb, var(--goal-color) 35%, transparent);
-    border-radius: var(--radius-pill);
+    width: 100%;
+    padding-left: 0;
+    background-color: transparent;
+    border-color: transparent;
     font-size: var(--font-2xs);
   }
 }
@@ -116,6 +107,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+}
+
+// Sitting in the length control's half of the time row, so it lines up with
+// the card's right edge the way the length did.
+.valueRowTrailing {
+  justify-content: flex-end;
 }
 
 // Scoped through the row so it outranks the inline input's own width and

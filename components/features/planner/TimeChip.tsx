@@ -22,6 +22,12 @@ const PIXELS_PER_SLOT = 6;
 export interface TimeChipProps {
   item: CalendarItem;
   goal: WorkoutType;
+  /**
+   * Takes the place of the length control. A duration goal's own value _is_ its
+   * length, so it puts its number entry here rather than showing both and
+   * letting them disagree.
+   */
+  trailing?: React.ReactNode;
 }
 
 /**
@@ -33,7 +39,7 @@ export interface TimeChipProps {
  * someone sets a length, it is the goal's own number for a duration goal and
  * an estimate otherwise.
  */
-export function TimeChip({ item, goal }: TimeChipProps) {
+export function TimeChip({ item, goal, trailing }: TimeChipProps) {
   const setItemTime = usePlannerStore((state) => state.setItemTime);
   const nudgeItemTime = usePlannerStore((state) => state.nudgeItemTime);
   const setItemDuration = usePlannerStore((state) => state.setItemDuration);
@@ -119,23 +125,25 @@ export function TimeChip({ item, goal }: TimeChipProps) {
       >
         {formatTimeOfDay(startMinutes)}
       </button>
-      <button
-        type="button"
-        className={clsx(
-          styles.chip,
-          styles.duration,
-          dragging === 'duration' && styles.isDragging
-        )}
-        onPointerDown={handleDurationDown}
-        onPointerMove={handleDurationMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onKeyDown={(e) => arrowKeys(e, nudgeItemDuration)}
-        title={isExact ? undefined : 'Estimated'}
-        aria-label={`Length ${formatDuration(duration)}. Drag or use arrow keys to change.`}
-      >
-        {formatDuration(duration)}
-      </button>
+      {trailing ?? (
+        <button
+          type="button"
+          className={clsx(
+            styles.chip,
+            styles.duration,
+            dragging === 'duration' && styles.isDragging
+          )}
+          onPointerDown={handleDurationDown}
+          onPointerMove={handleDurationMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onKeyDown={(e) => arrowKeys(e, nudgeItemDuration)}
+          title={isExact ? undefined : 'Estimated'}
+          aria-label={`Length ${formatDuration(duration)}. Drag or use arrow keys to change.`}
+        >
+          {formatDuration(duration)}
+        </button>
+      )}
     </div>
   );
 }

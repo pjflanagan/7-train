@@ -8,7 +8,7 @@ import { WeekSection } from './WeekSection';
 import { useHydrated } from '@/hooks/useHydrated';
 import { usePlannerStore } from '@/lib/store';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
-import { useInfiniteWeeks, PAGE_SIZE } from '@/hooks/useInfiniteWeeks';
+import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider';
 import { MobileDayFeed } from './MobileDayFeed';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -44,7 +44,7 @@ function WeekFeed() {
       >
         <div className={styles.container}>
           <button type="button" className={styles.loadMore} onClick={loadEarlier}>
-            Show {PAGE_SIZE} earlier weeks
+            Show more past weeks
           </button>
           {weeks.map((weekStart) => (
             <div
@@ -55,7 +55,7 @@ function WeekFeed() {
             </div>
           ))}
           <button type="button" className={styles.loadMore} onClick={loadLater}>
-            Show {PAGE_SIZE} more weeks
+            Show more future weeks
           </button>
         </div>
       </div>

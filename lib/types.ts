@@ -41,7 +41,17 @@ export const CalendarItemSchema = z.object({
    */
   durationMinutes: z.number().int().min(15).max(1440).optional(),
   /** The Google Calendar event this item is mirrored to, once it has one. */
-  googleEventId: z.string().nullable().optional()
+  googleEventId: z.string().nullable().optional(),
+  /**
+   * ISO timestamp of the last edit to the workout itself — when it happens,
+   * how long it runs, what it is. Absent on items last touched before this was
+   * recorded, which for merging purposes makes them older than anything stamped.
+   *
+   * Bookkeeping that doesn't change the plan (learning an item's Google event
+   * id, say) deliberately leaves it alone, so syncing never makes a side look
+   * newer than the other just by running.
+   */
+  updatedAt: z.string().optional()
 });
 export type CalendarItem = z.infer<typeof CalendarItemSchema>;
 

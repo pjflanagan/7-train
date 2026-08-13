@@ -127,6 +127,9 @@ function itemFromEvent(
     startMinutes: start.getHours() * 60 + start.getMinutes(),
     durationMinutes,
     googleEventId: event.eventId,
+    // Google's stamp, not the moment we pulled it: the point of recording this
+    // is to tell which side of a future merge holds the newer edit.
+    updatedAt: event.updated,
   };
 }
 

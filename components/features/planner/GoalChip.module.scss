@@ -19,6 +19,10 @@
 // Darker than the chip below it, because the band is the grab point: dragging
 // it drops the goal onto a day.
 .header {
+  position: relative;
+  // So the fill can sit behind the band's own text without escaping to behind
+  // the chip itself.
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -27,6 +31,9 @@
   background-color: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
+  // The progress fill runs the full height of the band, so the band has to be
+  // what rounds it off at either end.
+  overflow: hidden;
   cursor: grab;
 
   &:active {
@@ -97,10 +104,16 @@
   font-weight: 600;
 }
 
-// Last in the chip: pushed to the bottom so bars line up across chips of
-// differing sub-tag counts.
-.progressBar {
-  margin-top: auto;
+// The week's progress, drawn as the header's own fill rather than a bar of its
+// own. Behind the text, but still above the band's background.
+.progressFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background-color: color-mix(in srgb, var(--goal-color) 30%, transparent);
+  transition: var(--transition-smooth);
 }
 
 .tags {
