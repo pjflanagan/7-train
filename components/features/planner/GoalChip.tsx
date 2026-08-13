@@ -41,8 +41,8 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
           <span className={styles.tally}>
             {progress?.current || 0} /
             <InlineNumberInput
-              value={goal.target || 0}
-              onCommit={(val) => setGoalTarget(goal.id, val)}
+              value={progress?.target ?? goal.target ?? 0}
+              onCommit={(val) => setGoalTarget(goal.id, val, weekStart)}
               className={styles.targetInput}
               aria-label={`${goal.name} target`}
             />

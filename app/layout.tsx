@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { AuthProvider } from '@/hooks/useAuth';
+import { isGoogleAuthConfigured } from '@/lib/auth';
 import './globals.scss';
 
 const inter = Inter({
@@ -28,8 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body>
-        {children}
-        <Toaster theme="dark" />
+        <AuthProvider isGoogleAuthConfigured={isGoogleAuthConfigured}>
+          {children}
+          <Toaster theme="dark" />
+        </AuthProvider>
       </body>
     </html>
   );

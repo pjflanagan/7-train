@@ -26,6 +26,12 @@ Then visit `http://localhost:3000`.
 
 All user data is stored safely in `localStorage`. The application can be used entirely offline, and user progress is kept on-device. An API route is included for live weather data via Open-Meteo.
 
+### Google sign in
+
+Optional, and off until it is configured. Signing in with Google is what will
+eventually back calendar sync and the spreadsheet export. See
+`docs/google-setup.md` for the Google Cloud and environment setup.
+
 ### Contributing
 
 See `AGENTS.md` for strict architectural and styling rules before making changes.

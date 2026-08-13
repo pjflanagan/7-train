@@ -16,14 +16,38 @@ export type OverallProgress = {
   percent: number;
 };
 
-export function calculateProgress(types: WorkoutType[], items: CalendarItem[]): ProgressMap {
+export type WeeklyTargets = Record<string, number>;
+
+export const weeklyTargetKey = (weekStart: string, goalId: string) => `${weekStart}:${goalId}`;
+
+/**
+ * The target a goal runs against in one week: its per-week override when the
+ * user has bent that week, otherwise the goal's baseline target.
+ */
+export function getEffectiveTarget(
+  goal: WorkoutType,
+  weekStart: string,
+  weeklyTargets?: WeeklyTargets
+): number {
+  const override = weeklyTargets?.[weeklyTargetKey(weekStart, goal.id)];
+  return Number(override ?? goal.target) || 0;
+}
+
+export function calculateProgress(
+  types: WorkoutType[],
+  items: CalendarItem[],
+  weekStart?: string,
+  weeklyTargets?: WeeklyTargets
+): ProgressMap {
   const progressMap: ProgressMap = {};
 
   types.forEach(type => {
     progressMap[type.id] = {
       type: type,
       current: 0,
-      target: type.optional ? 0 : (Number(type.target) || 0),
+      target: type.optional
+        ? 0
+        : (weekStart ? getEffectiveTarget(type, weekStart, weeklyTargets) : Number(type.target) || 0),
       percent: 0,
       isDone: false
     };

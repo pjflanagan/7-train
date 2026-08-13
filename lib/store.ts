@@ -4,6 +4,7 @@ import { PlannerState, WorkoutType, CalendarItem, HelpfulLink } from './types';
 import { DEFAULT_WORKOUT_TYPES, getDefaultCalendarItems, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
+import { weeklyTargetKey } from './progress';
 import { arrayMove } from '@dnd-kit/sortable';
 
 type DayName = typeof DAYS[number];
@@ -15,7 +16,8 @@ type PlannerStore = PlannerState & {
   updateGoal: (id: string, goal: Partial<WorkoutType>) => void;
   deleteGoal: (id: string) => void;
   reorderGoals: (oldIndex: number, newIndex: number) => void;
-  setGoalTarget: (id: string, target: number) => void;
+  /** Bends a goal's target for one week only; the baseline `target` is untouched. */
+  setGoalTarget: (id: string, target: number, weekStart: string) => void;
 
   addItem: (item: Omit<CalendarItem, 'id'>) => void;
   updateItemValue: (id: string, value: number) => void;
@@ -42,6 +44,7 @@ function buildInitialState(): PlannerState {
     goals: DEFAULT_WORKOUT_TYPES,
     items: getDefaultCalendarItems(weekStart),
     notes: {},
+    weeklyTargets: {},
     links: DEFAULT_LINKS,
     history: [],
     lastViewedMonday: null,
@@ -62,16 +65,33 @@ export const usePlannerStore = create<PlannerStore>()(
       updateGoal: (id, updates) => set((state) => ({
         goals: state.goals.map(g => g.id === id ? { ...g, ...updates } : g)
       })),
-      deleteGoal: (id) => set((state) => ({
-        goals: state.goals.filter(g => g.id !== id),
-        items: state.items.filter(i => i.typeId !== id)
-      })),
+      deleteGoal: (id) => set((state) => {
+        const weeklyTargets = { ...(state.weeklyTargets || {}) };
+        Object.keys(weeklyTargets).forEach(key => {
+          if (key.endsWith(`:${id}`)) delete weeklyTargets[key];
+        });
+        return {
+          goals: state.goals.filter(g => g.id !== id),
+          items: state.items.filter(i => i.typeId !== id),
+          weeklyTargets
+        };
+      }),
       reorderGoals: (oldIndex, newIndex) => set((state) => ({
         goals: arrayMove(state.goals, oldIndex, newIndex)
       })),
-      setGoalTarget: (id, target) => set((state) => ({
-        goals: state.goals.map(g => g.id === id ? { ...g, target } : g)
-      })),
+      setGoalTarget: (id, target, weekStart) => set((state) => {
+        const key = weeklyTargetKey(weekStart, id);
+        const goal = state.goals.find(g => g.id === id);
+        const weeklyTargets = { ...(state.weeklyTargets || {}) };
+        // Back at the baseline there is nothing to remember, so drop the
+        // override and let the week follow the goal again.
+        if (goal && (Number(goal.target) || 0) === target) {
+          delete weeklyTargets[key];
+        } else {
+          weeklyTargets[key] = target;
+        }
+        return { weeklyTargets };
+      }),
 
       addItem: (item) => set((state) => ({
         items: [...state.items, { ...item, id: newId('item') }]
@@ -140,14 +160,29 @@ export const usePlannerStore = create<PlannerStore>()(
           }
         });
 
-        return { items: [...retainedItems, ...copiedItems], notes: newNotes };
+        // A copied week brings its bent targets with it, so the copy is a
+        // faithful duplicate rather than a week snapped back to baseline.
+        const weeklyTargets = { ...(state.weeklyTargets || {}) };
+        state.goals.forEach(goal => {
+          const from = weeklyTargets[weeklyTargetKey(fromWeekStart, goal.id)];
+          const toKey = weeklyTargetKey(toWeekStart, goal.id);
+          if (from === undefined) delete weeklyTargets[toKey];
+          else weeklyTargets[toKey] = from;
+        });
+
+        return { items: [...retainedItems, ...copiedItems], notes: newNotes, weeklyTargets };
       }),
       clearWeek: (weekStart) => set((state) => {
         const newNotes = { ...state.notes };
         DAYS.forEach(day => { delete newNotes[noteKey(weekStart, day)]; });
+        const weeklyTargets = { ...(state.weeklyTargets || {}) };
+        Object.keys(weeklyTargets).forEach(key => {
+          if (key.startsWith(`${weekStart}:`)) delete weeklyTargets[key];
+        });
         return {
           items: state.items.filter(i => i.weekStart !== weekStart),
-          notes: newNotes
+          notes: newNotes,
+          weeklyTargets
         };
       }),
 

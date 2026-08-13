@@ -72,14 +72,17 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
         </Select>
       )}
 
-      <div className={styles.valueRow}>
-        <InlineNumberInput
-          value={item.value || 0}
-          onCommit={(val) => updateItemValue(item.id, val)}
-          className={styles.valueInput}
-        />
-        <span className={styles.unit}>{goal.unit}</span>
-      </div>
+      {/* A "times" goal is always one occurrence, so "1 times" is noise. */}
+      {goal.metric !== 'times' && (
+        <div className={styles.valueRow}>
+          <InlineNumberInput
+            value={item.value || 0}
+            onCommit={(val) => updateItemValue(item.id, val)}
+            className={styles.valueInput}
+          />
+          <span className={styles.unit}>{goal.unit}</span>
+        </div>
+      )}
     </div>
   );
 }
