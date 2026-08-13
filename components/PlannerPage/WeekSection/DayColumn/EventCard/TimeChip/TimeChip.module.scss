@@ -49,11 +49,29 @@
   inset: 0;
   width: 100%;
   padding: 0;
+  // Safari won't paint a background or honour the radius on a time input
+  // while it still has its native appearance.
+  appearance: none;
+  -webkit-appearance: none;
+  line-height: 1.5;
   border: none;
   border-radius: var(--radius-xs);
   background: none;
   color: transparent;
+  font-family: inherit;
+  font-size: var(--font-2xs);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
   cursor: text;
+
+  // While it is being edited the field shows its own value, on a pill of its
+  // own. Safari paints the segment being typed into with a selection highlight,
+  // and over transparent text on a transparent background that reads as a
+  // coloured smear across the card.
+  &:focus {
+    background-color: var(--activity-inset, var(--bg-primary));
+    color: var(--text-main);
+  }
 
   // Chromium still paints the picker indicator over transparent text; this
   // is the "little clock icon" the field is meant to read without.
@@ -77,9 +95,14 @@
   pointer-events: none;
   transition: var(--transition-smooth);
 
-  .timeInput:hover ~ &,
-  .timeInput:focus ~ & {
+  .timeInput:hover ~ & {
     color: var(--text-main);
+  }
+
+  // While editing, the input shows its own value on its pill, so the card's
+  // compact copy of it gets out of the way rather than doubling up.
+  .timeInput:focus ~ & {
+    opacity: 0;
   }
 }
 

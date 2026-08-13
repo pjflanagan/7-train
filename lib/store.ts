@@ -430,12 +430,16 @@ export const usePlannerStore = create<PlannerStore>()(
         ...buildInitialState(),
         activities: [],
         events: [],
+        // The seeded state fills the current week from the template. With no
+        // template left to have come from, those targets are the one thing a
+        // blank slate must not keep.
+        weekActivities: {},
         links: []
       })
     }),
     {
       name: 'workout-week',
-      version: 6,
+      version: 7,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

@@ -23,7 +23,7 @@ export const MyActivitiesModal: React.FC<MyActivitiesModalProps> = ({ isOpen, on
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="My activities"
+        title="My weekly activities"
         maxWidth="600px"
         footer={
           <Button variant="primary" onClick={() => setIsAddOpen(true)}>
@@ -32,6 +32,10 @@ export const MyActivitiesModal: React.FC<MyActivitiesModalProps> = ({ isOpen, on
         }
       >
         <div className={styles.container}>
+          <p className={styles.intro}>
+            Set your typical weekly activities here. When you go to schedule events during the week
+            you can quickly default to these targets.
+          </p>
           <div className={styles.list}>
             {activities.length === 0 ? (
               <p className={styles.empty}>No workouts yet. Add one to start planning.</p>

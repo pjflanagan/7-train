@@ -23,6 +23,10 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
+  // `maxWidth` is the dialog's preferred width, not a promise the content can
+  // be squeezed into it: something that refuses to wrap — a row of segments, a
+  // wide table — pushes the dialog wider rather than spilling out of it.
+  min-width: min-content;
   // dvh rather than vh: on mobile the browser chrome eats into vh, which is
   // what pushed the footer out of reach.
   max-height: calc(100dvh - var(--space-8));

@@ -23,7 +23,7 @@ interface CopyWeekModalProps {
 const sourceLabels: Record<CopySource, string> = {
   current: 'Current week',
   previous: 'Previous week',
-  default: 'My activities',
+  default: 'My weekly activities',
 };
 
 /** Picks a source week and which parts of it — schedule, activities, or both — to pull in. */
@@ -69,7 +69,7 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Copy week"
+      title="Fill week"
       maxWidth="420px"
       footer={
         <>
@@ -77,7 +77,7 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
             Cancel
           </Button>
           <Button variant="primary" onClick={handleCopy} disabled={nothingSelected}>
-            Copy
+            Fill
           </Button>
         </>
       }

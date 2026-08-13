@@ -40,13 +40,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  // Sideways only. `scroll-area()` would also make this a vertical scroller
-  // with `overscroll-behavior: contain`, and since the board covers the whole
-  // week, every wheel event over the planner would die here instead of
-  // chaining up to the feed. `hidden` keeps the wheel passing through.
-  overflow-x: auto;
-  overflow-y: hidden;
-  @include mixins.thin-scrollbar();
+  // Seven 7.5rem columns plus their gaps need ~55.5rem, and the section adds
+  // 2.5rem of padding around them — so below 60rem the board has to scroll and
+  // above it never can. It stays a plain block up there rather than a scroll
+  // container that only ever holds a sliver of sub-pixel overflow.
+  @media (max-width: 60rem) {
+    // Sideways only. `scroll-area()` would also make this a vertical scroller
+    // with `overscroll-behavior: contain`, and since the board covers the whole
+    // week, every wheel event over the planner would die here instead of
+    // chaining up to the feed. `hidden` keeps the wheel passing through.
+    overflow-x: auto;
+    overflow-y: hidden;
+    @include mixins.thin-scrollbar();
+  }
 }
 
 .grid {

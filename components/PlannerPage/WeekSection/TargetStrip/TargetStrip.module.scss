@@ -29,6 +29,12 @@
   @include mixins.hide-scrollbar();
 }
 
+// An empty week holds only the placeholder slots, none of which are ever two
+// rows tall, so the rail collapses to the one row they actually fill.
+.isEmpty {
+  grid-template-rows: auto;
+}
+
 .arrow {
   position: absolute;
   top: 50%;

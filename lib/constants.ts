@@ -37,6 +37,9 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     metric: 'distance',
     unit: 'miles',
     target: 12,
+    // 8:30 per mile.
+    paceMinutes: 8.5,
+    paceDistance: 1,
     color: '#E5484D', // red
     workoutTypes: ['Long', 'Tempo']
   },
@@ -57,8 +60,9 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     metric: 'distance',
     unit: 'yards',
     target: 5000,
-    // 1:30 per 100 yards.
-    paceMinutes: 1.5 / 100,
+    // 2:00 per 100 yards.
+    paceMinutes: 2,
+    paceDistance: 100,
     color: '#00A2C7', // cyan
     workoutTypes: [],
     links: [

@@ -18,10 +18,17 @@ export const ActivitySchema = z.object({
   color: z.string(),
   optional: z.boolean().optional(),
   /**
-   * Typical pace in minutes per `unit`, on a distance workout. What a scheduled
-   * event's length is estimated from, in place of the rough per-icon table.
+   * Typical pace, on a distance workout: `paceMinutes` minutes per
+   * `paceDistance` of `unit`. What a scheduled event's length is estimated
+   * from, in place of the rough per-icon table.
+   *
+   * Stored as the pair the user typed rather than collapsed to a per-one-unit
+   * ratio, because the denominator is part of how a pace is read: swimming is
+   * 2:00 per 100 yards, never 0:01 per yard.
    */
   paceMinutes: z.number().positive().nullable().optional(),
+  /** Defaults to 1, which is what every pace stored before this meant. */
+  paceDistance: z.number().positive().nullable().optional(),
   /**
    * Typical session length in minutes, on an `instance` workout — there is no value
    * to derive one from, so this is the whole estimate.
@@ -45,6 +52,7 @@ export const ActivitySnapshotSchema = z.object({
   unit: z.string(),
   color: z.string(),
   paceMinutes: z.number().positive().nullable().optional(),
+  paceDistance: z.number().positive().nullable().optional(),
   typicalDurationMinutes: z.number().int().positive().nullable().optional(),
 });
 export type ActivitySnapshot = z.infer<typeof ActivitySnapshotSchema>;

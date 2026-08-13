@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { usePlannerStore } from '@/lib/store';
-import { LuCalendarArrowDown, LuCalendarX } from 'react-icons/lu';
+import { LuCalendarX } from 'react-icons/lu';
+import { FaFillDrip } from 'react-icons/fa';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { CopyWeekModal, type CopySource } from './CopyWeekModal/CopyWeekModal';
@@ -29,11 +30,13 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
   // Stable identity: the modal resets its form whenever this list changes.
   const sources = useMemo<CopySource[]>(() => {
     const options: CopySource[] = [];
+    // The template leads: it is the one source that always has something in it,
+    // and the default a week is most often built from.
+    if (!isPast) options.push('default');
     if (!isPast && weekStart !== currentWeek) options.push('current');
     if (!isPast && previousWeek !== currentWeek && previousWeek !== weekStart) {
       options.push('previous');
     }
-    if (!isPast) options.push('default');
     return options;
   }, [isPast, weekStart, currentWeek, previousWeek]);
 
@@ -52,11 +55,11 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
         {sources.length > 0 && (
           <IconButton
             size="sm"
-            aria-label="Copy week"
-            title="Copy week"
+            aria-label="Fill week"
+            title="Fill week"
             onClick={() => setIsCopyOpen(true)}
           >
-            <LuCalendarArrowDown />
+            <FaFillDrip />
           </IconButton>
         )}
         {!isEmpty && (

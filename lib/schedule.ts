@@ -117,6 +117,20 @@ export function parsePaceMinutes(input: string): number | null {
   return Number.isFinite(whole) ? whole : null;
 }
 
+/**
+ * A stored pace collapsed to minutes per one unit — the only form the duration
+ * maths wants. Everything else keeps the numerator and denominator apart, so
+ * this is the single place the two are divided.
+ */
+export function paceMinutesPerUnit(
+  activity: Pick<Activity, 'paceMinutes' | 'paceDistance'>
+): number | null {
+  if (!activity.paceMinutes) return null;
+  // A pace saved before the denominator existed was always per one unit.
+  const distance = activity.paceDistance ?? 1;
+  return distance > 0 ? activity.paceMinutes / distance : null;
+}
+
 function isMetricUnit(unit: string): boolean {
   return /^k(m|ilomet)/i.test(unit.trim());
 }
@@ -151,8 +165,9 @@ export function estimateDurationMinutes(
   if (activity.metric === 'distance' && value > 0) {
     // A pace the user gave is per the activity's own unit; the per-icon table is
     // per mile, so only that one needs the distance converting first.
-    const minutes = activity.paceMinutes
-      ? value * activity.paceMinutes
+    const perUnit = paceMinutesPerUnit(activity);
+    const minutes = perUnit
+      ? value * perUnit
       : (isMetricUnit(activity.unit) ? value * KM_PER_MILE : value) *
         (PACE_PER_MILE[activity.icon] ?? PACE_PER_MILE.run);
     return Math.max(SLOT_MINUTES, ceilToSlot(minutes));

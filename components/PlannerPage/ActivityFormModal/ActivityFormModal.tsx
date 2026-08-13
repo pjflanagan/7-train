@@ -63,6 +63,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
       color: DEFAULT_ACTIVITY_COLOR,
       optional: false,
       paceMinutes: null,
+      paceDistance: null,
       typicalDurationMinutes: null,
       workoutTypes: [],
       links: []
@@ -78,10 +79,10 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   const unit = useWatch({ control, name: 'unit' });
   const isOptional = useWatch({ control, name: 'optional' });
 
-  // Pace is entered as a minutes/distance ratio — e.g. "9 minutes / 1 mile" —
-  // rather than the single per-unit number the form actually saves, so it
-  // reads the way a pace is normally spoken. These two live outside
-  // react-hook-form and only ever get collapsed into `paceMinutes`.
+  // Pace is entered, stored and read back as a minutes/distance pair — "2:00 /
+  // 100 yards" — so it keeps the shape a pace is spoken in. These two live
+  // outside react-hook-form only because the minutes half is typed as a clock
+  // split; both halves are saved.
   const [paceMinutesInput, setPaceMinutesInput] = useState('');
   const [paceDistanceInput, setPaceDistanceInput] = useState<number | ''>(1);
 
@@ -94,7 +95,10 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     }
     // Only one of the two typical-length inputs is ever on screen; drop the
     // other so a metric switch cannot leave a stale estimate behind it.
-    if (metric !== 'distance') setValue('paceMinutes', null);
+    if (metric !== 'distance') {
+      setValue('paceMinutes', null);
+      setValue('paceDistance', null);
+    }
     if (metric !== 'instance') setValue('typicalDurationMinutes', null);
   }, [metric, setValue]);
 
@@ -103,8 +107,10 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     const minutes = parsePaceMinutes(paceMinutesInput);
     if (minutes === null || paceDistanceInput === '' || Number(paceDistanceInput) <= 0) {
       setValue('paceMinutes', null);
+      setValue('paceDistance', null);
     } else {
-      setValue('paceMinutes', minutes / Number(paceDistanceInput));
+      setValue('paceMinutes', minutes);
+      setValue('paceDistance', Number(paceDistanceInput));
     }
   }, [paceMinutesInput, paceDistanceInput, metric, setValue]);
 
@@ -120,10 +126,9 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     if (isOpen) {
       if (activity) {
         reset(activity);
-        // The stored ratio is minutes-per-one-unit, so that's the only pair
-        // that reconstructs it without inventing a distance the user never gave.
+        // Both halves come back exactly as they were typed.
         setPaceMinutesInput(activity.paceMinutes != null ? formatPaceMinutes(activity.paceMinutes) : '');
-        setPaceDistanceInput(1);
+        setPaceDistanceInput(activity.paceDistance ?? 1);
       } else {
         reset({
           id: `type-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -135,6 +140,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
           color: DEFAULT_ACTIVITY_COLOR,
           optional: false,
           paceMinutes: null,
+          paceDistance: null,
           typicalDurationMinutes: null,
           workoutTypes: [],
           links: []

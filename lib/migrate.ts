@@ -282,6 +282,48 @@ function migrateV5toV6(state: Record<string, unknown>): Record<string, unknown> 
   return { ...rest, weekActivities };
 }
 
+/**
+ * v6 -> v7: a pace used to be stored collapsed to minutes per one unit, which
+ * threw away the denominator it was typed with — "2:00 / 100 yards" came back
+ * as "0:01 / 1 yard", unrecognizable and unusable to edit. The pair is kept
+ * now, and everything stored before this was per one unit by definition.
+ */
+function migrateV6toV7(state: Record<string, unknown>): Record<string, unknown> {
+  const withPaceDistance = (raw: unknown): unknown => {
+    const record = raw as Record<string, unknown>;
+    if (!record || typeof record !== 'object') return raw;
+    if (record.paceMinutes == null || record.paceDistance != null) return raw;
+    return { ...record, paceDistance: 1 };
+  };
+
+  const activities = Array.isArray(state.activities)
+    ? state.activities.map(withPaceDistance)
+    : state.activities;
+
+  const weekActivities =
+    state.weekActivities && typeof state.weekActivities === 'object'
+      ? Object.fromEntries(
+          Object.entries(state.weekActivities as Record<string, unknown>).map(([key, value]) => [
+            key,
+            withPaceDistance(value),
+          ])
+        )
+      : state.weekActivities;
+
+  // An event whose activity was deleted carries its own frozen copy of the
+  // pace, which has to move with the rest of them.
+  const withSnapshot = (raw: unknown): unknown => {
+    const record = raw as Record<string, unknown>;
+    if (!record?.activitySnapshot) return raw;
+    return { ...record, activitySnapshot: withPaceDistance(record.activitySnapshot) };
+  };
+
+  const events = Array.isArray(state.events) ? state.events.map(withSnapshot) : state.events;
+  const history = Array.isArray(state.history) ? state.history.map(withSnapshot) : state.history;
+
+  return { ...state, activities, weekActivities, events, history };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -291,5 +333,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 4) state = migrateV3toV4(state);
   if (version < 5) state = migrateV4toV5(state);
   if (version < 6) state = migrateV5toV6(state);
+  if (version < 7) state = migrateV6toV7(state);
   return state;
 }

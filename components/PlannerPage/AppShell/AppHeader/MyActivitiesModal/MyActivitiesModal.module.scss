@@ -4,6 +4,15 @@
   gap: var(--space-4);
 }
 
+// What this list actually is — a template, not a week — said once at the top
+// so the "copy from my weekly activities" flow elsewhere makes sense.
+.intro {
+  margin: 0;
+  font-size: var(--font-md);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 // The modal body owns the scrolling, so the list just grows into it.
 .list {
   display: flex;

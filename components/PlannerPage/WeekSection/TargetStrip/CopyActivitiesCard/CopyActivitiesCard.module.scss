@@ -1,7 +1,7 @@
 @use '@/styles/mixins' as mixins;
 
-// Matches a target chip's footprint so the rail keeps its rhythm, but wordless
-// and dashed: a slot, not a labelled control.
+// Same dashed footprint as the add slot beside it — all three are empty slots
+// waiting to be filled, not chips. Only the tint separates them.
 .card {
   display: flex;
   align-items: center;
@@ -28,11 +28,15 @@
   }
 }
 
+// The template card leads the rail, so it carries the accent from the start —
+// washed down to a tint rather than a solid fill, since it is still a slot.
+.isDefault {
+  background-color: var(--accent-primary-soft);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary-text);
+}
+
 .icon {
   font-size: var(--icon-md);
   flex: 0 0 auto;
-}
-
-.label {
-  @include mixins.truncate();
 }

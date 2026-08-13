@@ -16,6 +16,7 @@ function activityFromSnapshot(
     target: null,
     color: snapshot.color,
     paceMinutes: snapshot.paceMinutes ?? null,
+    paceDistance: snapshot.paceDistance ?? null,
     typicalDurationMinutes: snapshot.typicalDurationMinutes ?? null,
     // The activity's current sub-kinds are still worth offering on an event
     // whose measurement was frozen — only the meaning of `value` is fixed.
@@ -49,6 +50,7 @@ export function buildActivitySnapshot(activity: Activity): ActivitySnapshot {
     unit: activity.unit,
     color: activity.color,
     paceMinutes: activity.paceMinutes ?? null,
+    paceDistance: activity.paceDistance ?? null,
     typicalDurationMinutes: activity.typicalDurationMinutes ?? null,
   };
 }

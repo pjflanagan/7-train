@@ -4,7 +4,7 @@ import styles from './AppHeader.module.scss';
 import { Button } from '@/components/elements/Button/Button';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
-import { MdBookmark, MdFitnessCenter } from 'react-icons/md';
+import { MdBookmark } from 'react-icons/md';
 import { MyActivitiesModal } from './MyActivitiesModal/MyActivitiesModal';
 import { LinksModal } from './LinksModal/LinksModal';
 import { ProfileMenu } from './ProfileMenu/ProfileMenu';
@@ -31,7 +31,7 @@ export const AppHeader: React.FC = () => {
               className={styles.myWorkouts}
               onClick={() => setIsMyWeekOpen(true)}
             >
-              <MdFitnessCenter /> My activities
+              My weekly activities
             </Button>
             <ProfileMenu />
           </div>
