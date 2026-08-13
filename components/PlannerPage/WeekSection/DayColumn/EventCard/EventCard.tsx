@@ -2,19 +2,17 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ScheduledEvent } from '@/lib/types';
-import { useEventActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
+import { useEventActivity } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
 import { TimeChip } from './TimeChip/TimeChip';
-import { formatTimeOfDay, startMinutesOf } from '@/lib/schedule';
 import styles from './EventCard.module.scss';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
   const activity = useEventActivity(event);
-  const use24Hour = useUse24HourClock();
   const updateEventValue = usePlannerStore(state => state.updateEventValue);
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
   const removeEvent = usePlannerStore(state => state.removeEvent);
@@ -75,14 +73,10 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
       {/* The band is the drag handle, so it sits darker than the card body and
           reads as something to grab. */}
       <div className={styles.header} {...attributes} {...listeners}>
-        {isDuration ? (
-          // A duration activity's own value already says how long it runs, so
-          // the header's time is just a label here, not a second control for
-          // the same fact — dimmed to read as repeated rather than actionable.
-          <span className={styles.headerTime}>{formatTimeOfDay(startMinutesOf(event), use24Hour)}</span>
-        ) : (
-          <TimeChip event={event} activity={activity} />
-        )}
+        {/* A duration activity's own value already says how long it runs, so
+            its card drops the length field — but when it happens is still
+            something to set here. */}
+        <TimeChip event={event} activity={activity} showDuration={!isDuration} />
       </div>
 
       <div className={styles.body}>

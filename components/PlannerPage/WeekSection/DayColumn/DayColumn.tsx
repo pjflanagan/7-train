@@ -35,7 +35,7 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
             <EventCard key={event.id} event={event} />
           ))}
         </SortableContext>
-        <AddEventZone day={day} weekStart={weekStart} compact={events.length > 0} />
+        <AddEventZone day={day} weekStart={weekStart} />
       </div>
       <DayNotes day={day} weekStart={weekStart} />
     </div>

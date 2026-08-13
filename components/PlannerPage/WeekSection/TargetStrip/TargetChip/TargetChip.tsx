@@ -12,7 +12,9 @@ import { getIconByKey } from '@/lib/icons';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
+import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinksPickerModal/ActivityLinksPickerModal';
+import { ActivityFormModal } from '@/components/PlannerPage/ActivityFormModal/ActivityFormModal';
 import { SubTagChip } from './SubTagChip/SubTagChip';
 import styles from './TargetChip.module.scss';
 
@@ -23,6 +25,8 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
   const progress = progressMap[activity.id];
   const scheduledSubTags = useScheduledSubTags(weekStart, activity.id);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
   const hasLinks = Boolean(activity.links && activity.links.length > 0);
   // Sub-types are the only thing that ever went below the band, so without them
   // the chip is the band and nothing else.
@@ -42,7 +46,12 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
       // claim both rows when the chip is a tall one.
       className={clsx(hasBody && styles.hasBody)}
       label={`Remove ${activity.name} from this week`}
-      onRemove={() => removeWeekActivity(weekStart, activity.id)}
+      // Dropping a target takes its sub-tags and its place in the week with
+      // it, and there is no undo — worth a question first. Removing a single
+      // event is one card and obvious, so that one stays immediate.
+      onRemove={() => setIsConfirmingRemove(true)}
+      onEdit={() => setIsEditOpen(true)}
+      editLabel={`Edit ${activity.name} for this week`}
     >
     <div
       ref={setNodeRef}
@@ -118,6 +127,26 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
           activity={activity}
         />
       )}
+      {/* Editing here edits this week's copy: measuring a usual week of running
+          in minutes and this one in miles is a change to this week alone. */}
+      <ActivityFormModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        activity={activity}
+        weekStart={weekStart}
+      />
+      <ConfirmDialog
+        isOpen={isConfirmingRemove}
+        title="Remove target"
+        message={`Remove ${activity.name} from this week? Anything already scheduled stays on the calendar.`}
+        confirmLabel="Remove"
+        isDestructive
+        onConfirm={() => {
+          removeWeekActivity(weekStart, activity.id);
+          setIsConfirmingRemove(false);
+        }}
+        onCancel={() => setIsConfirmingRemove(false)}
+      />
     </div>
     </RemovableCard>
   );

@@ -18,6 +18,12 @@ import styles from './TimeChip.module.scss';
 export interface TimeChipProps {
   event: ScheduledEvent;
   activity: Activity;
+  /**
+   * Off for an activity measured in time, where the event's own value already
+   * says how long it runs — a second length field would be the same fact twice.
+   * When it happens is still the card's to set either way.
+   */
+  showDuration?: boolean;
 }
 
 /** "17:30" — the value format a native `<input type="time">` reads and writes. */
@@ -39,7 +45,7 @@ function fromTimeInputValue(value: string): number | null {
  * grab and move the card instead of fighting a drag gesture for the same
  * pointer.
  */
-export function TimeChip({ event, activity }: TimeChipProps) {
+export function TimeChip({ event, activity, showDuration = true }: TimeChipProps) {
   const setEventTime = usePlannerStore((state) => state.setEventTime);
   const setEventDuration = usePlannerStore((state) => state.setEventDuration);
   const use24Hour = useUse24HourClock();
@@ -72,6 +78,7 @@ export function TimeChip({ event, activity }: TimeChipProps) {
           {formatChipTime(startMinutes, use24Hour)}
         </span>
       </div>
+      {showDuration && (
       <div className={styles.durationField}>
         <InlineNumberInput
           value={duration}
@@ -82,6 +89,7 @@ export function TimeChip({ event, activity }: TimeChipProps) {
         />
         <span className={styles.durationUnit}>mins</span>
       </div>
+      )}
     </div>
   );
 }

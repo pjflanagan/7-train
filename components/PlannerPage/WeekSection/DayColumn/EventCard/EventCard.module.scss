@@ -51,17 +51,6 @@
   min-width: 0;
 }
 
-// A duration activity's length lives in the body's own value entry, so the
-// header's time is only ever a label, not a second control saying the same
-// thing — dimmed further than the muted text a real control gets, so it reads
-// as a repeated fact rather than something to act on.
-.headerTime {
-  font-size: var(--font-2xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-  opacity: 0.6;
-}
-
 .icon {
   font-size: var(--icon-sm);
   flex: 0 0 auto;

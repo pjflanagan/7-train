@@ -17,11 +17,16 @@ $overhang: 0.4rem;
   }
 }
 
-.badge {
+.badges {
   position: absolute;
   top: -$overhang;
   right: -$overhang;
   z-index: 2;
+  display: flex;
+  gap: 0.125rem;
+}
+
+.badge {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,6 +58,7 @@ $overhang: 0.4rem;
 }
 
 .wrapper:hover .badge,
+.wrapper:focus-within .badge,
 .badge:focus-visible {
   opacity: 1;
 }

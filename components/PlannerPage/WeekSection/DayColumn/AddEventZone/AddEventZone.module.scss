@@ -2,10 +2,13 @@
 
 // Deliberately wordless: it reads as a slot waiting to be filled, and a column
 // of seven "add workout" labels would be louder than the workouts themselves.
+// The same fixed strip whether the day is empty or full: a slot is a slot, and
+// an empty day stretched to the height of a full one is mostly dashed border.
 .zone {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 4rem;
+  min-height: 3rem;
+  height: 3rem;
   padding: 0;
   background: none;
   border: 1px dashed var(--border-color);
@@ -20,16 +23,6 @@
   }
 }
 
-// A day that already has events keeps a slot to drop into, just a fixed
-// strip below them rather than the whole rest of the column.
-.compact {
-  flex: 0 0 auto;
-  min-height: 3rem;
-  height: 3rem;
-}
-
-// Pinned to the viewport, since a day column is narrower than this list and the
-// week board clips what overflows it.
 .panel {
   position: fixed;
   z-index: 50;

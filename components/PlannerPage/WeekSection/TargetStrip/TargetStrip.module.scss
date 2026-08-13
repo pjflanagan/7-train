@@ -14,6 +14,10 @@
   grid-auto-flow: column dense;
   grid-auto-columns: minmax(12rem, max-content);
   align-content: start;
+  // Each chip is as tall as what it holds. Without this a chip with no
+  // sub-types stretches to whatever its row grew to, showing a sliver of empty
+  // body under the band.
+  align-items: start;
   gap: var(--space-2);
   // A chip's remove badge hangs off its top corner, and the rail clips what
   // overflows it vertically — this is the room the badge needs to survive.
