@@ -35,6 +35,26 @@
   font-size: 0.8rem;
 }
 
+// Sits with the name rather than the tally, so the right edge stays the
+// count's.
+.linkButton {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+}
+
+// Stands in for the tally on optional workouts, in the same right-hand slot.
+.optionalTag {
+  margin-left: auto;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
 // Pushed right so the count sits at the far edge of the panel.
 .tally {
   display: flex;

@@ -49,7 +49,16 @@ type PlannerStore = PlannerState & {
   replaceCalendarItems: (items: CalendarItem[]) => void;
 
   setNote: (day: DayName, weekStart: string, note: string) => void;
-  copyWeek: (fromWeekStart: string, toWeekStart: string) => void;
+  /**
+   * Pull another week into this one. The schedule (workouts and day notes) and
+   * the goal targets are copied independently, so a week can inherit one
+   * without the other. Whichever part is copied overwrites what was there.
+   */
+  copyWeek: (
+    fromWeekStart: string,
+    toWeekStart: string,
+    parts?: { schedule?: boolean; goals?: boolean }
+  ) => void;
   clearWeek: (weekStart: string) => void;
 
   addLink: (link: HelpfulLink) => void;
@@ -223,40 +232,48 @@ export const usePlannerStore = create<PlannerStore>()(
         }
         return { notes: { ...state.notes, [key]: note } };
       }),
-      copyWeek: (fromWeekStart, toWeekStart) => set((state) => {
-        const fromItems = state.items.filter(i => i.weekStart === fromWeekStart);
-        const retainedItems = state.items.filter(i => i.weekStart !== toWeekStart);
+      copyWeek: (fromWeekStart, toWeekStart, parts) => set((state) => {
+        const { schedule = true, goals = true } = parts ?? {};
 
-        const copiedItems = fromItems.map(i => ({
-          ...i,
-          id: newId('item'),
-          weekStart: toWeekStart,
-          // A copy is a new workout, not the same one twice, so it gets its own
-          // calendar event rather than pointing at the original's.
-          googleEventId: null
-        }));
-
+        let items = state.items;
         const newNotes = { ...state.notes };
-        DAYS.forEach(day => {
-          const from = state.notes[noteKey(fromWeekStart, day)];
-          if (from) {
-            newNotes[noteKey(toWeekStart, day)] = from;
-          } else {
-            delete newNotes[noteKey(toWeekStart, day)];
-          }
-        });
+        if (schedule) {
+          const fromItems = state.items.filter(i => i.weekStart === fromWeekStart);
+          const retainedItems = state.items.filter(i => i.weekStart !== toWeekStart);
+
+          const copiedItems = fromItems.map(i => ({
+            ...i,
+            id: newId('item'),
+            weekStart: toWeekStart,
+            // A copy is a new workout, not the same one twice, so it gets its own
+            // calendar event rather than pointing at the original's.
+            googleEventId: null
+          }));
+          items = [...retainedItems, ...copiedItems];
+
+          DAYS.forEach(day => {
+            const from = state.notes[noteKey(fromWeekStart, day)];
+            if (from) {
+              newNotes[noteKey(toWeekStart, day)] = from;
+            } else {
+              delete newNotes[noteKey(toWeekStart, day)];
+            }
+          });
+        }
 
         // A copied week brings its bent targets with it, so the copy is a
         // faithful duplicate rather than a week snapped back to baseline.
         const weeklyTargets = { ...(state.weeklyTargets || {}) };
-        state.goals.forEach(goal => {
-          const from = weeklyTargets[weeklyTargetKey(fromWeekStart, goal.id)];
-          const toKey = weeklyTargetKey(toWeekStart, goal.id);
-          if (from === undefined) delete weeklyTargets[toKey];
-          else weeklyTargets[toKey] = from;
-        });
+        if (goals) {
+          state.goals.forEach(goal => {
+            const from = weeklyTargets[weeklyTargetKey(fromWeekStart, goal.id)];
+            const toKey = weeklyTargetKey(toWeekStart, goal.id);
+            if (from === undefined) delete weeklyTargets[toKey];
+            else weeklyTargets[toKey] = from;
+          });
+        }
 
-        return { items: [...retainedItems, ...copiedItems], notes: newNotes, weeklyTargets };
+        return { items, notes: newNotes, weeklyTargets };
       }),
       clearWeek: (weekStart) => set((state) => {
         const newNotes = { ...state.notes };

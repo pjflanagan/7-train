@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePlannerStore } from '@/lib/store';
-import { MdDeleteOutline } from 'react-icons/md';
-import { Button } from '@/components/elements/Button/Button';
+import { LuCalendarArrowDown, LuCalendarX } from 'react-icons/lu';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
+import { CopyWeekModal, type CopySource } from './CopyWeekModal';
 import { useIsWeekEmpty, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { addWeeks, getWeekStartKey } from '@/lib/dates';
 import styles from './WeekActions.module.scss';
 
-type WeekAction = 'current' | 'previous' | 'clear' | null;
-
-/** Pulls another week's schedule into this one, or empties it. All overwrite. */
+/** Pulls another week's schedule or goals into this one, or empties it. All overwrite. */
 export function WeekActions({ weekStart }: { weekStart: string }) {
-  const [action, setAction] = useState<WeekAction>(null);
+  const [isCopyOpen, setIsCopyOpen] = useState(false);
+  const [isClearOpen, setIsClearOpen] = useState(false);
   const copyWeek = usePlannerStore((state) => state.copyWeek);
   const clearWeek = usePlannerStore((state) => state.clearWeek);
   const weekStartsOn = useWeekStartsOn();
@@ -24,54 +23,35 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
   const previousWeek = addWeeks(weekStart, -1);
 
   // Past weeks are a record, not a plan — nothing gets copied into them. Beyond
-  // that, hide a copy whose source is this week itself, or that duplicates the
-  // other button: next week's "previous" is the current week.
+  // that, hide a source that is this week itself, or that duplicates the other
+  // option: next week's "previous" is the current week.
   const isPast = weekStart < currentWeek;
-  const canCopyCurrent = !isPast && weekStart !== currentWeek;
-  const canCopyPrevious = !isPast && previousWeek !== currentWeek && previousWeek !== weekStart;
+  // Stable identity: the modal resets its form whenever this list changes.
+  const sources = useMemo<CopySource[]>(() => {
+    const options: CopySource[] = [];
+    if (!isPast && weekStart !== currentWeek) options.push('current');
+    if (!isPast && previousWeek !== currentWeek && previousWeek !== weekStart) {
+      options.push('previous');
+    }
+    return options;
+  }, [isPast, weekStart, currentWeek, previousWeek]);
 
-  const handleConfirm = () => {
-    if (action === 'current') copyWeek(currentWeek, weekStart);
-    if (action === 'previous') copyWeek(previousWeek, weekStart);
-    if (action === 'clear') clearWeek(weekStart);
-    setAction(null);
+  const handleCopy = (source: CopySource, parts: { schedule: boolean; goals: boolean }) => {
+    copyWeek(source === 'current' ? currentWeek : previousWeek, weekStart, parts);
   };
-
-  const details = {
-    current: {
-      title: 'Copy current week',
-      message: 'This will overwrite this week with the contents of the current week. Are you sure?',
-    },
-    previous: {
-      title: 'Copy previous week',
-      message: 'This will overwrite this week with the contents of the previous week. Are you sure?',
-    },
-    clear: {
-      title: 'Clear week',
-      message: 'This will remove all workouts and notes from this week. Are you sure?',
-    },
-  }[action ?? 'current'];
 
   return (
     <>
       <div className={styles.actions}>
-        {canCopyCurrent && (
-          <Button
-            variant="secondary"
-            className={styles.button}
-            onClick={() => setAction('current')}
+        {sources.length > 0 && (
+          <IconButton
+            size="sm"
+            aria-label="Copy week"
+            title="Copy week"
+            onClick={() => setIsCopyOpen(true)}
           >
-            Copy current week
-          </Button>
-        )}
-        {canCopyPrevious && (
-          <Button
-            variant="secondary"
-            className={styles.button}
-            onClick={() => setAction('previous')}
-          >
-            Copy previous week
-          </Button>
+            <LuCalendarArrowDown />
+          </IconButton>
         )}
         {!isEmpty && (
           <IconButton
@@ -79,21 +59,31 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
             size="sm"
             aria-label="Clear week"
             title="Clear week"
-            onClick={() => setAction('clear')}
+            onClick={() => setIsClearOpen(true)}
           >
-            <MdDeleteOutline />
+            <LuCalendarX />
           </IconButton>
         )}
       </div>
 
+      <CopyWeekModal
+        isOpen={isCopyOpen}
+        onClose={() => setIsCopyOpen(false)}
+        sources={sources}
+        onCopy={handleCopy}
+      />
+
       <ConfirmDialog
-        isOpen={action !== null}
-        title={details.title}
-        message={details.message}
+        isOpen={isClearOpen}
+        title="Clear week"
+        message="This will remove all workouts and notes from this week. Are you sure?"
         confirmLabel="Confirm"
-        isDestructive={action === 'clear'}
-        onConfirm={handleConfirm}
-        onCancel={() => setAction(null)}
+        isDestructive
+        onConfirm={() => {
+          clearWeek(weekStart);
+          setIsClearOpen(false);
+        }}
+        onCancel={() => setIsClearOpen(false)}
       />
     </>
   );
