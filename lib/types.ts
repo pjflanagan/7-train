@@ -8,7 +8,7 @@ export const HelpfulLinkSchema = z.object({
 });
 export type HelpfulLink = z.infer<typeof HelpfulLinkSchema>;
 
-export const WorkoutTypeSchema = z.object({
+export const ActivitySchema = z.object({
   id: z.string(),
   name: z.string(),
   icon: z.custom<IconKey>((val) => typeof val === 'string' && val in ACTIVITY_ICONS),
@@ -19,7 +19,7 @@ export const WorkoutTypeSchema = z.object({
   optional: z.boolean().optional(),
   /**
    * Typical pace in minutes per `unit`, on a distance workout. What a scheduled
-   * item's length is estimated from, in place of the rough per-icon table.
+   * event's length is estimated from, in place of the rough per-icon table.
    */
   paceMinutes: z.number().positive().nullable().optional(),
   /**
@@ -30,9 +30,9 @@ export const WorkoutTypeSchema = z.object({
   workoutTypes: z.array(z.string()).optional(),
   links: z.array(HelpfulLinkSchema).optional()
 });
-export type WorkoutType = z.infer<typeof WorkoutTypeSchema>;
+export type Activity = z.infer<typeof ActivitySchema>;
 
-export const CalendarItemSchema = z.object({
+export const ScheduledEventSchema = z.object({
   id: z.string(),
   typeId: z.string(),
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
@@ -42,28 +42,28 @@ export const CalendarItemSchema = z.object({
   workoutType: z.string().nullable().optional(),
   /**
    * Start of the workout, in minutes from local midnight, snapped to 15.
-   * Absent on items created before times existed; treat as the default slot.
+   * Absent on events created before times existed; treat as the default slot.
    */
   startMinutes: z.number().int().min(0).max(1439).optional(),
   /**
    * How long the workout runs, in minutes, snapped to 15. Absent until someone
-   * sets it, and then it wins over the estimate read off the goal.
+   * sets it, and then it wins over the estimate read off the activity.
    */
   durationMinutes: z.number().int().min(15).max(1440).optional(),
-  /** The Google Calendar event this item is mirrored to, once it has one. */
+  /** The Google Calendar event this event is mirrored to, once it has one. */
   googleEventId: z.string().nullable().optional(),
   /**
    * ISO timestamp of the last edit to the workout itself — when it happens,
-   * how long it runs, what it is. Absent on items last touched before this was
+   * how long it runs, what it is. Absent on events last touched before this was
    * recorded, which for merging purposes makes them older than anything stamped.
    *
-   * Bookkeeping that doesn't change the plan (learning an item's Google event
+   * Bookkeeping that doesn't change the plan (learning an event's Google event
    * id, say) deliberately leaves it alone, so syncing never makes a side look
    * newer than the other just by running.
    */
   updatedAt: z.string().optional()
 });
-export type CalendarItem = z.infer<typeof CalendarItemSchema>;
+export type ScheduledEvent = z.infer<typeof ScheduledEventSchema>;
 
 export const HistoryEntrySchema = z.object({
   id: z.string(),
@@ -77,12 +77,12 @@ export const HistoryEntrySchema = z.object({
 export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 
 export const PlannerStateSchema = z.object({
-  goals: z.array(WorkoutTypeSchema),
-  items: z.array(CalendarItemSchema),
+  activities: z.array(ActivitySchema),
+  events: z.array(ScheduledEventSchema),
   notes: z.record(z.string(), z.string()), // `${weekStart}-${day}` -> text
   /**
-   * Per-week overrides of a goal's weekly target, keyed `${weekStart}:${goalId}`.
-   * A goal's `target` stays the baseline; editing the tally on a week's chip
+   * Per-week overrides of an activity's weekly target, keyed `${weekStart}:${activityId}`.
+   * An activity's `target` stays the baseline; editing the tally on a week's chip
    * only bends that one week.
    */
   weeklyTargets: z.record(z.string(), z.number()).optional().default({}),

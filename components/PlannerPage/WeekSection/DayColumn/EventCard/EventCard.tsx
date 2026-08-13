@@ -2,21 +2,21 @@ import React from 'react';
 import clsx from 'clsx';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarItem } from '@/lib/types';
-import { useGoal } from '@/hooks/usePlannerSelectors';
+import { ScheduledEvent } from '@/lib/types';
+import { useActivity } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { MdClose } from 'react-icons/md';
 import { TimeChip } from './TimeChip/TimeChip';
-import styles from './ScheduledCard.module.scss';
+import styles from './EventCard.module.scss';
 
-export function ScheduledCard({ item }: { item: CalendarItem }) {
-  const goal = useGoal(item.typeId);
-  const updateItemValue = usePlannerStore(state => state.updateItemValue);
-  const setItemSubType = usePlannerStore(state => state.setItemSubType);
-  const removeItem = usePlannerStore(state => state.removeItem);
+export function EventCard({ event }: { event: ScheduledEvent }) {
+  const activity = useActivity(event.typeId);
+  const updateEventValue = usePlannerStore(state => state.updateEventValue);
+  const setEventSubType = usePlannerStore(state => state.setEventSubType);
+  const removeEvent = usePlannerStore(state => state.removeEvent);
 
   const {
     attributes,
@@ -26,34 +26,34 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
     transition,
     isDragging,
   } = useSortable({
-    id: item.id,
-    data: { kind: 'item', itemId: item.id },
+    id: event.id,
+    data: { kind: 'event', eventId: event.id },
   });
 
-  if (!goal) return null;
+  if (!activity) return null;
 
   const style = {
-    '--goal-color': goal.color,
+    '--activity-color': activity.color,
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   } as React.CSSProperties;
 
-  const subTypes = goal.workoutTypes ?? [];
-  // A "times" goal is always one occurrence, so "1 times" is noise.
-  const hasValue = goal.metric !== 'times';
-  // A duration goal's value is its length, so the number entry sits where the
+  const subTypes = activity.workoutTypes ?? [];
+  // A "times" activity is always one occurrence, so "1 times" is noise.
+  const hasValue = activity.metric !== 'times';
+  // A duration activity's value is its length, so the number entry sits where the
   // length control would be instead of repeating it a line further down.
-  const isDuration = goal.metric === 'duration';
+  const isDuration = activity.metric === 'duration';
 
   const valueEntry = (
     <div className={clsx(styles.valueRow, isDuration && styles.valueRowTrailing)}>
       <InlineNumberInput
-        value={item.value || 0}
-        onCommit={(val) => updateItemValue(item.id, val)}
+        value={event.value || 0}
+        onCommit={(val) => updateEventValue(event.id, val)}
         className={styles.valueInput}
       />
-      <span className={styles.unit}>{goal.unit}</span>
+      <span className={styles.unit}>{activity.unit}</span>
     </div>
   );
 
@@ -67,18 +67,18 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
           reads as something to grab. Remove waits at the far end until the card
           is hovered, so a wall of x's never competes with the plan itself. */}
       <div className={styles.header} {...attributes} {...listeners}>
-        {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
-        <span className={styles.title}>{goal.name}</span>
+        {React.createElement(getIconByKey(activity.icon), { className: styles.icon })}
+        <span className={styles.title}>{activity.name}</span>
         <button
           className={styles.removeButton}
           // The band drags, so the button keeps its own pointer events.
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
-            removeItem(item.id);
+            removeEvent(event.id);
           }}
-          title="Remove item"
-          aria-label="Remove item"
+          title="Remove event"
+          aria-label="Remove event"
         >
           <MdClose size={14} />
         </button>
@@ -86,8 +86,8 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
 
       <div className={styles.body}>
         <TimeChip
-          item={item}
-          goal={goal}
+          event={event}
+          activity={activity}
           trailing={isDuration && hasValue ? valueEntry : undefined}
         />
 
@@ -95,9 +95,9 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
           <Select
             size="sm"
             className={styles.subtagSelect}
-            aria-label={`${goal.name} type`}
-            value={item.workoutType || ''}
-            onChange={(e) => setItemSubType(item.id, e.target.value)}
+            aria-label={`${activity.name} type`}
+            value={event.workoutType || ''}
+            onChange={(e) => setEventSubType(event.id, e.target.value)}
           >
             {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
                 carries what the control is for. */}

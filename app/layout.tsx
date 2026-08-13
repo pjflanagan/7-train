@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: '7 Train',
-  description: 'Plan your weekly workouts',
+  description: 'Plan your weekly targets',
 };
 
 export const viewport: Viewport = {

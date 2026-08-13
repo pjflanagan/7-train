@@ -1,6 +1,6 @@
 import { WeekProgressBar } from './WeekProgressBar/WeekProgressBar';
 import { WeekActions } from './WeekActions/WeekActions';
-import { GoalStrip } from './GoalStrip/GoalStrip';
+import { TargetStrip } from './TargetStrip/TargetStrip';
 import { WeekDayHeader } from './WeekDayHeader/WeekDayHeader';
 import { DayColumn } from './DayColumn/DayColumn';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
@@ -28,7 +28,7 @@ export function WeekSection({ weekStart, currentWeekStart }: WeekSectionProps) {
         <WeekActions weekStart={weekStart} />
       </header>
       {/* The strip is the drag source for planning ahead; past weeks are read-only. */}
-      {weekStart >= currentWeekStart && <GoalStrip weekStart={weekStart} />}
+      {weekStart >= currentWeekStart && <TargetStrip weekStart={weekStart} />}
       <div className={styles.board}>
         <WeekDayHeader weekStart={weekStart} todayKey={todayKey} />
         <div className={styles.grid}>

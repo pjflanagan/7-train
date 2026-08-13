@@ -55,7 +55,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Helpful links" maxWidth="400px">
+      <Modal isOpen={isOpen} onClose={onClose} title="Bookmarks" maxWidth="400px">
         <div className={styles.container}>
           <div className={styles.list}>
             {links.length === 0 ? (

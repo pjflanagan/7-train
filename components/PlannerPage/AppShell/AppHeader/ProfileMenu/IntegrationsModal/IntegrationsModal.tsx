@@ -94,7 +94,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
               <h3 className={styles.sectionTitle}>Google</h3>
               <p className={styles.note}>
                 Your calendar holds the workouts once it is connected, so a change made in
-                Google Calendar shows up here. Goals stay on this device.
+                Google Calendar shows up here. Activities stay on this device.
               </p>
 
               {GOOGLE_INTEGRATION_LIST.map((integration) => (

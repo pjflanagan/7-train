@@ -1,17 +1,17 @@
 /**
- * Time of day for scheduled items, and how long each one is expected to take.
+ * Time of day for scheduled events, and how long each one is expected to take.
  *
- * A planner item only ever knew which day it was on. Google Calendar needs a
- * start and an end, so every item now carries a start time in minutes from
- * local midnight, and a duration we either read off the goal or estimate.
+ * A planner event only ever knew which day it was on. Google Calendar needs a
+ * start and an end, so every event now carries a start time in minutes from
+ * local midnight, and a duration we either read off the activity or estimate.
  */
 
-import { CalendarItem, WorkoutType } from './types';
+import { ScheduledEvent, Activity } from './types';
 
 /** Times snap to quarter hours, both when dragged and when read back from Google. */
 export const SLOT_MINUTES = 15;
 
-/** Where an item lands when nothing — not even a setting — has said otherwise. */
+/** Where an event lands when nothing — not even a setting — has said otherwise. */
 export const DEFAULT_START_MINUTES = 7 * 60;
 
 /** Latest start we allow, so a workout never runs past midnight unseen. */
@@ -20,7 +20,7 @@ export const MAX_START_MINUTES = 23 * 60 + 45;
 /** How long a workout with no better signal is assumed to run. */
 const FALLBACK_DURATION_MINUTES = 45;
 
-/** Minutes per mile, by goal icon. Rough, and only ever used as an estimate. */
+/** Minutes per mile, by activity icon. Rough, and only ever used as an estimate. */
 const PACE_PER_MILE: Record<string, number> = {
   run: 9,
   walk: 18,
@@ -46,9 +46,9 @@ export function clampStartMinutes(minutes: number): number {
   return Math.min(MAX_START_MINUTES, Math.max(0, snapToSlot(minutes)));
 }
 
-/** The start time of an item, falling back to the default slot. */
-export function startMinutesOf(item: CalendarItem): number {
-  return clampStartMinutes(item.startMinutes ?? DEFAULT_START_MINUTES);
+/** The start time of an event, falling back to the default slot. */
+export function startMinutesOf(event: ScheduledEvent): number {
+  return clampStartMinutes(event.startMinutes ?? DEFAULT_START_MINUTES);
 }
 
 /** "7:00 AM", in the viewer's locale. */
@@ -90,39 +90,39 @@ function isHourUnit(unit: string): boolean {
 }
 
 /**
- * How long the item should block out on the calendar.
+ * How long the event should block out on the calendar.
  *
- * A `duration` goal already says so — its value _is_ the length, so the
- * calendar reflects it exactly. Distance goals multiply out the goal's typical
- * pace, and `times` goals use its typical session length; both round up to the
- * next quarter hour. Either falls back to a rough guess when the goal has not
+ * A `duration` activity already says so — its value _is_ the length, so the
+ * calendar reflects it exactly. Distance activities multiply out the activity's typical
+ * pace, and `times` activities use its typical session length; both round up to the
+ * next quarter hour. Either falls back to a rough guess when the activity has not
  * been told what is typical.
  */
 export function estimateDurationMinutes(
-  item: Pick<CalendarItem, 'value'>,
-  goal: WorkoutType | undefined
+  event: Pick<ScheduledEvent, 'value'>,
+  activity: Activity | undefined
 ): number {
-  if (!goal) return FALLBACK_DURATION_MINUTES;
+  if (!activity) return FALLBACK_DURATION_MINUTES;
 
-  const value = Number(item.value) || 0;
+  const value = Number(event.value) || 0;
 
-  if (goal.metric === 'duration') {
-    const minutes = isHourUnit(goal.unit) ? value * 60 : value;
+  if (activity.metric === 'duration') {
+    const minutes = isHourUnit(activity.unit) ? value * 60 : value;
     // Exact, not estimated — only the floor and the quarter-hour snap apply.
     return Math.max(SLOT_MINUTES, snapToSlot(minutes));
   }
 
-  if (goal.metric === 'times' && goal.typicalDurationMinutes) {
-    return clampDuration(ceilToSlot(goal.typicalDurationMinutes));
+  if (activity.metric === 'times' && activity.typicalDurationMinutes) {
+    return clampDuration(ceilToSlot(activity.typicalDurationMinutes));
   }
 
-  if (goal.metric === 'distance' && value > 0) {
-    // A pace the user gave is per the goal's own unit; the per-icon table is
+  if (activity.metric === 'distance' && value > 0) {
+    // A pace the user gave is per the activity's own unit; the per-icon table is
     // per mile, so only that one needs the distance converting first.
-    const minutes = goal.paceMinutes
-      ? value * goal.paceMinutes
-      : (isMetricUnit(goal.unit) ? value * KM_PER_MILE : value) *
-        (PACE_PER_MILE[goal.icon] ?? PACE_PER_MILE.run);
+    const minutes = activity.paceMinutes
+      ? value * activity.paceMinutes
+      : (isMetricUnit(activity.unit) ? value * KM_PER_MILE : value) *
+        (PACE_PER_MILE[activity.icon] ?? PACE_PER_MILE.run);
     return Math.max(SLOT_MINUTES, ceilToSlot(minutes));
   }
 
@@ -138,33 +138,33 @@ export function clampDuration(minutes: number): number {
 }
 
 /**
- * How long the item actually blocks out: what someone set by hand, or the
+ * How long the event actually blocks out: what someone set by hand, or the
  * estimate when they never touched it.
  */
 export function durationMinutesOf(
-  item: Pick<CalendarItem, 'value' | 'durationMinutes'>,
-  goal: WorkoutType | undefined
+  event: Pick<ScheduledEvent, 'value' | 'durationMinutes'>,
+  activity: Activity | undefined
 ): number {
-  return item.durationMinutes != null
-    ? clampDuration(item.durationMinutes)
-    : estimateDurationMinutes(item, goal);
+  return event.durationMinutes != null
+    ? clampDuration(event.durationMinutes)
+    : estimateDurationMinutes(event, activity);
 }
 
-/** True when the duration is set or read off the goal rather than guessed. */
+/** True when the duration is set or read off the activity rather than guessed. */
 export function isExactDuration(
-  item: Pick<CalendarItem, 'durationMinutes'>,
-  goal: WorkoutType | undefined
+  event: Pick<ScheduledEvent, 'durationMinutes'>,
+  activity: Activity | undefined
 ): boolean {
-  return item.durationMinutes != null || goal?.metric === 'duration';
+  return event.durationMinutes != null || activity?.metric === 'duration';
 }
 
-/** Sort a day's items by start time, keeping insertion order for ties. */
-export function byStartTime(items: CalendarItem[]): CalendarItem[] {
-  return items
-    .map((item, index) => ({ item, index }))
+/** Sort a day's events by start time, keeping insertion order for ties. */
+export function byStartTime(events: ScheduledEvent[]): ScheduledEvent[] {
+  return events
+    .map((event, index) => ({ event, index }))
     .sort(
       (a, b) =>
-        startMinutesOf(a.item) - startMinutesOf(b.item) || a.index - b.index
+        startMinutesOf(a.event) - startMinutesOf(b.event) || a.index - b.index
     )
-    .map(({ item }) => item);
+    .map(({ event }) => event);
 }

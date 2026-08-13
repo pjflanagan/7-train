@@ -6,8 +6,8 @@
  * item edited in Google Calendar comes back to us on the next pull, which is
  * why the event carries the item's identity in its private properties.
  *
- * Goals stay local. An event only names the goal it belongs to, so a schedule
- * pulled back in can reattach itself to whatever goals this device holds.
+ * Activities stay local. An event only names the activity it belongs to, so a schedule
+ * pulled back in can reattach itself to whatever activities this device holds.
  */
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
@@ -117,7 +117,7 @@ export interface GoogleEvent {
 export interface EventDraft {
   itemId: string;
   typeId: string;
-  /** Goal name, so the event reads well inside Google Calendar. */
+  /** Activity name, so the event reads well inside Google Calendar. */
   title: string;
   subType?: string | null;
   value: number;
@@ -238,7 +238,7 @@ export function itemPropsFromEvent(event: GoogleEvent): {
 }
 
 /**
- * The shape the client turns back into a `CalendarItem`.
+ * The shape the client turns back into a `ScheduledEvent`.
  *
  * `start` stays an RFC 3339 instant rather than a date and a time: only the
  * browser knows the user's zone, so it is the browser that decides which local

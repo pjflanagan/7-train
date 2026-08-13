@@ -55,37 +55,37 @@
   border-radius: var(--radius-md);
 }
 
-// A workout's own colour reaches the stylesheet as `--goal-color`, set inline
-// from the stored goal. These two mixins are the tones drawn from it, and
+// A workout's own colour reaches the stylesheet as `--activity-color`, set inline
+// from the stored activity. These two mixins are the tones drawn from it, and
 // which one an element takes is the planner's whole visual hierarchy:
 //
 //   event   — the workouts actually scheduled on a day. This is the plan, so
 //             it wears the colour at full strength and reads first.
-//   context — the week's goal chips above the board. They are a running tally,
+//   context — the week's activity chips above the board. They are a running tally,
 //             not the plan, so the colour is mixed down into the surface and
 //             stays behind the day columns.
 //
 // Both are derived rather than hand-picked so a new preset colour lands at the
 // same two weights as every other one.
-@mixin goal-tones-event() {
-  --goal-color: var(--accent-primary);
-  --goal-surface: color-mix(in srgb, var(--goal-color) 30%, var(--bg-secondary));
-  --goal-border: var(--goal-color);
-  --goal-ink: var(--goal-color);
+@mixin activity-tones-event() {
+  --activity-color: var(--accent-primary);
+  --activity-surface: color-mix(in srgb, var(--activity-color) 30%, var(--bg-secondary));
+  --activity-border: var(--activity-color);
+  --activity-ink: var(--activity-color);
   // A control sitting on the tinted card: darkened glass, so it keeps the
   // card's hue instead of punching a flat hole in it.
-  --goal-inset: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+  --activity-inset: color-mix(in srgb, var(--bg-primary) 55%, transparent);
 }
 
-@mixin goal-tones-context() {
-  --goal-color: var(--accent-primary);
-  --goal-surface: color-mix(in srgb, var(--goal-color) 18%, var(--bg-secondary));
-  --goal-border: color-mix(in srgb, var(--goal-color) 40%, transparent);
+@mixin activity-tones-context() {
+  --activity-color: var(--accent-primary);
+  --activity-surface: color-mix(in srgb, var(--activity-color) 18%, var(--bg-secondary));
+  --activity-border: color-mix(in srgb, var(--activity-color) 40%, transparent);
   // Mixed toward muted rather than dim: the fills are gone, so the hue has to
   // survive in the text or a sub-tag stops reading as its workout's colour.
-  --goal-ink: color-mix(in srgb, var(--goal-color) 72%, var(--text-muted));
+  --activity-ink: color-mix(in srgb, var(--activity-color) 72%, var(--text-muted));
   // The one place the colour still reads as itself, darkened: the tally bar.
-  --goal-solid: color-mix(in srgb, var(--goal-color) 55%, var(--bg-primary));
+  --activity-solid: color-mix(in srgb, var(--activity-color) 55%, var(--bg-primary));
 }
 
 // The shared shape of every typed-in control — text, number, textarea, select,

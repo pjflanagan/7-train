@@ -4,10 +4,10 @@ import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 
 export interface PlannerDndData {
-  kind: 'goal' | 'subtag' | 'item' | 'column';
+  kind: 'activity' | 'subtag' | 'event' | 'column';
   typeId?: string;
   tag?: string;
-  itemId?: string;
+  eventId?: string;
   day?: typeof DAYS[number];
   weekStart?: string;
 }
@@ -16,10 +16,10 @@ export function usePlannerDnd() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<PlannerDndData | null>(null);
 
-  const addItem = usePlannerStore(state => state.addItem);
-  const moveItem = usePlannerStore(state => state.moveItem);
+  const addEvent = usePlannerStore(state => state.addEvent);
+  const moveEvent = usePlannerStore(state => state.moveEvent);
   const reorderDay = usePlannerStore(state => state.reorderDay);
-  const items = usePlannerStore(state => state.items);
+  const events = usePlannerStore(state => state.events);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -48,38 +48,38 @@ export function usePlannerDnd() {
 
     if (!activeData || !overData) return;
 
-    if (activeData.kind === 'goal' && overData.kind === 'column') {
+    if (activeData.kind === 'activity' && overData.kind === 'column') {
       if (activeData.typeId && overData.day && overData.weekStart) {
-        addItem({ typeId: activeData.typeId, day: overData.day, weekStart: overData.weekStart, value: 1 });
+        addEvent({ typeId: activeData.typeId, day: overData.day, weekStart: overData.weekStart, value: 1 });
       }
     } else if (activeData.kind === 'subtag' && overData.kind === 'column') {
       if (activeData.typeId && activeData.tag && overData.day && overData.weekStart) {
-        addItem({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, weekStart: overData.weekStart, value: 1 });
+        addEvent({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, weekStart: overData.weekStart, value: 1 });
       }
-    } else if (activeData.kind === 'item') {
-      const activeItem = items.find(i => i.id === activeData.itemId);
-      if (!activeItem) return;
+    } else if (activeData.kind === 'event') {
+      const activeEvent = events.find(i => i.id === activeData.eventId);
+      if (!activeEvent) return;
 
-      if (overData.kind === 'item') {
-        const overItem = items.find(i => i.id === overData.itemId);
-        if (!overItem) return;
-        if (activeItem.day === overItem.day && activeItem.weekStart === overItem.weekStart) {
+      if (overData.kind === 'event') {
+        const overEvent = events.find(i => i.id === overData.eventId);
+        if (!overEvent) return;
+        if (activeEvent.day === overEvent.day && activeEvent.weekStart === overEvent.weekStart) {
           // Same column
-          const dayItems = items.filter(i => i.day === activeItem.day && i.weekStart === activeItem.weekStart);
-          const oldIndex = dayItems.findIndex(i => i.id === activeItem.id);
-          const newIndex = dayItems.findIndex(i => i.id === overItem.id);
+          const dayEvents = events.filter(i => i.day === activeEvent.day && i.weekStart === activeEvent.weekStart);
+          const oldIndex = dayEvents.findIndex(i => i.id === activeEvent.id);
+          const newIndex = dayEvents.findIndex(i => i.id === overEvent.id);
           if (oldIndex !== newIndex) {
-            reorderDay(activeItem.day, activeItem.weekStart, oldIndex, newIndex);
+            reorderDay(activeEvent.day, activeEvent.weekStart, oldIndex, newIndex);
           }
         } else {
           // Different column, insert at specific index
-          const targetDayItems = items.filter(i => i.day === overItem.day && i.weekStart === overItem.weekStart);
-          const newIndex = targetDayItems.findIndex(i => i.id === overItem.id);
-          moveItem(activeItem.id, overItem.day, overItem.weekStart, newIndex);
+          const targetDayEvents = events.filter(i => i.day === overEvent.day && i.weekStart === overEvent.weekStart);
+          const newIndex = targetDayEvents.findIndex(i => i.id === overEvent.id);
+          moveEvent(activeEvent.id, overEvent.day, overEvent.weekStart, newIndex);
         }
       } else if (overData.kind === 'column') {
-        if (overData.day && overData.weekStart && (activeItem.day !== overData.day || activeItem.weekStart !== overData.weekStart)) {
-          moveItem(activeItem.id, overData.day, overData.weekStart);
+        if (overData.day && overData.weekStart && (activeEvent.day !== overData.day || activeEvent.weekStart !== overData.weekStart)) {
+          moveEvent(activeEvent.id, overData.day, overData.weekStart);
         }
       }
     }

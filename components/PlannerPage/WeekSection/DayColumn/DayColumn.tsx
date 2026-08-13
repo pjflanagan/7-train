@@ -3,10 +3,10 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
-import { useDayItems } from '@/hooks/usePlannerSelectors';
-import { AddWorkoutZone } from './AddWorkoutZone/AddWorkoutZone';
+import { useDayEvents } from '@/hooks/usePlannerSelectors';
+import { AddEventZone } from './AddEventZone/AddEventZone';
 import { DayNotes } from './DayNotes/DayNotes';
-import { ScheduledCard } from './ScheduledCard/ScheduledCard';
+import { EventCard } from './EventCard/EventCard';
 import styles from './DayColumn.module.scss';
 
 export interface DayColumnProps {
@@ -16,8 +16,8 @@ export interface DayColumnProps {
 }
 
 export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
-  const items = useDayItems(day, weekStart);
-  const itemIds = items.map(item => item.id);
+  const events = useDayEvents(day, weekStart);
+  const eventIds = events.map(event => event.id);
 
   const { setNodeRef, isOver } = useDroppable({
     id: `col-${weekStart}-${day}`,
@@ -30,12 +30,12 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
       ref={setNodeRef}
     >
       <div className={styles.itemsList}>
-        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          {items.map(item => (
-            <ScheduledCard key={item.id} item={item} />
+        <SortableContext items={eventIds} strategy={verticalListSortingStrategy}>
+          {events.map(event => (
+            <EventCard key={event.id} event={event} />
           ))}
         </SortableContext>
-        {items.length === 0 && <AddWorkoutZone day={day} weekStart={weekStart} />}
+        {events.length === 0 && <AddEventZone day={day} weekStart={weekStart} />}
       </div>
       <DayNotes day={day} weekStart={weekStart} />
     </div>

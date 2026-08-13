@@ -22,13 +22,13 @@ export function useSheetsExport() {
     const store = usePlannerStore.getState();
 
     const scheduled = entriesFromSchedule(
-      store.items,
+      store.events,
       store.notes,
       (store.weekStartsOn ?? 1) as WeekStartsOn
     );
     const rows = historyRows(
       [...store.history, ...scheduled].sort((a, b) => a.date.localeCompare(b.date)),
-      store.goals
+      store.activities
     );
 
     try {

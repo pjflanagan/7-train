@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { usePlannerStore } from '@/lib/store';
 import { getWeekStartKey } from '@/lib/dates';
 import { startMinutesOf } from '@/lib/schedule';
-import { CalendarItem, WorkoutType } from '@/lib/types';
+import { ScheduledEvent, Activity } from '@/lib/types';
 
 const weekStart = getWeekStartKey(new Date(), 1);
 
-/** A 30 minute goal, so every duration in here is exact and easy to read. */
-const goal: WorkoutType = {
+/** A 30 minute activity, so every duration in here is exact and easy to read. */
+const activity: Activity = {
   id: 'half-hour',
   name: 'Half hour',
   icon: 'run',
@@ -17,9 +17,9 @@ const goal: WorkoutType = {
   color: '#000000',
 };
 
-const item = (id: string, startMinutes: number): CalendarItem => ({
+const event = (id: string, startMinutes: number): ScheduledEvent => ({
   id,
-  typeId: goal.id,
+  typeId: activity.id,
   day: 'monday',
   weekStart,
   value: 30,
@@ -27,15 +27,15 @@ const item = (id: string, startMinutes: number): CalendarItem => ({
 });
 
 const startOf = (id: string) =>
-  startMinutesOf(usePlannerStore.getState().items.find(i => i.id === id)!);
+  startMinutesOf(usePlannerStore.getState().events.find(i => i.id === id)!);
 
 describe('dropping a workout after another', () => {
   beforeEach(() => {
     usePlannerStore.getState().resetAll();
     usePlannerStore.setState({
-      goals: [goal],
+      activities: [activity],
       // 7:00 and 9:00, a two hour gap so a swap is obvious.
-      items: [item('first', 7 * 60), item('second', 9 * 60)],
+      events: [event('first', 7 * 60), event('second', 9 * 60)],
     });
   });
 
@@ -61,14 +61,14 @@ describe('dropping a workout after another', () => {
 
   it('applies the same rule when the workout comes from another day', () => {
     usePlannerStore.setState({
-      items: [
-        item('first', 7 * 60),
-        item('second', 9 * 60),
-        { ...item('visitor', 6 * 60), day: 'tuesday' },
+      events: [
+        event('first', 7 * 60),
+        event('second', 9 * 60),
+        { ...event('visitor', 6 * 60), day: 'tuesday' },
       ],
     });
 
-    usePlannerStore.getState().moveItem('visitor', 'monday', weekStart, 1);
+    usePlannerStore.getState().moveEvent('visitor', 'monday', weekStart, 1);
 
     expect(startOf('visitor')).toBe(7 * 60 + 30);
     expect(startOf('first')).toBe(7 * 60);

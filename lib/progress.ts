@@ -1,14 +1,14 @@
-import { WorkoutType, CalendarItem } from './types';
+import { Activity, ScheduledEvent } from './types';
 
-export type GoalProgress = {
-  type: WorkoutType;
+export type TargetProgress = {
+  type: Activity;
   current: number;
   target: number;
   percent: number;
   isDone: boolean;
 };
 
-export type ProgressMap = Record<string, GoalProgress>;
+export type ProgressMap = Record<string, TargetProgress>;
 
 export type OverallProgress = {
   completed: number;
@@ -18,24 +18,24 @@ export type OverallProgress = {
 
 export type WeeklyTargets = Record<string, number>;
 
-export const weeklyTargetKey = (weekStart: string, goalId: string) => `${weekStart}:${goalId}`;
+export const weeklyTargetKey = (weekStart: string, activityId: string) => `${weekStart}:${activityId}`;
 
 /**
- * The target a goal runs against in one week: its per-week override when the
- * user has bent that week, otherwise the goal's baseline target.
+ * The target an activity runs against in one week: its per-week override when the
+ * user has bent that week, otherwise the activity's baseline target.
  */
 export function getEffectiveTarget(
-  goal: WorkoutType,
+  activity: Activity,
   weekStart: string,
   weeklyTargets?: WeeklyTargets
 ): number {
-  const override = weeklyTargets?.[weeklyTargetKey(weekStart, goal.id)];
-  return Number(override ?? goal.target) || 0;
+  const override = weeklyTargets?.[weeklyTargetKey(weekStart, activity.id)];
+  return Number(override ?? activity.target) || 0;
 }
 
 export function calculateProgress(
-  types: WorkoutType[],
-  items: CalendarItem[],
+  types: Activity[],
+  events: ScheduledEvent[],
   weekStart?: string,
   weeklyTargets?: WeeklyTargets
 ): ProgressMap {
@@ -53,10 +53,10 @@ export function calculateProgress(
     };
   });
 
-  items.forEach(item => {
-    const typeProgress = progressMap[item.typeId];
+  events.forEach(event => {
+    const typeProgress = progressMap[event.typeId];
     if (typeProgress) {
-      typeProgress.current += Number(item.value) || 0;
+      typeProgress.current += Number(event.value) || 0;
     }
   });
 

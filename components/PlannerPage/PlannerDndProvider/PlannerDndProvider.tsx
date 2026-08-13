@@ -18,17 +18,17 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // A scheduled card only carries its item id, so the workout type has to be
+  // A scheduled card only carries its event id, so the workout type has to be
   // looked up to draw the same preview as a strip drag.
-  const draggedItem = usePlannerStore(state =>
-    activeData?.kind === 'item'
-      ? state.items.find(i => i.id === activeData.itemId)
+  const draggedEvent = usePlannerStore(state =>
+    activeData?.kind === 'event'
+      ? state.events.find(i => i.id === activeData.eventId)
       : undefined
   );
 
   const preview =
-    activeData?.kind === 'item'
-      ? { typeId: draggedItem?.typeId, tag: draggedItem?.workoutType ?? undefined }
+    activeData?.kind === 'event'
+      ? { typeId: draggedEvent?.typeId, tag: draggedEvent?.workoutType ?? undefined }
       : { typeId: activeData?.typeId, tag: activeData?.tag };
 
   return (

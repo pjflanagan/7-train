@@ -13,7 +13,7 @@ interface CopyWeekModalProps {
   onClose: () => void;
   /** Which source weeks this week is allowed to pull from. */
   sources: CopySource[];
-  onCopy: (source: CopySource, parts: { schedule: boolean; goals: boolean }) => void;
+  onCopy: (source: CopySource, parts: { schedule: boolean; activities: boolean }) => void;
 }
 
 const sourceLabels: Record<CopySource, string> = {
@@ -21,26 +21,26 @@ const sourceLabels: Record<CopySource, string> = {
   previous: 'Previous week',
 };
 
-/** Picks a source week and which parts of it — schedule, goals, or both — to pull in. */
+/** Picks a source week and which parts of it — schedule, activities, or both — to pull in. */
 export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModalProps) {
   const [source, setSource] = useState<CopySource>(sources[0] ?? 'current');
   const [schedule, setSchedule] = useState(true);
-  const [goals, setGoals] = useState(true);
+  const [activities, setActivities] = useState(true);
 
   // Reopening starts fresh rather than resuming whatever was half-picked last time.
   useEffect(() => {
     if (isOpen) {
       setSource(sources[0] ?? 'current');
       setSchedule(true);
-      setGoals(true);
+      setActivities(true);
     }
   }, [isOpen, sources]);
 
-  const nothingSelected = !schedule && !goals;
+  const nothingSelected = !schedule && !activities;
 
   const handleCopy = () => {
     if (nothingSelected) return;
-    onCopy(source, { schedule, goals });
+    onCopy(source, { schedule, activities });
     onClose();
   };
 
@@ -81,14 +81,14 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Copy what</legend>
           <Checkbox
-            label="Schedule (workouts and notes)"
+            label="Schedule (events and notes)"
             checked={schedule}
             onChange={(e) => setSchedule(e.target.checked)}
           />
           <Checkbox
-            label="Goals (weekly targets)"
-            checked={goals}
-            onChange={(e) => setGoals(e.target.checked)}
+            label="Weekly targets"
+            checked={activities}
+            onChange={(e) => setActivities(e.target.checked)}
           />
         </fieldset>
 

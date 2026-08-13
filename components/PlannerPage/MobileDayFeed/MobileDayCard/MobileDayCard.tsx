@@ -2,7 +2,7 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { useDayItems, useGoals, useNote, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { useDayEvents, useActivities, useNote, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
 import { getIconByKey } from '@/lib/icons';
@@ -31,8 +31,8 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
   const day = dayNameForDate(date);
   const weekStart = getWeekStartKey(date, weekStartsOn);
 
-  const items = useDayItems(day, weekStart);
-  const goals = useGoals();
+  const events = useDayEvents(day, weekStart);
+  const activities = useActivities();
   const note = useNote(day, weekStart);
   const { data: weather } = useWeather();
   const forecast = weather?.days.find((d) => d.date === dateKey);
@@ -53,34 +53,34 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
         )}
       </header>
 
-      {items.length === 0 && !note && <p className={styles.empty}>Rest day</p>}
+      {events.length === 0 && !note && <p className={styles.empty}>Rest day</p>}
 
-      {items.length > 0 && (
-        <ul className={styles.items}>
-          {items.map((item) => {
-            const goal = goals.find((g) => g.id === item.typeId);
-            if (!goal) return null;
-            const Icon = getIconByKey(goal.icon);
+      {events.length > 0 && (
+        <ul className={styles.events}>
+          {events.map((event) => {
+            const activity = activities.find((g) => g.id === event.typeId);
+            if (!activity) return null;
+            const Icon = getIconByKey(activity.icon);
 
             return (
               <li
-                key={item.id}
-                className={styles.item}
-                style={{ '--goal-color': goal.color } as React.CSSProperties}
+                key={event.id}
+                className={styles.event}
+                style={{ '--activity-color': activity.color } as React.CSSProperties}
               >
                 <Icon className={styles.icon} />
-                <span className={styles.itemName}>
-                  <span className={styles.time}>{formatTimeOfDay(startMinutesOf(item))}</span>
-                  {goal.name}
-                  {item.workoutType && (
-                    <span className={styles.subType}>{item.workoutType}</span>
+                <span className={styles.eventName}>
+                  <span className={styles.time}>{formatTimeOfDay(startMinutesOf(event))}</span>
+                  {activity.name}
+                  {event.workoutType && (
+                    <span className={styles.subType}>{event.workoutType}</span>
                   )}
                 </span>
-                {/* A "times" goal is always one occurrence, so "1 times" is noise. */}
-                {goal.metric !== 'times' && item.value > 0 && (
+                {/* A "times" activity is always one occurrence, so "1 times" is noise. */}
+                {activity.metric !== 'times' && event.value > 0 && (
                   <span className={styles.value}>
-                    {item.value}
-                    <span className={styles.unit}>{goal.unit}</span>
+                    {event.value}
+                    <span className={styles.unit}>{activity.unit}</span>
                   </span>
                 )}
               </li>

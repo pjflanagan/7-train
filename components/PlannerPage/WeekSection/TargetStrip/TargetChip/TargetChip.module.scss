@@ -1,10 +1,10 @@
 @use '@/styles/mixins' as *;
 
 // The week's tally, not the week's plan. It sits on a recessed surface and
-// wears the goal's colour mixed down into it, so the day columns below keep
+// wears the activity's colour mixed down into it, so the day columns below keep
 // the eye.
 .chip {
-  @include goal-tones-context();
+  @include activity-tones-context();
 
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
   overflow: hidden;
 }
 
-// A goal with sub-types under its band is roughly twice the height of one
+// An activity with sub-types under its band is roughly twice the height of one
 // without, so it takes both rows of the rail while the plain ones pair up in a
 // single column.
 .hasBody {
@@ -24,7 +24,7 @@
 }
 
 // Darker than the chip below it, because the band is the grab point: dragging
-// it drops the goal onto a day.
+// it drops the activity onto a day.
 .header {
   position: relative;
   // So the fill can sit behind the band's own text without escaping to behind
@@ -35,7 +35,7 @@
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
   background-color: var(--bg-tertiary);
-  // A goal with nothing under it is the band alone, so the rule only belongs
+  // An activity with nothing under it is the band alone, so the rule only belongs
   // there when something follows it.
   .hasBody & {
     border-bottom: 1px solid var(--border-color);
@@ -60,8 +60,8 @@
   width: var(--space-6);
   height: var(--space-6);
   border-radius: 50%;
-  background-color: var(--goal-surface);
-  color: var(--goal-ink);
+  background-color: var(--activity-surface);
+  color: var(--activity-ink);
 }
 
 .icon {
@@ -121,7 +121,7 @@
   bottom: 0;
   left: 0;
   z-index: -1;
-  background-color: color-mix(in srgb, var(--goal-color) 30%, transparent);
+  background-color: color-mix(in srgb, var(--activity-color) 30%, transparent);
   transition: var(--transition-smooth);
 }
 

@@ -5,28 +5,28 @@ import { createPortal } from 'react-dom';
 import { DAYS } from '@/lib/constants';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
-import styles from './AddWorkoutZone.module.scss';
+import styles from './AddEventZone.module.scss';
 
 /** Roughly how wide the picker is, so it can be kept inside the viewport. */
 const PANEL_WIDTH = 220;
 const VIEWPORT_MARGIN = 8;
 
-export interface AddWorkoutZoneProps {
+export interface AddEventZoneProps {
   day: typeof DAYS[number];
   weekStart: string;
 }
 
 /**
- * The empty half of a day: a drop target for dragged goals, and — because the
- * goal strip only exists on the current week — the way to add a workout to a
+ * The empty half of a day: a drop target for dragged activities, and — because the
+ * activity strip only exists on the current week — the way to add a workout to a
  * week whose strip is nowhere on screen.
  *
  * The picker is portalled rather than anchored inline: a day column is narrower
  * than the list, and the week board clips its own overflow.
  */
-export function AddWorkoutZone({ day, weekStart }: AddWorkoutZoneProps) {
-  const goals = usePlannerStore((state) => state.goals);
-  const addItem = usePlannerStore((state) => state.addItem);
+export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
+  const activities = usePlannerStore((state) => state.activities);
+  const addEvent = usePlannerStore((state) => state.addEvent);
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -81,24 +81,24 @@ export function AddWorkoutZone({ day, weekStart }: AddWorkoutZoneProps) {
             className={styles.panel}
             style={{ top: anchor.top, left: anchor.left, width: PANEL_WIDTH }}
             role="menu"
-            aria-label="Add a workout"
+            aria-label="Add an event"
             ref={panelRef}
           >
-            {goals.map((goal) => (
+            {activities.map((activity) => (
               <button
-                key={goal.id}
+                key={activity.id}
                 type="button"
                 role="menuitem"
                 className={styles.option}
                 onClick={() => {
-                  addItem({ typeId: goal.id, day, weekStart, value: 1 });
+                  addEvent({ typeId: activity.id, day, weekStart, value: 1 });
                   setAnchor(null);
                 }}
               >
-                <span className={styles.optionIcon} style={{ color: goal.color }}>
-                  {React.createElement(getIconByKey(goal.icon))}
+                <span className={styles.optionIcon} style={{ color: activity.color }}>
+                  {React.createElement(getIconByKey(activity.icon))}
                 </span>
-                <span className={styles.optionLabel}>{goal.name}</span>
+                <span className={styles.optionLabel}>{activity.name}</span>
               </button>
             ))}
           </div>,

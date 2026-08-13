@@ -1,5 +1,5 @@
-import { PlannerState, WorkoutTypeSchema, CalendarItemSchema, HelpfulLinkSchema, HistoryEntrySchema, WorkoutType, CalendarItem } from './types';
-import { DEFAULT_WORKOUT_TYPES, getDefaultCalendarItems, DEFAULT_LINKS } from './constants';
+import { PlannerState, ActivitySchema, ScheduledEventSchema, HelpfulLinkSchema, HistoryEntrySchema, Activity, ScheduledEvent } from './types';
+import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './constants';
 import { getWeekStartKey, addWeeks } from './dates';
 import { ACTIVITY_ICONS, IconKey } from './icons';
 
@@ -8,28 +8,28 @@ function mapLegacyIcon(iconStr: string): IconKey {
   return mapping ? (mapping[0] as IconKey) : 'other';
 }
 
-function normalizeGoal(raw: unknown): WorkoutType {
-  const goal = { ...(raw as Record<string, unknown>) } as Partial<WorkoutType> & Record<string, unknown>;
-  if (typeof goal.icon === 'string') {
+function normalizeActivity(raw: unknown): Activity {
+  const activity = { ...(raw as Record<string, unknown>) } as Partial<Activity> & Record<string, unknown>;
+  if (typeof activity.icon === 'string') {
     // If it is a legacy Material Icon ligature, remap it
-    if (!Object.keys(ACTIVITY_ICONS).includes(goal.icon)) {
-      goal.icon = mapLegacyIcon(goal.icon);
+    if (!Object.keys(ACTIVITY_ICONS).includes(activity.icon)) {
+      activity.icon = mapLegacyIcon(activity.icon);
     }
   }
-  if (!goal.workoutTypes) goal.workoutTypes = [];
-  if (!goal.links) goal.links = [];
-  if (goal.metric === 'times') goal.unit = 'times';
-  return WorkoutTypeSchema.parse(goal);
+  if (!activity.workoutTypes) activity.workoutTypes = [];
+  if (!activity.links) activity.links = [];
+  if (activity.metric === 'times') activity.unit = 'times';
+  return ActivitySchema.parse(activity);
 }
 
-function normalizeItem(raw: unknown, weekStarts: [string, string]): CalendarItem {
-  const item = { ...(raw as Record<string, unknown>) } as Record<string, unknown>;
-  // Legacy items carried a relative slot (week 1 or 2); anchor it to a real date.
-  if (typeof item.weekStart !== 'string') {
-    item.weekStart = item.week === 2 ? weekStarts[1] : weekStarts[0];
+function normalizeEvent(raw: unknown, weekStarts: [string, string]): ScheduledEvent {
+  const event = { ...(raw as Record<string, unknown>) } as Record<string, unknown>;
+  // Legacy events carried a relative slot (week 1 or 2); anchor it to a real date.
+  if (typeof event.weekStart !== 'string') {
+    event.weekStart = event.week === 2 ? weekStarts[1] : weekStarts[0];
   }
-  delete item.week;
-  return CalendarItemSchema.parse(item);
+  delete event.week;
+  return ScheduledEventSchema.parse(event);
 }
 
 /** Rekey notes from the legacy `${day}-${week}` form to `${weekStart}-${day}`. */
@@ -55,7 +55,7 @@ export function importLegacy(): Partial<PlannerState> | null {
 
   const raw = {
     types:   localStorage.getItem('workout_week_types'),
-    items:   localStorage.getItem('workout_week_calendar'),
+    events:   localStorage.getItem('workout_week_calendar'),
     notes:   localStorage.getItem('workout_week_notes'),
     links:   localStorage.getItem('workout_week_links'),
     history: localStorage.getItem('workout_week_history'),
@@ -69,33 +69,33 @@ export function importLegacy(): Partial<PlannerState> | null {
   const currentWeekStart = getWeekStartKey(new Date(), 1);
   const weekStarts: [string, string] = [currentWeekStart, addWeeks(currentWeekStart, 1)];
 
-  let goals = DEFAULT_WORKOUT_TYPES;
+  let activities = DEFAULT_ACTIVITIES;
   if (raw.types) {
     try {
       const parsed = JSON.parse(raw.types);
-      goals = parsed.map(normalizeGoal);
+      activities = parsed.map(normalizeActivity);
     } catch (e) {
       console.error('Failed to parse legacy types', e);
     }
   }
 
-  let items = getDefaultCalendarItems(currentWeekStart);
-  if (raw.items) {
+  let events = getDefaultEvents(currentWeekStart);
+  if (raw.events) {
     try {
-      const parsed = JSON.parse(raw.items);
-      items = parsed.map((i: unknown) => normalizeItem(i, weekStarts));
+      const parsed = JSON.parse(raw.events);
+      events = parsed.map((i: unknown) => normalizeEvent(i, weekStarts));
     } catch (e) {
-      console.error('Failed to parse legacy items', e);
+      console.error('Failed to parse legacy events', e);
     }
   }
 
   // enforce value=1 for times metric
-  items = items.map(item => {
-    const goal = goals.find(g => g.id === item.typeId);
-    if (goal && goal.metric === 'times') {
-      return { ...item, value: 1 };
+  events = events.map(event => {
+    const activity = activities.find(g => g.id === event.typeId);
+    if (activity && activity.metric === 'times') {
+      return { ...event, value: 1 };
     }
-    return item;
+    return event;
   });
 
   let notes: Record<string, string> = {};
@@ -120,8 +120,8 @@ export function importLegacy(): Partial<PlannerState> | null {
   }
 
   const newState: Partial<PlannerState> = {
-    goals,
-    items,
+    activities,
+    events,
     notes,
     links,
     history,
@@ -143,13 +143,11 @@ export function importLegacy(): Partial<PlannerState> | null {
  * v1 -> v2: weeks stopped being relative slots (1 and 2) and became absolute
  * dates, so past weeks can be kept and scrolled back to. Week 1 lands on the
  * current week and week 2 on the next one.
+ *
+ * Note this reads the field names as they were *written*: v1 and v2 stored the
+ * schedule under `items`, which v3 renames.
  */
-export function migrateStore(persistedState: unknown, version: number): unknown {
-  if (version >= 2 || !persistedState || typeof persistedState !== 'object') {
-    return persistedState;
-  }
-
-  const state = persistedState as Record<string, unknown>;
+function migrateV1toV2(state: Record<string, unknown>): Record<string, unknown> {
   const weekStartsOn = 1; // v1 always started weeks on Monday
   const current = getWeekStartKey(new Date(), weekStartsOn);
   const weekStarts: [string, string] = [current, addWeeks(current, 1)];
@@ -171,4 +169,28 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
       : state.notes;
 
   return { ...state, items, notes, weekStartsOn };
+}
+
+/**
+ * v2 -> v3: the vocabulary settled. What you can do is an *activity*, what you
+ * put on the calendar is an *event*, and a *target* is what a week aims at — so
+ * `goals` and `items` are stored under their new names. Nothing inside either
+ * record changes; only the two keys move.
+ */
+function migrateV2toV3(state: Record<string, unknown>): Record<string, unknown> {
+  const { goals, items, ...rest } = state;
+  return {
+    ...rest,
+    activities: state.activities ?? goals,
+    events: state.events ?? items,
+  };
+}
+
+export function migrateStore(persistedState: unknown, version: number): unknown {
+  if (!persistedState || typeof persistedState !== 'object') return persistedState;
+
+  let state = persistedState as Record<string, unknown>;
+  if (version < 2) state = migrateV1toV2(state);
+  if (version < 3) state = migrateV2toV3(state);
+  return state;
 }

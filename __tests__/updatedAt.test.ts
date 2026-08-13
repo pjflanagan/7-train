@@ -4,21 +4,21 @@ import { getWeekStartKey } from '@/lib/dates';
 
 const weekStart = getWeekStartKey(new Date(), 1);
 
-const only = () => usePlannerStore.getState().items[0];
+const only = () => usePlannerStore.getState().events[0];
 
-/** An edit made strictly after the item was created, however fast the test runs. */
+/** An edit made strictly after the event was created, however fast the test runs. */
 const backdate = () => {
   usePlannerStore.setState({
-    items: usePlannerStore.getState().items.map(i => ({ ...i, updatedAt: '2020-01-01T00:00:00.000Z' })),
+    events: usePlannerStore.getState().events.map(i => ({ ...i, updatedAt: '2020-01-01T00:00:00.000Z' })),
   });
 };
 
-describe('item updatedAt', () => {
+describe('event updatedAt', () => {
   beforeEach(() => {
     usePlannerStore.getState().resetAll();
-    usePlannerStore.setState({ items: [] });
-    usePlannerStore.getState().addItem({
-      typeId: usePlannerStore.getState().goals[0].id,
+    usePlannerStore.setState({ events: [] });
+    usePlannerStore.getState().addEvent({
+      typeId: usePlannerStore.getState().activities[0].id,
       day: 'monday',
       weekStart,
       value: 3,
@@ -31,24 +31,24 @@ describe('item updatedAt', () => {
 
   it('restamps when the value changes', () => {
     backdate();
-    usePlannerStore.getState().updateItemValue(only().id, 5);
+    usePlannerStore.getState().updateEventValue(only().id, 5);
     expect(only().updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
   });
 
   it('restamps when the time or length changes', () => {
     backdate();
-    usePlannerStore.getState().setItemTime(only().id, 9 * 60);
+    usePlannerStore.getState().setEventTime(only().id, 9 * 60);
     const afterTime = only().updatedAt!;
     expect(afterTime).not.toBe('2020-01-01T00:00:00.000Z');
 
-    usePlannerStore.setState({ items: [{ ...only(), updatedAt: '2020-01-01T00:00:00.000Z' }] });
-    usePlannerStore.getState().setItemDuration(only().id, 90);
+    usePlannerStore.setState({ events: [{ ...only(), updatedAt: '2020-01-01T00:00:00.000Z' }] });
+    usePlannerStore.getState().setEventDuration(only().id, 90);
     expect(only().updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
   });
 
   it('restamps when it moves to another day', () => {
     backdate();
-    usePlannerStore.getState().moveItem(only().id, 'friday', weekStart);
+    usePlannerStore.getState().moveEvent(only().id, 'friday', weekStart);
     expect(only().updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
   });
 

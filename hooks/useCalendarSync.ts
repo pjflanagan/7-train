@@ -7,7 +7,7 @@ import { useGoogleAccount } from '@/hooks/useAuth';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { PulledEvent } from '@/lib/googleCalendar';
-import { CalendarItem, WorkoutType } from '@/lib/types';
+import { ScheduledEvent, Activity } from '@/lib/types';
 import {
   addWeeks,
   dateForDay,
@@ -26,8 +26,8 @@ import { clampDuration, durationMinutesOf, startMinutesOf } from '@/lib/schedule
  * another day inside Google Calendar shows up here. After that every local
  * change is mirrored back, debounced so a run of keystrokes is one write.
  *
- * Goals are deliberately not synced. An event names the goal it belongs to and
- * nothing more, so goals stay a local, per-device list.
+ * Activities are deliberately not synced. An event names the activity it belongs to and
+ * nothing more, so activities stay a local, per-device list.
  */
 
 /** How much of the calendar a pull covers, in weeks either side of this one. */
@@ -37,21 +37,21 @@ const PULL_WEEKS_FORWARD = 12;
 /** Long enough to swallow a burst of edits, short enough to feel immediate. */
 const PUSH_DEBOUNCE_MS = 1200;
 
-/** What we last wrote to Google for an item, so we only write real changes. */
-interface SyncedItem {
+/** What we last wrote to Google for an event, so we only write real changes. */
+interface SyncedEvent {
   eventId: string;
   signature: string;
 }
 
-function itemSignature(item: CalendarItem, goal: WorkoutType | undefined): string {
+function eventSignature(event: ScheduledEvent, activity: Activity | undefined): string {
   return [
-    item.typeId,
-    item.day,
-    item.weekStart,
-    item.value,
-    item.workoutType ?? '',
-    startMinutesOf(item),
-    durationMinutesOf(item, goal),
+    event.typeId,
+    event.day,
+    event.weekStart,
+    event.value,
+    event.workoutType ?? '',
+    startMinutesOf(event),
+    durationMinutesOf(event, activity),
   ].join('|');
 }
 
@@ -66,7 +66,7 @@ function wallClock(dateKey: string, minutes: number): string {
 }
 
 interface EventDraftPayload {
-  itemId: string;
+  eventId: string;
   typeId: string;
   title: string;
   subType: string | null;
@@ -78,39 +78,39 @@ interface EventDraftPayload {
 }
 
 function draftFor(
-  item: CalendarItem,
-  goal: WorkoutType,
+  event: ScheduledEvent,
+  activity: Activity,
   weekStartsOn: WeekStartsOn,
   timeZone: string
 ): EventDraftPayload {
-  const dateKey = formatDateLocal(dateForDay(item.weekStart, item.day, weekStartsOn));
-  const start = startMinutesOf(item);
-  const duration = durationMinutesOf(item, goal);
+  const dateKey = formatDateLocal(dateForDay(event.weekStart, event.day, weekStartsOn));
+  const start = startMinutesOf(event);
+  const duration = durationMinutesOf(event, activity);
 
   return {
-    itemId: item.id,
-    typeId: item.typeId,
-    title: goal.name,
-    subType: item.workoutType ?? null,
-    value: item.value,
+    eventId: event.id,
+    typeId: event.typeId,
+    title: activity.name,
+    subType: event.workoutType ?? null,
+    value: event.value,
     start: wallClock(dateKey, start),
     end: wallClock(dateKey, start + duration),
     timeZone,
     description:
-      goal.metric === 'times' ? undefined : `${item.value} ${goal.unit}`,
+      activity.metric === 'times' ? undefined : `${event.value} ${activity.unit}`,
   };
 }
 
 /** A pulled event, placed back on the local week grid in the browser's zone. */
-function itemFromEvent(
+function eventFromGoogle(
   event: PulledEvent,
   weekStartsOn: WeekStartsOn
-): CalendarItem | null {
+): ScheduledEvent | null {
   const start = new Date(event.start);
   if (Number.isNaN(start.getTime())) return null;
 
   // Google owns the event's length too, so a drag of its bottom edge over
-  // there comes back as this item's duration.
+  // there comes back as this event's duration.
   const end = event.end ? new Date(event.end) : null;
   const durationMinutes =
     end && !Number.isNaN(end.getTime()) && end > start
@@ -118,7 +118,7 @@ function itemFromEvent(
       : undefined;
 
   return {
-    id: event.itemId,
+    id: event.eventId,
     typeId: event.typeId,
     day: dayNameForDate(start),
     weekStart: getWeekStartKey(start, weekStartsOn),
@@ -144,8 +144,8 @@ export function useCalendarSync(): void {
   const setStatus = useCalendarSyncStore((state) => state.setStatus);
   const pullNonce = useCalendarSyncStore((state) => state.resyncNonce);
 
-  /** Item id -> what Google already holds. Empty until the first pull lands. */
-  const syncedRef = useRef(new Map<string, SyncedItem>());
+  /** Event id -> what Google already holds. Empty until the first pull lands. */
+  const syncedRef = useRef(new Map<string, SyncedEvent>());
   /** Pushing before the pull has landed would fight it, so it waits. */
   const isReadyRef = useRef(false);
 
@@ -185,19 +185,19 @@ export function useCalendarSync(): void {
         const store = usePlannerStore.getState();
         store.setGoogleCalendarId(calendarId);
 
-        const goalIds = new Set(store.goals.map((goal) => goal.id));
-        const pulled: CalendarItem[] = [];
-        const synced = new Map<string, SyncedItem>();
+        const activityIds = new Set(store.activities.map((activity) => activity.id));
+        const pulled: ScheduledEvent[] = [];
+        const synced = new Map<string, SyncedEvent>();
 
-        for (const event of events) {
-          const item = itemFromEvent(event, weekStartsOn);
-          // An event for a goal this device does not have is left in Google
-          // untouched; goals are local, so we simply cannot draw it.
-          if (!item || !goalIds.has(item.typeId)) continue;
-          pulled.push(item);
-          synced.set(item.id, {
-            eventId: event.eventId,
-            signature: itemSignature(item, store.goals.find((g) => g.id === item.typeId)),
+        for (const pulledEvent of events) {
+          const event = eventFromGoogle(pulledEvent, weekStartsOn);
+          // An event for an activity this device does not have is left in Google
+          // untouched; activities are local, so we simply cannot draw it.
+          if (!event || !activityIds.has(event.typeId)) continue;
+          pulled.push(event);
+          synced.set(event.id, {
+            eventId: pulledEvent.eventId,
+            signature: eventSignature(event, store.activities.find((g) => g.id === event.typeId)),
           });
         }
 
@@ -205,22 +205,22 @@ export function useCalendarSync(): void {
         // to Google, so an empty response there means "not asked", not "empty".
         const fromKey = formatDateLocal(from);
         const toKey = formatDateLocal(to);
-        const outsideWindow = store.items.filter(
-          (item) => item.weekStart < fromKey || item.weekStart >= toKey
+        const outsideWindow = store.events.filter(
+          (event) => event.weekStart < fromKey || event.weekStart >= toKey
         );
 
-        // A local item inside the window with no event yet is a plan made
+        // A local event inside the window with no event yet is a plan made
         // offline; it survives the pull and gets pushed up next.
-        const unsynced = store.items.filter(
-          (item) =>
-            item.weekStart >= fromKey &&
-            item.weekStart < toKey &&
-            !item.googleEventId &&
-            !synced.has(item.id)
+        const unsynced = store.events.filter(
+          (event) =>
+            event.weekStart >= fromKey &&
+            event.weekStart < toKey &&
+            !event.googleEventId &&
+            !synced.has(event.id)
         );
 
         syncedRef.current = synced;
-        store.replaceCalendarItems([...outsideWindow, ...pulled, ...unsynced]);
+        store.replaceEvents([...outsideWindow, ...pulled, ...unsynced]);
         isReadyRef.current = true;
         setStatus('synced');
       })
@@ -255,23 +255,23 @@ export function useCalendarSync(): void {
       const update: (EventDraftPayload & { eventId: string })[] = [];
       const seen = new Set<string>();
 
-      for (const item of store.items) {
-        const goal = store.goals.find((g) => g.id === item.typeId);
-        if (!goal) continue;
+      for (const event of store.events) {
+        const activity = store.activities.find((g) => g.id === event.typeId);
+        if (!activity) continue;
 
-        seen.add(item.id);
-        const known = synced.get(item.id);
-        const eventId = item.googleEventId ?? known?.eventId;
-        const signature = itemSignature(item, goal);
+        seen.add(event.id);
+        const known = synced.get(event.id);
+        const eventId = event.googleEventId ?? known?.eventId;
+        const signature = eventSignature(event, activity);
         if (known && known.signature === signature && eventId) continue;
 
-        const draft = draftFor(item, goal, weekStartsOn, timeZone);
+        const draft = draftFor(event, activity, weekStartsOn, timeZone);
         if (eventId) update.push({ ...draft, eventId });
         else create.push(draft);
       }
 
       const remove = [...synced.entries()]
-        .filter(([itemId]) => !seen.has(itemId))
+        .filter(([eventId]) => !seen.has(eventId))
         .map(([, { eventId }]) => eventId);
 
       if (create.length === 0 && update.length === 0 && remove.length === 0) {
@@ -305,15 +305,15 @@ export function useCalendarSync(): void {
 
         // Rebuild the baseline from what we just wrote, not from the store,
         // which may have moved on while the request was in flight.
-        for (const [itemId] of synced) {
-          if (!seen.has(itemId)) synced.delete(itemId);
+        for (const [eventId] of synced) {
+          if (!seen.has(eventId)) synced.delete(eventId);
         }
         for (const draft of [...create, ...update]) {
-          const eventId = eventIds[draft.itemId];
-          const item = after.items.find((i) => i.id === draft.itemId);
-          const goal = after.goals.find((g) => g.id === draft.typeId);
-          if (!eventId || !item) continue;
-          synced.set(draft.itemId, { eventId, signature: itemSignature(item, goal) });
+          const eventId = eventIds[draft.eventId];
+          const event = after.events.find((i) => i.id === draft.eventId);
+          const activity = after.activities.find((g) => g.id === draft.typeId);
+          if (!eventId || !event) continue;
+          synced.set(draft.eventId, { eventId, signature: eventSignature(event, activity) });
         }
 
         setStatus('synced');
@@ -327,12 +327,12 @@ export function useCalendarSync(): void {
     };
 
     const unsubscribe = usePlannerStore.subscribe((state, previous) => {
-      if (state.items === previous.items) return;
+      if (state.events === previous.events) return;
       clearTimeout(timer);
       timer = setTimeout(push, PUSH_DEBOUNCE_MS);
     });
 
-    // A pull can leave local-only items behind, so try once on connect too.
+    // A pull can leave local-only events behind, so try once on connect too.
     timer = setTimeout(push, PUSH_DEBOUNCE_MS);
 
     return () => {

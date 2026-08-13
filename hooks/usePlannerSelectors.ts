@@ -6,42 +6,42 @@ import { byStartTime, DEFAULT_START_MINUTES } from '@/lib/schedule';
 
 type DayName = typeof DAYS[number];
 
-export const useGoals = () => usePlannerStore((state) => state.goals);
-export const useGoal = (id: string) => usePlannerStore((state) => state.goals.find(g => g.id === id));
+export const useActivities = () => usePlannerStore((state) => state.activities);
+export const useActivity = (id: string) => usePlannerStore((state) => state.activities.find(g => g.id === id));
 
-/** A day's items in the order they happen. */
-export const useDayItems = (day: DayName, weekStart: string) => {
-  const items = usePlannerStore((state) => state.items);
+/** A day's events in the order they happen. */
+export const useDayEvents = (day: DayName, weekStart: string) => {
+  const events = usePlannerStore((state) => state.events);
   return useMemo(() => {
-    return byStartTime(items.filter(i => i.day === day && i.weekStart === weekStart));
-  }, [items, day, weekStart]);
+    return byStartTime(events.filter(i => i.day === day && i.weekStart === weekStart));
+  }, [events, day, weekStart]);
 };
 
 export const useNote = (day: DayName, weekStart: string) =>
   usePlannerStore((state) => state.notes[noteKey(weekStart, day)] || '');
 
-/** True when a week has no scheduled items and no day notes. */
+/** True when a week has no scheduled events and no day notes. */
 export const useIsWeekEmpty = (weekStart: string) =>
   usePlannerStore((state) =>
-    !state.items.some(i => i.weekStart === weekStart) &&
+    !state.events.some(i => i.weekStart === weekStart) &&
     !DAYS.some(day => state.notes[noteKey(weekStart, day)]?.trim())
   );
 
 /**
- * The `workoutType` sub-tags already scheduled in a week, per goal — used to
+ * The `workoutType` sub-tags already scheduled in a week, per activity — used to
  * mute a sub-tag chip once it is on the board.
  */
 export const useScheduledSubTags = (weekStart: string, typeId: string) => {
-  const items = usePlannerStore((state) => state.items);
+  const events = usePlannerStore((state) => state.events);
   return useMemo(() => {
     const scheduled = new Set<string>();
-    for (const item of items) {
-      if (item.weekStart === weekStart && item.typeId === typeId && item.workoutType) {
-        scheduled.add(item.workoutType);
+    for (const event of events) {
+      if (event.weekStart === weekStart && event.typeId === typeId && event.workoutType) {
+        scheduled.add(event.workoutType);
       }
     }
     return scheduled;
-  }, [items, weekStart, typeId]);
+  }, [events, weekStart, typeId]);
 };
 
 export const useLinks = () => usePlannerStore((state) => state.links);

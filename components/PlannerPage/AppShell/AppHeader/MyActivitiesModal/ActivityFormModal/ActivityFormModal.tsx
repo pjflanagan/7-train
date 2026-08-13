@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { WorkoutTypeSchema, WorkoutType } from '@/lib/types';
+import { ActivitySchema, Activity } from '@/lib/types';
 import { estimateDurationMinutes, formatDuration } from '@/lib/schedule';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
@@ -15,13 +15,13 @@ import { ColorPicker } from '@/components/elements/ColorPicker/ColorPicker';
 import { IconPicker } from '@/components/elements/IconPicker/IconPicker';
 import { TagInput } from '@/components/elements/TagInput/TagInput';
 import { MdDelete, MdAdd } from 'react-icons/md';
-import styles from './GoalFormModal.module.scss';
+import styles from './ActivityFormModal.module.scss';
 import { usePlannerStore } from '@/lib/store';
 
-export interface GoalFormModalProps {
+export interface ActivityFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  goal?: WorkoutType;
+  activity?: Activity;
 }
 
 const TABS: TabConfig[] = [
@@ -32,26 +32,26 @@ const TABS: TabConfig[] = [
 ];
 
 /** Falls back to the violet preset so a new workout starts on the theme colour. */
-const DEFAULT_GOAL_COLOR = '#8E4EC6';
+const DEFAULT_ACTIVITY_COLOR = '#8E4EC6';
 
 /** Lets the footer's submit button reach the form it sits outside of. */
-const FORM_ID = 'goal-form';
+const FORM_ID = 'activity-form';
 
-export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, goal }) => {
+export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, activity }) => {
   const [activeTab, setActiveTab] = useState('basic');
-  const addGoal = usePlannerStore((s) => s.addGoal);
-  const updateGoal = usePlannerStore((s) => s.updateGoal);
+  const addActivity = usePlannerStore((s) => s.addActivity);
+  const updateActivity = usePlannerStore((s) => s.updateActivity);
   
-  const { control, handleSubmit, reset, register, setValue, formState: { errors } } = useForm<WorkoutType>({
-    resolver: zodResolver(WorkoutTypeSchema),
-    defaultValues: goal || {
+  const { control, handleSubmit, reset, register, setValue, formState: { errors } } = useForm<Activity>({
+    resolver: zodResolver(ActivitySchema),
+    defaultValues: activity || {
       id: '',
       name: '',
       icon: 'run',
       metric: 'distance',
       unit: 'miles',
       target: 0,
-      color: DEFAULT_GOAL_COLOR,
+      color: DEFAULT_ACTIVITY_COLOR,
       optional: false,
       paceMinutes: null,
       typicalDurationMinutes: null,
@@ -90,8 +90,8 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
 
   useEffect(() => {
     if (isOpen) {
-      if (goal) {
-        reset(goal);
+      if (activity) {
+        reset(activity);
       } else {
         reset({
           id: `type-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -100,7 +100,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           metric: 'distance',
           unit: 'miles',
           target: 0,
-          color: DEFAULT_GOAL_COLOR,
+          color: DEFAULT_ACTIVITY_COLOR,
           optional: false,
           paceMinutes: null,
           typicalDurationMinutes: null,
@@ -112,13 +112,13 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
         setActiveTab('basic');
       }, 0);
     }
-  }, [isOpen, goal, reset]);
+  }, [isOpen, activity, reset]);
 
-  const onSubmit = (data: WorkoutType) => {
-    if (goal) {
-      updateGoal(goal.id, data);
+  const onSubmit = (data: Activity) => {
+    if (activity) {
+      updateActivity(activity.id, data);
     } else {
-      addGoal(data);
+      addActivity(data);
     }
     onClose();
   };
@@ -127,7 +127,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={goal ? 'Edit workout' : 'Add workout'}
+      title={activity ? 'Edit activity' : 'Add activity'}
       maxWidth="600px"
       footer={
         <>
@@ -143,7 +143,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           {activeTab === 'basic' && (
             <div className={styles.section}>
               <TextInput
-                label="Workout name"
+                label="Activity name"
                 {...register('name')}
                 error={errors.name?.message}
                 placeholder="e.g. Running, Lifting"
@@ -190,7 +190,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   />
                   <p className={styles.hint}>
                     {paceMinutes
-                      ? `Blocks out ${formatDuration(estimateDurationMinutes({ value: 3 }, { metric: 'distance', paceMinutes } as WorkoutType))} for a 3 ${unit || 'unit'} session, rounded up to the nearest 15 mins.`
+                      ? `Blocks out ${formatDuration(estimateDurationMinutes({ value: 3 }, { metric: 'distance', paceMinutes } as Activity))} for a 3 ${unit || 'unit'} session, rounded up to the nearest 15 mins.`
                       : 'Used to work out how long each session blocks out on the calendar, rounded up to the nearest 15 mins.'}
                   </p>
                 </div>
@@ -202,7 +202,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                     name="typicalDurationMinutes"
                     render={({ field }) => (
                       <NumberInput
-                        label="Typical workout duration (mins)"
+                        label="Typical session duration (mins)"
                         value={field.value ?? ''}
                         step={15}
                         min={0}
@@ -223,7 +223,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   name="target"
                   render={({ field }) => (
                     <NumberInput
-                      label="Weekly target (optional)"
+                      label="Weekly target"
                       value={field.value ?? ''}
                       onChange={(e) => {
                         const raw = e.target.value;
@@ -256,7 +256,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
 
           {activeTab === 'links' && (
             <div className={styles.section}>
-              <p className={styles.hint}>Add helpful links related to this workout.</p>
+              <p className={styles.hint}>Add links related to this activity.</p>
               <div className={styles.linksList}>
                 {linkFields.map((field, index) => (
                   <div key={field.id} className={styles.linkRow}>

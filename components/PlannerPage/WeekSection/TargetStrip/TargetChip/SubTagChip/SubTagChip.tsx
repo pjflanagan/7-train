@@ -27,7 +27,7 @@ export function SubTagChip({
     <span
       ref={setNodeRef}
       className={clsx(styles.subtag, isScheduled && styles.isScheduled)}
-      style={color ? ({ '--goal-color': color } as React.CSSProperties) : undefined}
+      style={color ? ({ '--activity-color': color } as React.CSSProperties) : undefined}
       {...listeners}
       {...attributes}
     >

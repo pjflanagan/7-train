@@ -3,7 +3,7 @@
 // What rides under the cursor is a weekday event in flight, so it wears the
 // same full-strength tones as the card it will land as.
 .preview {
-  @include goal-tones-event();
+  @include activity-tones-event();
 
   display: inline-flex;
   align-items: center;
@@ -11,8 +11,8 @@
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-sm);
   font-weight: 600;
-  background-color: var(--goal-surface);
-  border: 1px solid var(--goal-border);
+  background-color: var(--activity-surface);
+  border: 1px solid var(--activity-border);
   border-radius: var(--radius-md);
   backdrop-filter: blur(2px);
   box-shadow: var(--shadow-md);
@@ -27,7 +27,7 @@
   width: var(--space-6);
   height: var(--space-6);
   border-radius: 50%;
-  background-color: var(--goal-color);
+  background-color: var(--activity-color);
   color: var(--text-on-accent);
 }
 
@@ -42,7 +42,7 @@
 .tag {
   padding: var(--space-05) var(--space-2);
   border-radius: var(--radius-pill);
-  background-color: var(--goal-color);
+  background-color: var(--activity-color);
   font-size: var(--font-2xs);
   font-weight: 600;
   color: var(--text-on-accent);

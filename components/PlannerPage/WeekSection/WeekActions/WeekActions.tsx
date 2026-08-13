@@ -10,7 +10,7 @@ import { useIsWeekEmpty, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { addWeeks, getWeekStartKey } from '@/lib/dates';
 import styles from './WeekActions.module.scss';
 
-/** Pulls another week's schedule or goals into this one, or empties it. All overwrite. */
+/** Pulls another week's schedule or activities into this one, or empties it. All overwrite. */
 export function WeekActions({ weekStart }: { weekStart: string }) {
   const [isCopyOpen, setIsCopyOpen] = useState(false);
   const [isClearOpen, setIsClearOpen] = useState(false);
@@ -36,7 +36,7 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
     return options;
   }, [isPast, weekStart, currentWeek, previousWeek]);
 
-  const handleCopy = (source: CopySource, parts: { schedule: boolean; goals: boolean }) => {
+  const handleCopy = (source: CopySource, parts: { schedule: boolean; activities: boolean }) => {
     copyWeek(source === 'current' ? currentWeek : previousWeek, weekStart, parts);
   };
 
@@ -76,7 +76,7 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
       <ConfirmDialog
         isOpen={isClearOpen}
         title="Clear week"
-        message="This will remove all workouts and notes from this week. Are you sure?"
+        message="This will remove all events and notes from this week. Are you sure?"
         confirmLabel="Confirm"
         isDestructive
         onConfirm={() => {

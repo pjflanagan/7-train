@@ -3,17 +3,17 @@ import { usePlannerStore } from '@/lib/store';
 import { calculateProgress, getOverallProgress } from '@/lib/progress';
 
 export function useWeekProgress(weekStart: string) {
-  const goals = usePlannerStore(state => state.goals);
-  const allItems = usePlannerStore(state => state.items);
+  const activities = usePlannerStore(state => state.activities);
+  const allEvents = usePlannerStore(state => state.events);
   const weeklyTargets = usePlannerStore(state => state.weeklyTargets);
 
-  const items = useMemo(() => {
-    return allItems.filter(i => i.weekStart === weekStart);
-  }, [allItems, weekStart]);
+  const events = useMemo(() => {
+    return allEvents.filter(i => i.weekStart === weekStart);
+  }, [allEvents, weekStart]);
 
   const progressMap = useMemo(
-    () => calculateProgress(goals, items, weekStart, weeklyTargets),
-    [goals, items, weekStart, weeklyTargets]
+    () => calculateProgress(activities, events, weekStart, weeklyTargets),
+    [activities, events, weekStart, weeklyTargets]
   );
   const overall = useMemo(() => getOverallProgress(progressMap), [progressMap]);
 

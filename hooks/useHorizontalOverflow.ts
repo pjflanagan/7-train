@@ -27,7 +27,7 @@ export function useHorizontalOverflow<T extends HTMLElement>() {
     measure();
     el.addEventListener('scroll', measure, { passive: true });
 
-    // Catches both the viewport resizing and goals being added or removed.
+    // Catches both the viewport resizing and activities being added or removed.
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     Array.from(el.children).forEach((child) => observer.observe(child));

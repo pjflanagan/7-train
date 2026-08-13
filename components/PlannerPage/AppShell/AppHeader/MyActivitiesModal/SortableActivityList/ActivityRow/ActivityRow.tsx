@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { WorkoutType } from '@/lib/types';
+import { Activity } from '@/lib/types';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { MdDragIndicator, MdEdit, MdDelete, MdLink } from 'react-icons/md';
 import { usePlannerStore } from '@/lib/store';
-import { GoalFormModal } from '@/components/PlannerPage/AppShell/AppHeader/MyWorkoutsModal/GoalFormModal/GoalFormModal';
-import { GoalLinksPickerModal } from '@/components/PlannerPage/GoalLinksPickerModal/GoalLinksPickerModal';
-import styles from './GoalRow.module.scss';
+import { ActivityFormModal } from '@/components/PlannerPage/AppShell/AppHeader/MyActivitiesModal/ActivityFormModal/ActivityFormModal';
+import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinksPickerModal/ActivityLinksPickerModal';
+import styles from './ActivityRow.module.scss';
 import clsx from 'clsx';
 import { getIconByKey } from '@/lib/icons';
 
-export interface GoalRowProps {
-  goal: WorkoutType;
+export interface ActivityRowProps {
+  activity: Activity;
 }
 
-export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
+export const ActivityRow: React.FC<ActivityRowProps> = ({ activity }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
   
-  const deleteGoal = usePlannerStore((s) => s.deleteGoal);
+  const deleteActivity = usePlannerStore((s) => s.deleteActivity);
 
   const {
     attributes,
@@ -30,7 +30,7 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: goal.id });
+  } = useSortable({ id: activity.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -48,19 +48,19 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
           <MdDragIndicator />
         </div>
         
-        <div className={styles.iconWrapper} style={{ backgroundColor: goal.color }}>
-          {React.createElement(getIconByKey(goal.icon), { size: 20, color: 'var(--text-on-accent)' })}
+        <div className={styles.iconWrapper} style={{ backgroundColor: activity.color }}>
+          {React.createElement(getIconByKey(activity.icon), { size: 20, color: 'var(--text-on-accent)' })}
         </div>
 
         <div className={styles.content}>
-          <div className={styles.name}>{goal.name}</div>
+          <div className={styles.name}>{activity.name}</div>
           <div className={styles.target}>
-            {goal.optional ? 'Optional' : `${goal.target || 0} ${goal.unit}`}
+            {activity.optional ? 'Optional' : `${activity.target || 0} ${activity.unit}`}
           </div>
         </div>
 
         <div className={styles.actions}>
-          {goal.links && goal.links.length > 0 && (
+          {activity.links && activity.links.length > 0 && (
             <IconButton onClick={() => setIsLinksOpen(true)} title="Links">
               <MdLink />
             </IconButton>
@@ -74,26 +74,26 @@ export const GoalRow: React.FC<GoalRowProps> = ({ goal }) => {
         </div>
       </div>
 
-      <GoalFormModal 
+      <ActivityFormModal 
         isOpen={isEditOpen} 
         onClose={() => setIsEditOpen(false)} 
-        goal={goal} 
+        activity={activity} 
       />
 
-      <GoalLinksPickerModal
+      <ActivityLinksPickerModal
         isOpen={isLinksOpen}
         onClose={() => setIsLinksOpen(false)}
-        goal={goal}
+        activity={activity}
       />
 
       <ConfirmDialog
         isOpen={isDeleteOpen}
-        title="Delete workout"
-        message={`Are you sure you want to delete ${goal.name}? This will also remove all related calendar items.`}
+        title="Delete activity"
+        message={`Are you sure you want to delete ${activity.name}? This will also remove all related calendar events.`}
         isDestructive
         confirmLabel="Delete"
         onConfirm={() => {
-          deleteGoal(goal.id);
+          deleteActivity(activity.id);
           setIsDeleteOpen(false);
         }}
         onCancel={() => setIsDeleteOpen(false)}

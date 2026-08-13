@@ -6,20 +6,20 @@ import { startMinutesOf } from '@/lib/schedule';
 const weekStart = getWeekStartKey(new Date(), 1);
 
 const add = (day: 'monday' | 'tuesday') => {
-  const before = usePlannerStore.getState().items.map(i => i.id);
-  usePlannerStore.getState().addItem({
-    typeId: usePlannerStore.getState().goals[0].id,
+  const before = usePlannerStore.getState().events.map(i => i.id);
+  usePlannerStore.getState().addEvent({
+    typeId: usePlannerStore.getState().activities[0].id,
     day,
     weekStart,
     value: 3,
   });
-  return usePlannerStore.getState().items.find(i => !before.includes(i.id))!;
+  return usePlannerStore.getState().events.find(i => !before.includes(i.id))!;
 };
 
 describe('default workout time', () => {
   beforeEach(() => {
     usePlannerStore.getState().resetAll();
-    usePlannerStore.setState({ items: [] });
+    usePlannerStore.setState({ events: [] });
   });
 
   it('starts a new workout at the time the setting names', () => {

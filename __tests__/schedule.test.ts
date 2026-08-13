@@ -9,11 +9,11 @@ import {
   isExactDuration,
   startMinutesOf,
 } from '@/lib/schedule';
-import { CalendarItem, WorkoutType } from '@/lib/types';
+import { ScheduledEvent, Activity } from '@/lib/types';
 
-const goal = (overrides: Partial<WorkoutType>): WorkoutType => ({
-  id: 'goal',
-  name: 'Goal',
+const activity = (overrides: Partial<Activity>): Activity => ({
+  id: 'activity',
+  name: 'Activity',
   icon: 'run',
   metric: 'distance',
   unit: 'miles',
@@ -22,9 +22,9 @@ const goal = (overrides: Partial<WorkoutType>): WorkoutType => ({
   ...overrides,
 });
 
-const item = (overrides: Partial<CalendarItem> = {}): CalendarItem => ({
-  id: 'item',
-  typeId: 'goal',
+const event = (overrides: Partial<ScheduledEvent> = {}): ScheduledEvent => ({
+  id: 'event',
+  typeId: 'activity',
   day: 'monday',
   weekStart: '2026-08-10',
   value: 1,
@@ -32,26 +32,26 @@ const item = (overrides: Partial<CalendarItem> = {}): CalendarItem => ({
 });
 
 describe('estimateDurationMinutes', () => {
-  it('takes a duration goal at its word', () => {
+  it('takes a duration activity at its word', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 45 }),
-      goal({ metric: 'duration', unit: 'mins' })
+      event({ value: 45 }),
+      activity({ metric: 'duration', unit: 'mins' })
     );
     expect(minutes).toBe(45);
   });
 
-  it('reads a duration goal measured in hours as hours', () => {
+  it('reads a duration activity measured in hours as hours', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 1.5 }),
-      goal({ metric: 'duration', unit: 'hours' })
+      event({ value: 1.5 }),
+      activity({ metric: 'duration', unit: 'hours' })
     );
     expect(minutes).toBe(90);
   });
 
-  it('estimates a distance goal from a per-mile pace', () => {
+  it('estimates a distance activity from a per-mile pace', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 6 }),
-      goal({ metric: 'distance', unit: 'miles', icon: 'run' })
+      event({ value: 6 }),
+      activity({ metric: 'distance', unit: 'miles', icon: 'run' })
     );
     // 6 miles at ~9 min/mile, snapped to a quarter hour.
     expect(minutes).toBe(60);
@@ -59,72 +59,72 @@ describe('estimateDurationMinutes', () => {
 
   it('converts kilometres before applying the pace', () => {
     const miles = estimateDurationMinutes(
-      item({ value: 10 }),
-      goal({ metric: 'distance', unit: 'miles', icon: 'bike' })
+      event({ value: 10 }),
+      activity({ metric: 'distance', unit: 'miles', icon: 'bike' })
     );
     const km = estimateDurationMinutes(
-      item({ value: 10 }),
-      goal({ metric: 'distance', unit: 'km', icon: 'bike' })
+      event({ value: 10 }),
+      activity({ metric: 'distance', unit: 'km', icon: 'bike' })
     );
     expect(km).toBeLessThan(miles);
   });
 
-  it('prefers the goal\'s own pace over the per-icon table', () => {
+  it('prefers the activity\'s own pace over the per-icon table', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 4 }),
-      goal({ metric: 'distance', unit: 'miles', icon: 'run', paceMinutes: 12 })
+      event({ value: 4 }),
+      activity({ metric: 'distance', unit: 'miles', icon: 'run', paceMinutes: 12 })
     );
     // 4 × 12 = 48, up to the next quarter hour — not the 9 min/mile default.
     expect(minutes).toBe(60);
   });
 
-  it('reads a set pace as per the goal\'s own unit, without converting', () => {
+  it('reads a set pace as per the activity\'s own unit, without converting', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 10 }),
-      goal({ metric: 'distance', unit: 'km', paceMinutes: 6 })
+      event({ value: 10 }),
+      activity({ metric: 'distance', unit: 'km', paceMinutes: 6 })
     );
     expect(minutes).toBe(60);
   });
 
   it('rounds an estimated distance up to the next quarter hour', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 3 }),
-      goal({ metric: 'distance', unit: 'miles', paceMinutes: 10 })
+      event({ value: 3 }),
+      activity({ metric: 'distance', unit: 'miles', paceMinutes: 10 })
     );
     // 30 exactly stays put; 31 would round up rather than down.
     expect(minutes).toBe(30);
     expect(
-      estimateDurationMinutes(item({ value: 3.1 }), goal({ metric: 'distance', paceMinutes: 10 }))
+      estimateDurationMinutes(event({ value: 3.1 }), activity({ metric: 'distance', paceMinutes: 10 }))
     ).toBe(45);
   });
 
-  it('uses the typical session length for a count goal', () => {
+  it('uses the typical session length for a count activity', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 1 }),
-      goal({ metric: 'times', unit: 'times', typicalDurationMinutes: 50 })
+      event({ value: 1 }),
+      activity({ metric: 'times', unit: 'times', typicalDurationMinutes: 50 })
     );
     expect(minutes).toBe(60);
   });
 
-  it('falls back to a flat session for a count goal', () => {
-    expect(estimateDurationMinutes(item({ value: 1 }), goal({ metric: 'times' }))).toBe(45);
+  it('falls back to a flat session for a count activity', () => {
+    expect(estimateDurationMinutes(event({ value: 1 }), activity({ metric: 'times' }))).toBe(45);
   });
 
   it('never returns less than one slot', () => {
     const minutes = estimateDurationMinutes(
-      item({ value: 1 }),
-      goal({ metric: 'duration', unit: 'mins' })
+      event({ value: 1 }),
+      activity({ metric: 'duration', unit: 'mins' })
     );
     expect(minutes).toBe(15);
   });
 
-  it('marks only duration goals as exact', () => {
-    expect(isExactDuration(item(), goal({ metric: 'duration' }))).toBe(true);
-    expect(isExactDuration(item(), goal({ metric: 'distance' }))).toBe(false);
+  it('marks only duration activities as exact', () => {
+    expect(isExactDuration(event(), activity({ metric: 'duration' }))).toBe(true);
+    expect(isExactDuration(event(), activity({ metric: 'distance' }))).toBe(false);
   });
 
   it('treats a hand-set length as exact', () => {
-    expect(isExactDuration(item({ durationMinutes: 30 }), goal({ metric: 'distance' }))).toBe(
+    expect(isExactDuration(event({ durationMinutes: 30 }), activity({ metric: 'distance' }))).toBe(
       true
     );
   });
@@ -132,11 +132,11 @@ describe('estimateDurationMinutes', () => {
 
 describe('durationMinutesOf', () => {
   it('prefers a hand-set length over the estimate', () => {
-    expect(durationMinutesOf(item({ value: 6, durationMinutes: 30 }), goal({}))).toBe(30);
+    expect(durationMinutesOf(event({ value: 6, durationMinutes: 30 }), activity({}))).toBe(30);
   });
 
   it('falls back to the estimate when nothing was set', () => {
-    expect(durationMinutesOf(item({ value: 6 }), goal({ icon: 'run' }))).toBe(60);
+    expect(durationMinutesOf(event({ value: 6 }), activity({ icon: 'run' }))).toBe(60);
   });
 
   it('snaps and bounds a dragged length', () => {
@@ -147,8 +147,8 @@ describe('durationMinutesOf', () => {
 });
 
 describe('start times', () => {
-  it('defaults an item with no time to the morning slot', () => {
-    expect(startMinutesOf(item())).toBe(7 * 60);
+  it('defaults an event with no time to the morning slot', () => {
+    expect(startMinutesOf(event())).toBe(7 * 60);
   });
 
   it('snaps to quarter hours and stays inside the day', () => {
@@ -159,9 +159,9 @@ describe('start times', () => {
   });
 
   it('orders a day by when things happen, keeping ties stable', () => {
-    const evening = item({ id: 'evening', startMinutes: 18 * 60 });
-    const morningA = item({ id: 'a', startMinutes: 6 * 60 });
-    const morningB = item({ id: 'b', startMinutes: 6 * 60 });
+    const evening = event({ id: 'evening', startMinutes: 18 * 60 });
+    const morningA = event({ id: 'a', startMinutes: 6 * 60 });
+    const morningB = event({ id: 'b', startMinutes: 6 * 60 });
 
     expect(byStartTime([evening, morningA, morningB]).map(i => i.id)).toEqual([
       'a',

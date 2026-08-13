@@ -1,48 +1,48 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
-import { SortableGoalList } from './SortableGoalList/SortableGoalList';
-import { GoalFormModal } from './GoalFormModal/GoalFormModal';
+import { SortableActivityList } from './SortableActivityList/SortableActivityList';
+import { ActivityFormModal } from './ActivityFormModal/ActivityFormModal';
 import { usePlannerStore } from '@/lib/store';
 import { MdAdd } from 'react-icons/md';
-import styles from './MyWorkoutsModal.module.scss';
-import { useGoals } from '@/hooks/usePlannerSelectors';
+import styles from './MyActivitiesModal.module.scss';
+import { useActivities } from '@/hooks/usePlannerSelectors';
 
-export interface MyWorkoutsModalProps {
+export interface MyActivitiesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const MyWorkoutsModal: React.FC<MyWorkoutsModalProps> = ({ isOpen, onClose }) => {
+export const MyActivitiesModal: React.FC<MyActivitiesModalProps> = ({ isOpen, onClose }) => {
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const goals = useGoals();
-  const reorderGoals = usePlannerStore((s) => s.reorderGoals);
+  const activities = useActivities();
+  const reorderActivities = usePlannerStore((s) => s.reorderActivities);
 
   return (
     <>
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="My workouts"
+        title="My activities"
         maxWidth="600px"
         footer={
           <Button variant="primary" onClick={() => setIsAddOpen(true)}>
-            <MdAdd /> Add workout
+            <MdAdd /> Add activity
           </Button>
         }
       >
         <div className={styles.container}>
           <div className={styles.list}>
-            {goals.length === 0 ? (
+            {activities.length === 0 ? (
               <p className={styles.empty}>No workouts yet. Add one to start planning.</p>
             ) : (
-              <SortableGoalList goals={goals} onReorder={reorderGoals} />
+              <SortableActivityList activities={activities} onReorder={reorderActivities} />
             )}
           </div>
         </div>
       </Modal>
 
-      <GoalFormModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
+      <ActivityFormModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </>
   );
 };

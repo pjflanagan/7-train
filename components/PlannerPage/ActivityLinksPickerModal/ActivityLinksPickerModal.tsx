@@ -1,28 +1,28 @@
 import React from 'react';
-import { WorkoutType } from '@/lib/types';
+import { Activity } from '@/lib/types';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
-import styles from './GoalLinksPickerModal.module.scss';
+import styles from './ActivityLinksPickerModal.module.scss';
 import { MdOpenInNew } from 'react-icons/md';
 
-export interface GoalLinksPickerModalProps {
+export interface ActivityLinksPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  goal: WorkoutType;
+  activity: Activity;
 }
 
-export const GoalLinksPickerModal: React.FC<GoalLinksPickerModalProps> = ({
+export const ActivityLinksPickerModal: React.FC<ActivityLinksPickerModalProps> = ({
   isOpen,
   onClose,
-  goal
+  activity
 }) => {
-  const links = goal.links || [];
+  const links = activity.links || [];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${goal.name} links`}
+      title={`${activity.name} links`}
       maxWidth="400px"
       footer={<Button onClick={onClose} variant="secondary">Close</Button>}
     >
@@ -36,7 +36,7 @@ export const GoalLinksPickerModal: React.FC<GoalLinksPickerModalProps> = ({
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.linkItem}
+              className={styles.linkEvent}
             >
               <span>{link.title || link.url}</span>
               <MdOpenInNew size={16} />

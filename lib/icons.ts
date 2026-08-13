@@ -27,7 +27,7 @@ import { FaPersonSwimming, FaPersonBiking } from 'react-icons/fa6';
 import type { IconType } from 'react-icons';
 
 /**
- * Keys are persisted on goals, so they are the stable part — the `Icon` behind
+ * Keys are persisted on activities, so they are the stable part — the `Icon` behind
  * a key can be reskinned, but a key must never be renamed or dropped without a
  * migration. `legacy` maps the original Material ligature for imported data.
  */

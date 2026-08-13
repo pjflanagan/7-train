@@ -2,18 +2,18 @@
 
 import React, { useEffect } from 'react';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
-import { useGoals } from '@/hooks/usePlannerSelectors';
+import { useActivities } from '@/hooks/usePlannerSelectors';
 import { useHorizontalOverflow } from '@/hooks/useHorizontalOverflow';
-import { GoalChip } from './GoalChip/GoalChip';
-import styles from './GoalStrip.module.scss';
+import { TargetChip } from './TargetChip/TargetChip';
+import styles from './TargetStrip.module.scss';
 
-export function GoalStrip({ weekStart }: { weekStart: string }) {
-  const goals = useGoals();
+export function TargetStrip({ weekStart }: { weekStart: string }) {
+  const activities = useActivities();
   const { ref, canScrollLeft, canScrollRight, scrollBy, measure } =
     useHorizontalOverflow<HTMLDivElement>();
 
-  // Adding or removing a goal changes scrollWidth without resizing the rail.
-  useEffect(measure, [measure, goals.length]);
+  // Adding or removing an activity changes scrollWidth without resizing the rail.
+  useEffect(measure, [measure, activities.length]);
 
   return (
     <div className={styles.wrapper}>
@@ -21,7 +21,7 @@ export function GoalStrip({ weekStart }: { weekStart: string }) {
         <button
           type="button"
           className={`${styles.arrow} ${styles.left}`}
-          aria-label="Scroll workouts left"
+          aria-label="Scroll targets left"
           onClick={() => scrollBy(-1)}
         >
           <MdChevronLeft size={20} />
@@ -29,8 +29,8 @@ export function GoalStrip({ weekStart }: { weekStart: string }) {
       )}
 
       <div className={styles.strip} ref={ref}>
-        {goals.map(goal => (
-          <GoalChip key={goal.id} goal={goal} weekStart={weekStart} />
+        {activities.map(activity => (
+          <TargetChip key={activity.id} activity={activity} weekStart={weekStart} />
         ))}
       </div>
 
@@ -38,7 +38,7 @@ export function GoalStrip({ weekStart }: { weekStart: string }) {
         <button
           type="button"
           className={`${styles.arrow} ${styles.right}`}
-          aria-label="Scroll workouts right"
+          aria-label="Scroll targets right"
           onClick={() => scrollBy(1)}
         >
           <MdChevronRight size={20} />

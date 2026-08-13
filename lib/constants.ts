@@ -1,9 +1,9 @@
-import { WorkoutType, CalendarItem, HelpfulLink } from './types';
+import { Activity, ScheduledEvent, HelpfulLink } from './types';
 
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
 /**
- * Goal colors. Held around the same lightness so no chip reads as louder than
+ * Activity colors. Held around the same lightness so no chip reads as louder than
  * its neighbours, and mid-toned enough to stay legible on both themes.
  */
 export const PRESET_COLORS = [
@@ -29,7 +29,7 @@ export const DEFAULT_LINKS: HelpfulLink[] = [
   }
 ];
 
-export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
+export const DEFAULT_ACTIVITIES: Activity[] = [
   {
     id: 'type-run',
     name: 'Run',
@@ -84,14 +84,14 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
 ];
 
 /**
- * Seed items for a fresh install, anchored to whichever week is current.
+ * Seed events for a fresh install, anchored to whichever week is current.
  * Takes the week key as an argument so this module stays free of date logic
  * (lib/dates imports DAYS from here).
  */
-export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
+export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
   return [
     {
-      id: 'item-1',
+      id: 'event-1',
       typeId: 'type-run',
       day: 'monday',
       weekStart,
@@ -99,7 +99,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       workoutType: 'Tempo run'
     },
     {
-      id: 'item-2',
+      id: 'event-2',
       typeId: 'type-lift',
       day: 'tuesday',
       weekStart,
@@ -107,7 +107,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       workoutType: 'Chest'
     },
     {
-      id: 'item-3',
+      id: 'event-3',
       typeId: 'type-bike',
       day: 'wednesday',
       weekStart,
@@ -115,7 +115,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       workoutType: null
     },
     {
-      id: 'item-4',
+      id: 'event-4',
       typeId: 'type-swim',
       day: 'thursday',
       weekStart,
@@ -123,7 +123,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       workoutType: null
     },
     {
-      id: 'item-5',
+      id: 'event-5',
       typeId: 'type-yoga',
       day: 'friday',
       weekStart,
@@ -131,7 +131,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       workoutType: null
     },
     {
-      id: 'item-6',
+      id: 'event-6',
       typeId: 'type-run',
       day: 'saturday',
       weekStart,

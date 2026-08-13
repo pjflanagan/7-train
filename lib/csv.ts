@@ -1,21 +1,21 @@
-import { HistoryEntry, WorkoutType, CalendarItem } from './types';
+import { HistoryEntry, Activity, ScheduledEvent } from './types';
 import { dayLabel, dateForDay, formatDateLocal, WeekStartsOn } from './dates';
 import { DAYS } from './constants';
 
 /**
- * Flatten scheduled items and day notes into dated rows.
+ * Flatten scheduled events and day notes into dated rows.
  *
  * Weeks are stored against real dates and kept indefinitely, so the schedule
  * itself is the record — `history` only holds rows imported from the old
  * archive-on-rollover format.
  */
 export function entriesFromSchedule(
-  items: CalendarItem[],
+  events: ScheduledEvent[],
   notes: Record<string, string>,
   weekStartsOn: WeekStartsOn = 1
 ): HistoryEntry[] {
   const entries: HistoryEntry[] = [];
-  const weekStarts = new Set(items.map(i => i.weekStart));
+  const weekStarts = new Set(events.map(i => i.weekStart));
   Object.keys(notes).forEach(key => {
     const weekStart = key.slice(0, 10);
     if (weekStart) weekStarts.add(weekStart);
@@ -25,17 +25,17 @@ export function entriesFromSchedule(
     DAYS.forEach(day => {
       const date = formatDateLocal(dateForDay(weekStart, day, weekStartsOn));
       const note = notes[`${weekStart}-${day}`] || null;
-      const dayItems = items.filter(i => i.weekStart === weekStart && i.day === day);
+      const dayEvents = events.filter(i => i.weekStart === weekStart && i.day === day);
 
-      if (dayItems.length > 0) {
-        dayItems.forEach(item => {
+      if (dayEvents.length > 0) {
+        dayEvents.forEach(event => {
           entries.push({
-            id: `sched-${item.id}`,
+            id: `sched-${event.id}`,
             date,
             day,
-            typeId: item.typeId,
-            workoutType: item.workoutType || null,
-            value: item.value,
+            typeId: event.typeId,
+            workoutType: event.workoutType || null,
+            value: event.value,
             notes: note
           });
         });
@@ -62,25 +62,25 @@ const HEADERS = ["Date", "Day", "Workout Category", "Workout Type/Subtype", "Val
  * History as a grid of strings, header row first. Shared by the CSV download
  * and the Sheets export so both records say exactly the same thing.
  */
-export function historyRows(history: HistoryEntry[], types: WorkoutType[]): string[][] {
+export function historyRows(history: HistoryEntry[], types: Activity[]): string[][] {
   return [
     HEADERS,
-    ...history.map(item => {
-      const type = item.typeId ? types.find(t => t.id === item.typeId) : null;
+    ...history.map(event => {
+      const type = event.typeId ? types.find(t => t.id === event.typeId) : null;
       return [
-        item.date,
-        dayLabel(item.day),
-        type ? type.name : (item.typeId || ''),
-        item.workoutType || '',
-        item.value !== null && item.value !== undefined ? String(item.value) : '',
+        event.date,
+        dayLabel(event.day),
+        type ? type.name : (event.typeId || ''),
+        event.workoutType || '',
+        event.value !== null && event.value !== undefined ? String(event.value) : '',
         type ? type.unit : '',
-        item.notes || ''
+        event.notes || ''
       ];
     })
   ];
 }
 
-export function exportCsv(history: HistoryEntry[], types: WorkoutType[]): string {
+export function exportCsv(history: HistoryEntry[], types: Activity[]): string {
   const headers = HEADERS;
 
   function escapeCSV(val: string | number | null | undefined): string {
@@ -96,20 +96,20 @@ export function exportCsv(history: HistoryEntry[], types: WorkoutType[]): string
 
   const csvRows = [headers.join(",")];
 
-  history.forEach(item => {
-    const type = item.typeId ? types.find(t => t.id === item.typeId) : null;
-    const categoryName = type ? type.name : (item.typeId || '');
+  history.forEach(event => {
+    const type = event.typeId ? types.find(t => t.id === event.typeId) : null;
+    const categoryName = type ? type.name : (event.typeId || '');
     const unit = type ? type.unit : '';
-    const dayNameCap = dayLabel(item.day);
+    const dayNameCap = dayLabel(event.day);
 
     const row = [
-      item.date,
+      event.date,
       dayNameCap,
       categoryName,
-      item.workoutType || '',
-      item.value !== null ? item.value : '',
+      event.workoutType || '',
+      event.value !== null ? event.value : '',
       unit,
-      item.notes || ''
+      event.notes || ''
     ];
 
     csvRows.push(row.map(escapeCSV).join(","));

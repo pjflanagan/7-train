@@ -5,17 +5,17 @@ import { WeekStartsOn } from '@/lib/dates';
 
 export function useCsvExport() {
   const history = usePlannerStore(state => state.history);
-  const items = usePlannerStore(state => state.items);
+  const events = usePlannerStore(state => state.events);
   const notes = usePlannerStore(state => state.notes);
   const weekStartsOn = usePlannerStore(state => state.weekStartsOn);
-  const goals = usePlannerStore(state => state.goals);
+  const activities = usePlannerStore(state => state.activities);
 
   const exportData = useCallback(() => {
     // Legacy archived rows first, then everything currently on the calendar.
-    const scheduled = entriesFromSchedule(items, notes, (weekStartsOn ?? 1) as WeekStartsOn);
+    const scheduled = entriesFromSchedule(events, notes, (weekStartsOn ?? 1) as WeekStartsOn);
     const rows = [...history, ...scheduled].sort((a, b) => a.date.localeCompare(b.date));
 
-    const csvContent = exportCsv(rows, goals);
+    const csvContent = exportCsv(rows, activities);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
@@ -30,7 +30,7 @@ export function useCsvExport() {
 
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, [history, items, notes, weekStartsOn, goals]);
+  }, [history, events, notes, weekStartsOn, activities]);
 
   return { exportData };
 }

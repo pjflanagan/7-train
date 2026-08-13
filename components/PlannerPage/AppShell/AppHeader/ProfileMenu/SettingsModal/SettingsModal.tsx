@@ -92,7 +92,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const getConfirmDetails = () => {
     switch (confirmAction) {
       case 'reset':
-        return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all goals, workouts, history, and links.', isDestructive: true };
+        return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
       case 'import':
         return { title: 'Import backup', message: 'Importing replaces everything currently in the app with the contents of the backup file. This cannot be undone.', isDestructive: true };
       default:
@@ -163,7 +163,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <Button onClick={exportData} variant="secondary">Export CSV</Button>
               </div>
               <div className={styles.row}>
-                <span className={styles.text}>Save a full backup, including goals and settings</span>
+                <span className={styles.text}>Save a full backup, including activities and settings</span>
                 <Button onClick={exportBackup} variant="secondary">Export backup</Button>
               </div>
               <div className={styles.row}>

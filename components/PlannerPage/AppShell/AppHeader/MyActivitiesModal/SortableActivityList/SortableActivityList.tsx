@@ -13,16 +13,16 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { WorkoutType } from '@/lib/types';
-import { GoalRow } from './GoalRow/GoalRow';
-import styles from './SortableGoalList.module.scss';
+import { Activity } from '@/lib/types';
+import { ActivityRow } from './ActivityRow/ActivityRow';
+import styles from './SortableActivityList.module.scss';
 
-export interface SortableGoalListProps {
-  goals: WorkoutType[];
+export interface SortableActivityListProps {
+  activities: Activity[];
   onReorder: (oldIndex: number, newIndex: number) => void;
 }
 
-export const SortableGoalList: React.FC<SortableGoalListProps> = ({ goals, onReorder }) => {
+export const SortableActivityList: React.FC<SortableActivityListProps> = ({ activities, onReorder }) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -33,18 +33,18 @@ export const SortableGoalList: React.FC<SortableGoalListProps> = ({ goals, onReo
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = goals.findIndex((g) => g.id === active.id);
-      const newIndex = goals.findIndex((g) => g.id === over.id);
+      const oldIndex = activities.findIndex((g) => g.id === active.id);
+      const newIndex = activities.findIndex((g) => g.id === over.id);
       onReorder(oldIndex, newIndex);
     }
   };
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={goals.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={activities.map((g) => g.id)} strategy={verticalListSortingStrategy}>
         <div className={styles.list}>
-          {goals.map((goal) => (
-            <GoalRow key={goal.id} goal={goal} />
+          {activities.map((activity) => (
+            <ActivityRow key={activity.id} activity={activity} />
           ))}
         </div>
       </SortableContext>
