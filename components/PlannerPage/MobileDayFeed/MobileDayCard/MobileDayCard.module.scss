@@ -113,7 +113,10 @@
   color: var(--text-muted);
 }
 
+// Read-only here, but it is the one thing on the page worth copying out of.
 .note {
+  -webkit-user-select: text;
+  user-select: text;
   padding-left: var(--space-3);
   border-left: 2px solid var(--border-color);
   font-size: var(--font-sm);

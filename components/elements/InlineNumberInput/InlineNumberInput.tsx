@@ -17,6 +17,7 @@ export const InlineNumberInput: React.FC<InlineNumberInputProps> = ({
   className,
   onBlur,
   onKeyDown,
+  onPointerDown,
   ...props
 }) => {
   const [prevValue, setPrevValue] = useState<number>(value);
@@ -55,7 +56,22 @@ export const InlineNumberInput: React.FC<InlineNumberInputProps> = ({
     onBlur?.(e);
   };
 
+  // This input lives inside a drag handle in both places it is used — the
+  // target's tally band and the event card. Pressing into it is editing a
+  // number, never the start of a drag, so the gesture stops here rather than
+  // reaching the handle and picking the whole chip up.
+  const handlePointerDown = (e: React.PointerEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onPointerDown?.(e);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Enter and space are dnd-kit's keyboard drag activators, and they would
+    // otherwise bubble to the handle: space is a character here, and enter
+    // commits.
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.stopPropagation();
+    }
     if (e.key === 'Enter') {
       e.currentTarget.blur();
     } else if (e.key === 'Escape') {
@@ -76,6 +92,7 @@ export const InlineNumberInput: React.FC<InlineNumberInputProps> = ({
       onChange={handleChange}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
       {...props}
     />
   );

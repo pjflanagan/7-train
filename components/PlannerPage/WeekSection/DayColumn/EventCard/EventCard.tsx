@@ -32,7 +32,9 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
     isDragging,
   } = useSortable({
     id: event.id,
-    data: { kind: 'event', eventId: event.id },
+    // The day travels with the card so whatever is under the pointer can say
+    // which column a drop would land in, card or bare column alike.
+    data: { kind: 'event', eventId: event.id, day: event.day, weekStart: event.weekStart },
   });
 
   if (!activity) return null;

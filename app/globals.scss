@@ -98,6 +98,19 @@ body {
   accent-color: var(--accent-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  // The planner is dragged, not read: a pointer pressed on a card is starting a
+  // drag every time, and Safari otherwise takes it as the start of a selection
+  // and drags a ghost of the highlighted text along with the card.
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+// Anything actually typed into keeps its selection — the caret, double-click to
+// pick a word, and drag-select all need it. `:where` keeps this at zero
+// specificity so a component can still opt out on its own.
+:where(input, textarea, [contenteditable]) {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 // While a drag is in flight the planner must not scroll under the pointer —
