@@ -4,14 +4,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  // The left rule is always reserved so today's marker does not shift the text.
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) - 3px);
+  border-left: 3px solid transparent;
   border-bottom: 1px solid var(--border-color);
 }
 
 // Today is the landing spot, so it reads as the active day.
 .isToday {
   background-color: var(--bg-secondary);
-  border-left: 3px solid var(--accent-primary);
+  border-left-color: var(--accent-primary);
 }
 
 // The past is a record; it recedes.
@@ -24,6 +26,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-height: var(--control-sm);
 }
 
 .title {
@@ -42,20 +45,20 @@
   color: var(--text-dim);
 }
 
-.items {
+.events {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   list-style: none;
 }
 
-.item {
+.event {
   @include activity-tones-event();
 
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-3);
+  padding: var(--space-3);
   background-color: var(--activity-surface);
   border: 1px solid var(--activity-border);
   border-radius: var(--radius-md);
@@ -67,25 +70,30 @@
   color: var(--activity-ink);
 }
 
-.itemName {
+// Name, time and workout type stack: the row is narrow, so they get their own
+// lines rather than wrapping mid-phrase.
+.eventName {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-1);
+  flex-direction: column;
+  gap: var(--space-05);
   min-width: 0;
   font-size: var(--font-md);
   font-weight: 500;
+  line-height: 1.3;
 }
 
 .time {
   font-size: var(--font-xs);
   font-variant-numeric: tabular-nums;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .subType {
+  @include truncate();
+
   font-size: var(--font-xs);
+  font-weight: 400;
   color: var(--text-muted);
 }
 
@@ -93,7 +101,7 @@
 .value {
   margin-left: auto;
   flex: 0 0 auto;
-  font-size: var(--font-md);
+  font-size: var(--font-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -106,6 +114,8 @@
 }
 
 .note {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-color);
   font-size: var(--font-sm);
   line-height: 1.5;
   color: var(--text-muted);

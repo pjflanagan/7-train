@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { MobileDayCard } from './MobileDayCard/MobileDayCard';
-import { useInfiniteDays, DAY_PAGE_SIZE } from '@/hooks/useInfiniteDays';
+import { useInfiniteDays } from '@/hooks/useInfiniteDays';
 import { formatDateLocal } from '@/lib/dates';
 import styles from './MobileDayFeed.module.scss';
 
@@ -22,7 +22,7 @@ export function MobileDayFeed() {
       }}
     >
       <button type="button" className={styles.loadMore} onClick={loadEarlier}>
-        Show {DAY_PAGE_SIZE} earlier days
+        Show more past days
       </button>
       {days.map((dateKey) => (
         <div key={dateKey} ref={dateKey === todayKey ? todayRef : undefined}>
@@ -30,7 +30,7 @@ export function MobileDayFeed() {
         </div>
       ))}
       <button type="button" className={styles.loadMore} onClick={loadLater}>
-        Show {DAY_PAGE_SIZE} more days
+        Show more upcoming days
       </button>
     </div>
   );

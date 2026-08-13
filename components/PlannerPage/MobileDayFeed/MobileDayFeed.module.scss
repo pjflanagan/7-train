@@ -1,3 +1,5 @@
+@use '@/styles/mixins' as *;
+
 .scroller {
   display: flex;
   flex-direction: column;
@@ -9,14 +11,23 @@
   overflow-anchor: none;
 }
 
+// A quiet end-cap on either side of the feed rather than a button competing
+// with the days themselves.
 .loadMore {
+  @include focus-ring();
+
   flex: 0 0 auto;
   padding: var(--space-4);
   font-family: inherit;
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: 600;
-  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
   background: none;
   border: none;
   cursor: pointer;
+}
+
+.loadMore:active {
+  color: var(--text-main);
 }

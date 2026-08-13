@@ -55,7 +55,7 @@ function WeekFeed() {
             </div>
           ))}
           <button type="button" className={styles.loadMore} onClick={loadLater}>
-            Show more future weeks
+            Show more upcoming weeks
           </button>
         </div>
       </div>
