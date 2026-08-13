@@ -48,6 +48,12 @@ export const PlannerStateSchema = z.object({
   goals: z.array(WorkoutTypeSchema),
   items: z.array(CalendarItemSchema),
   notes: z.record(z.string(), z.string()), // `${weekStart}-${day}` -> text
+  /**
+   * Per-week overrides of a goal's weekly target, keyed `${weekStart}:${goalId}`.
+   * A goal's `target` stays the baseline; editing the tally on a week's chip
+   * only bends that one week.
+   */
+  weeklyTargets: z.record(z.string(), z.number()).optional().default({}),
   links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),

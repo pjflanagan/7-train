@@ -30,13 +30,13 @@ avatar opens a dropdown with **Settings** only, and no sign in is offered.
 - **Scopes**: add the three below. You can add them later, but the consent
   screen has to list a scope before Google will grant it.
 
-| Scope | Why |
-| --- | --- |
-| `openid`, `email`, `profile` | Identity. Requested at sign in. |
+| Scope                           | Why                                                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `openid`, `email`, `profile`    | Identity. Requested at sign in.                                                                                        |
 | `.../auth/calendar.app.created` | Create a Workouts calendar and manage **only** calendars this app created. Deliberately not the full `calendar` scope. |
-| `.../auth/drive.file` | Create and keep editing the export spreadsheet, and nothing else in Drive. |
+| `.../auth/drive.file`           | Create and keep editing the export spreadsheet, and nothing else in Drive.                                             |
 
-- **Test users**: while the app is in *Testing*, only accounts you list here can
+- **Test users**: while the app is in _Testing_, only accounts you list here can
   sign in, up to 100. Add your own Google account. This is enough for personal
   use — you never have to publish.
 - **Publishing / verification**: only needed if other people will sign in.
@@ -72,12 +72,12 @@ cp .env.example .env.local
 openssl rand -base64 32   # paste into AUTH_SECRET
 ```
 
-| Variable | Value |
-| --- | --- |
-| `AUTH_SECRET` | Random 32 bytes. Encrypts the session cookie. |
-| `AUTH_GOOGLE_ID` | Client ID from step 3. |
-| `AUTH_GOOGLE_SECRET` | Client secret from step 3. |
-| `AUTH_URL` | Optional. Only if the app cannot work out its own origin. |
+| Variable             | Value                                                     |
+| -------------------- | --------------------------------------------------------- |
+| `AUTH_SECRET`        | Random 32 bytes. Encrypts the session cookie.             |
+| `AUTH_GOOGLE_ID`     | Client ID from step 3.                                    |
+| `AUTH_GOOGLE_SECRET` | Client secret from step 3.                                |
+| `AUTH_URL`           | Optional. Only if the app cannot work out its own origin. |
 
 `.env.local` is gitignored. `.env.example` is committed and holds no values.
 

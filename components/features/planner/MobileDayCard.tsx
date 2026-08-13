@@ -74,7 +74,8 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
                     <span className={styles.subType}>{item.workoutType}</span>
                   )}
                 </span>
-                {item.value > 0 && (
+                {/* A "times" goal is always one occurrence, so "1 times" is noise. */}
+                {goal.metric !== 'times' && item.value > 0 && (
                   <span className={styles.value}>
                     {item.value}
                     <span className={styles.unit}>{goal.unit}</span>
