@@ -1,0 +1,102 @@
+// Design tokens — the single source of truth for colour, spacing, radius, type
+// and control sizing.
+//
+// app/globals.scss is the only file that reads these directly: it emits each
+// one as a custom property on :root so the component modules can pick them up
+// with var(). Add a token here, expose it there, use it everywhere else.
+
+/* ---------------------------------------------------------------- surfaces */
+
+$bg-primary: #101014;
+$bg-secondary: #17171d;
+$bg-tertiary: #1f1f27;
+$bg-elevated: #26262f;
+$border-color: #2e2e38;
+$border-focus: #3a3a46;
+
+// Sits over a surface without knowing which one — for hover states on
+// transparent controls.
+$overlay-hover: rgba(255, 255, 255, 0.05);
+$overlay-scrim: rgba(0, 0, 0, 0.6);
+
+/* ------------------------------------------------------------------- text */
+
+$text-main: #f4f4f5;
+$text-muted: #a1a1aa;
+$text-dim: #71717a;
+// Text and icons sitting on a saturated fill — an accent button, or a chip
+// tinted with a workout's own colour.
+$text-on-accent: #ffffff;
+
+/* ----------------------------------------------------------------- accents */
+
+// Purple is the action colour. Anything interactive and affirmative wears it.
+$accent-primary: #8b5cf6;
+$accent-primary-hover: #7c48ee;
+$accent-primary-soft: rgba(139, 92, 246, 0.16);
+$accent-primary-text: #c4b5fd;
+
+$accent-success: #10b981;
+$accent-success-soft: rgba(16, 185, 129, 0.16);
+$accent-success-text: #34d399;
+
+$accent-warning: #f59e0b;
+$accent-warning-soft: rgba(245, 158, 11, 0.16);
+$accent-warning-text: #fbbf24;
+
+$accent-error: #ef4444;
+$accent-error-hover: #dc2626;
+$accent-error-soft: rgba(239, 68, 68, 0.16);
+$accent-error-text: #f87171;
+
+// The 7 line's own bullet colour. Brand, not theme — it only dresses the logo.
+$brand-seven: #b933ad;
+
+/* ----------------------------------------------------------------- spacing */
+
+// A 4px scale. Every gap, padding and margin in the app comes from here.
+$space-05: 0.125rem; // 2px
+$space-1: 0.25rem; // 4px
+$space-2: 0.5rem; // 8px
+$space-3: 0.75rem; // 12px
+$space-4: 1rem; // 16px
+$space-5: 1.25rem; // 20px
+$space-6: 1.5rem; // 24px
+$space-8: 2rem; // 32px
+
+/* -------------------------------------------------------------------- type */
+
+$font-2xs: 0.6875rem; // 11px — sub-tags, units, dense chip metadata
+$font-xs: 0.75rem; // 12px — captions, day labels, helper text
+$font-sm: 0.8125rem; // 13px — secondary body
+$font-md: 0.875rem; // 14px — form controls and default body
+$font-lg: 1rem; // 16px — section headings
+$font-xl: 1.125rem; // 18px — modal titles
+
+// Icon glyphs are sized by font-size, so they get their own rung.
+$icon-sm: 1rem;
+$icon-md: 1.25rem;
+$icon-lg: 1.5rem;
+
+/* ------------------------------------------------------------------ radius */
+
+$radius-xs: 4px;
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-pill: 999px;
+
+/* ---------------------------------------------------------------- controls */
+
+// Shared heights so a button, an input and a select line up in the same row.
+$control-sm: 1.75rem; // 28px
+$control-md: 2.25rem; // 36px
+$control-lg: 2.75rem; // 44px
+
+/* ----------------------------------------------------------------- effects */
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+$shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+$transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

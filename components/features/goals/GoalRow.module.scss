@@ -1,37 +1,37 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: var(--space-3);
+  padding: var(--space-3);
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  margin-bottom: 8px;
-  
+  border-radius: var(--radius-md);
+
   &.dragging {
     opacity: 0.5;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
 .dragHandle {
   cursor: grab;
-  color: var(--text-tertiary);
+  color: var(--text-dim);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  
+  flex: 0 0 auto;
+  font-size: var(--icon-md);
+
   &:active {
     cursor: grabbing;
   }
 }
 
 .iconWrapper {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: var(--control-lg);
+  height: var(--control-lg);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,21 +41,24 @@
 .content {
   flex: 1;
   min-width: 0;
-  
-  .name {
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .target {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-  }
+}
+
+.name {
+  font-size: var(--font-md);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.target {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
 }
 
 .actions {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 0 0 auto;
 }

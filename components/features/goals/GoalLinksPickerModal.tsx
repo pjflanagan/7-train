@@ -19,7 +19,13 @@ export const GoalLinksPickerModal: React.FC<GoalLinksPickerModalProps> = ({
   const links = goal.links || [];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`${goal.name} Links`} maxWidth="400px">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${goal.name} links`}
+      maxWidth="400px"
+      footer={<Button onClick={onClose} variant="secondary">Close</Button>}
+    >
       <div className={styles.list}>
         {links.length === 0 ? (
           <p className={styles.empty}>No links added for this workout.</p>
@@ -37,9 +43,6 @@ export const GoalLinksPickerModal: React.FC<GoalLinksPickerModalProps> = ({
             </a>
           ))
         )}
-      </div>
-      <div className={styles.actions}>
-        <Button onClick={onClose} variant="secondary">Close</Button>
       </div>
     </Modal>
   );

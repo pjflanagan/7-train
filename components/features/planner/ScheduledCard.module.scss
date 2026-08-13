@@ -1,42 +1,51 @@
+@use '@/styles/mixins' as *;
+
+// The scheduled workout is the plan, so it takes the goal's colour at full
+// strength — a real tinted card, not a wash over the surface.
 .card {
+  @include goal-tones-event();
+
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.35rem 0.4rem;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background-color: var(--goal-surface);
+  border: 1px solid var(--goal-border);
+  border-radius: var(--radius-md);
 }
 
 .headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--space-1);
   min-width: 0;
+  flex: 1;
+  cursor: grab;
 }
 
 .removeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-smooth);
 
   &:hover {
     color: var(--accent-error);
-    background-color: rgba(239, 68, 68, 0.1);
+    background-color: var(--accent-error-soft);
   }
 
   // Kept out of the way until the card is hovered — faded rather than removed,
@@ -53,48 +62,53 @@
 }
 
 .icon {
-  font-size: 1rem;
+  font-size: var(--icon-sm);
   flex: 0 0 auto;
+  color: var(--goal-ink);
 }
 
 .title {
-  font-weight: 500;
-  font-size: 0.78rem;
-  line-height: 1.2;
+  font-weight: 600;
+  font-size: var(--font-xs);
+  line-height: 1.3;
+  color: var(--text-main);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+// A pill on the card rather than a full-width field: it is one glanceable
+// value, not a form.
 .subtagSelect {
   align-self: flex-start;
+  max-width: 100%;
 
   select {
-    appearance: none;
-    -webkit-appearance: none;
     width: auto;
-    font-size: 0.68rem;
-    line-height: 1;
-    padding: 0.2rem 0.5rem;
-    border-radius: 999px;
-    background-image: none;
+    max-width: 100%;
+    background-color: var(--goal-inset);
+    border-color: color-mix(in srgb, var(--goal-color) 35%, transparent);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-2xs);
   }
 }
 
 .valueRow {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
-.valueInput {
-  width: 40px;
+// Scoped through the row so it outranks the inline input's own width and
+// alignment whichever stylesheet lands first.
+.valueRow .valueInput {
+  width: 2.5rem;
   text-align: right;
-  padding: 0.1rem 0.2rem;
-  font-size: 0.72rem;
+  font-size: var(--font-2xs);
+  font-weight: 600;
 }
 
 .unit {
-  font-size: 0.68rem;
+  font-size: var(--font-2xs);
   color: var(--text-muted);
 }

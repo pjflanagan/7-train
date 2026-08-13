@@ -66,9 +66,9 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
               <li
                 key={item.id}
                 className={styles.item}
-                style={{ borderColor: goal.color, backgroundColor: `${goal.color}10` }}
+                style={{ '--goal-color': goal.color } as React.CSSProperties}
               >
-                <Icon className={styles.icon} style={{ color: goal.color }} />
+                <Icon className={styles.icon} />
                 <span className={styles.itemName}>
                   <span className={styles.time}>{formatTimeOfDay(startMinutesOf(item))}</span>
                   {goal.name}

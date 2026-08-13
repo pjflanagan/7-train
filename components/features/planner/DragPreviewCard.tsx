@@ -21,17 +21,13 @@ export function DragPreviewCard({ typeId, tag }: DragPreviewCardProps) {
   return (
     <div
       className={styles.preview}
-      style={{ borderColor: goal.color, backgroundColor: `${goal.color}26` }}
+      style={{ '--goal-color': goal.color } as React.CSSProperties}
     >
-      <span className={styles.iconBadge} style={{ backgroundColor: goal.color }}>
+      <span className={styles.iconBadge}>
         <Icon className={styles.icon} />
       </span>
       <span className={styles.name}>{goal.name}</span>
-      {tag && (
-        <span className={styles.tag} style={{ backgroundColor: goal.color }}>
-          {tag}
-        </span>
-      )}
+      {tag && <span className={styles.tag}>{tag}</span>}
     </div>
   );
 }

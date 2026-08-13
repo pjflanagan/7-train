@@ -1,13 +1,13 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   border: none;
   margin: 0;
   padding: 0;
@@ -15,30 +15,25 @@
 
 .legend {
   padding: 0;
-  margin-bottom: 0.25rem;
-  font-size: 0.75rem;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-xs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
 }
 
 .radioRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
+  gap: var(--space-2);
+  font-size: var(--font-md);
   cursor: pointer;
 }
 
 .warning {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--font-sm);
   line-height: 1.5;
   color: var(--text-muted);
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
 }

@@ -30,6 +30,12 @@ const TABS: TabConfig[] = [
   { id: 'appearance', label: 'Appearance' }
 ];
 
+/** Falls back to the violet preset so a new workout starts on the theme colour. */
+const DEFAULT_GOAL_COLOR = '#8E4EC6';
+
+/** Lets the footer's submit button reach the form it sits outside of. */
+const FORM_ID = 'goal-form';
+
 export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, goal }) => {
   const [activeTab, setActiveTab] = useState('basic');
   const addGoal = usePlannerStore((s) => s.addGoal);
@@ -44,7 +50,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
       metric: 'distance',
       unit: 'miles',
       target: 0,
-      color: '#3b82f6',
+      color: DEFAULT_GOAL_COLOR,
       optional: false,
       workoutTypes: [],
       links: []
@@ -85,7 +91,7 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           metric: 'distance',
           unit: 'miles',
           target: 0,
-          color: '#3b82f6',
+          color: DEFAULT_GOAL_COLOR,
           optional: false,
           workoutTypes: [],
           links: []
@@ -107,8 +113,19 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={goal ? 'Edit workout' : 'Add workout'} maxWidth="600px">
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={goal ? 'Edit workout' : 'Add workout'}
+      maxWidth="600px"
+      footer={
+        <>
+          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form={FORM_ID} variant="primary">Save</Button>
+        </>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         
         <div className={styles.tabContent}>
@@ -192,8 +209,13 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   </div>
                 ))}
               </div>
-              <Button type="button" variant="secondary" onClick={() => appendLink({ id: `link-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`, title: '', url: '' })}>
-                <MdAdd /> Add Link
+              <Button
+                type="button"
+                variant="secondary"
+                className={styles.addLink}
+                onClick={() => appendLink({ id: `link-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`, title: '', url: '' })}
+              >
+                <MdAdd /> Add link
               </Button>
             </div>
           )}
@@ -218,11 +240,6 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
               </div>
             </div>
           )}
-        </div>
-
-        <div className={styles.actions}>
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary">Save</Button>
         </div>
       </form>
     </Modal>

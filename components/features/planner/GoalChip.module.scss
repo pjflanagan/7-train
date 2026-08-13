@@ -1,57 +1,67 @@
-@use '@/styles/mixins' as mixins;
+@use '@/styles/mixins' as *;
 
+// The week's tally, not the week's plan. It sits on a recessed surface and
+// wears the goal's colour mixed down into it, so the day columns below keep
+// the eye.
 .chip {
-  @include mixins.card-surface();
+  @include goal-tones-context();
+
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.5rem 0.6rem;
-  min-width: 190px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-width: 12rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
+  cursor: grab;
 }
 
+// A tinted disc with the glyph in the muted tone, rather than a solid puck of
+// colour with a white glyph on it.
 .iconBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: var(--space-6);
+  height: var(--space-6);
   border-radius: 50%;
-  color: #fff;
+  background-color: var(--goal-surface);
+  color: var(--goal-ink);
 }
 
 .icon {
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
 }
 
 .name {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
 }
 
 // Sits with the name rather than the tally, so the right edge stays the
 // count's.
 .linkButton {
   flex: 0 0 auto;
-  font-size: 0.8rem;
 }
 
 // Stands in for the tally on optional workouts, in the same right-hand slot.
 .optionalTag {
   margin-left: auto;
-  padding: 0.05rem 0.35rem;
-  border-radius: 999px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  font-size: 0.6rem;
-  opacity: 0.75;
+  color: var(--text-dim);
+  font-size: var(--font-2xs);
   white-space: nowrap;
 }
 
@@ -59,30 +69,31 @@
 .tally {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: var(--space-05);
   margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: var(--font-xs);
+  color: var(--text-dim);
   white-space: nowrap;
 }
 
-.targetInput {
-  width: 2.2em;
-  padding: 0 0.1rem;
+// Scoped through the tally so it outranks the inline input's own width and
+// padding whichever stylesheet lands first.
+.tally .targetInput {
+  width: 2.4em;
+  padding: 0;
   text-align: center;
-  color: var(--text-main);
+  color: var(--text-muted);
   font-weight: 600;
 }
 
 // Last in the chip: pushed to the bottom so bars line up across chips of
 // differing sub-tag counts.
 .progressBar {
-  height: 5px;
   margin-top: auto;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }

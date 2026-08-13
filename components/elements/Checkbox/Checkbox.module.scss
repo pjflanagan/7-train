@@ -1,22 +1,24 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .wrapper {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .checkbox {
-  width: 1rem;
-  height: 1rem;
+  width: var(--font-lg);
+  height: var(--font-lg);
+  flex: 0 0 auto;
   appearance: none;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   display: grid;
   place-content: center;
   margin: 0;
+  transition: border-color 0.2s;
   @include focus-ring();
 
   &::before {
@@ -45,7 +47,7 @@
 }
 
 .label {
-  font-size: 0.875rem;
+  font-size: var(--font-md);
   color: var(--text-main);
   cursor: pointer;
   user-select: none;

@@ -109,6 +109,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className={styles.row}>
                 <span className={styles.text}>Week starts on</span>
                 <Select
+                  className={styles.control}
                   value={String(weekStartsOn)}
                   onChange={(e) => setWeekStartsOn(Number(e.target.value) as WeekStartsOn)}
                 >
@@ -120,6 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className={styles.row}>
                 <span className={styles.text}>Temperature unit</span>
                 <Select
+                  className={styles.control}
                   value={tempUnit}
                   onChange={(e) => handleTempUnitChange(e.target.value as 'C' | 'F')}
                 >
@@ -129,7 +131,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
               <div className={styles.row}>
                 <span className={styles.text}>Weather location</span>
-                <span className={styles.text} style={{ color: 'var(--text-muted)' }}>
+                <span className={styles.value}>
                   {weatherData ? weatherData.location.city : 'Location TBD'}
                 </span>
               </div>

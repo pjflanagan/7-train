@@ -1,39 +1,21 @@
-@use "../../../styles/mixins" as *;
+@use '@/styles/mixins' as *;
 
 .wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  @include field-wrapper();
 }
 
 .label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-main);
+  @include field-label();
 }
 
 .input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  background-color: var(--bg-secondary);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
-  @include focus-ring();
-
-  &:focus { border-color: var(--accent-primary); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  @include field-control();
 }
 
 .hasError {
-  border-color: var(--accent-error);
-  &:focus { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-error); }
+  @include field-invalid();
 }
 
 .errorMessage {
-  font-size: 0.75rem;
-  color: var(--accent-error);
-  margin-top: 0.125rem;
+  @include field-error();
 }

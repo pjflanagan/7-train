@@ -45,7 +45,22 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Copy week" maxWidth="420px">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Copy week"
+      maxWidth="420px"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleCopy} disabled={nothingSelected}>
+            Copy
+          </Button>
+        </>
+      }
+    >
       <div className={styles.body}>
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Copy from</legend>
@@ -80,15 +95,6 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
         <p className={styles.warning}>
           Whatever you copy overwrites what this week already has.
         </p>
-
-        <div className={styles.actions}>
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleCopy} disabled={nothingSelected}>
-            Copy
-          </Button>
-        </div>
       </div>
     </Modal>
   );

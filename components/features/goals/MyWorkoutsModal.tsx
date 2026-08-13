@@ -20,16 +20,24 @@ export const MyWorkoutsModal: React.FC<MyWorkoutsModalProps> = ({ isOpen, onClos
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="My workouts" maxWidth="600px">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="My workouts"
+        maxWidth="600px"
+        footer={
+          <Button variant="primary" onClick={() => setIsAddOpen(true)}>
+            <MdAdd /> Add workout
+          </Button>
+        }
+      >
         <div className={styles.container}>
-          <div className={styles.header}>
-            <Button variant="primary" onClick={() => setIsAddOpen(true)}>
-              <MdAdd /> Add workout
-            </Button>
-          </div>
-          
           <div className={styles.list}>
-            <SortableGoalList goals={goals} onReorder={reorderGoals} />
+            {goals.length === 0 ? (
+              <p className={styles.empty}>No workouts yet. Add one to start planning.</p>
+            ) : (
+              <SortableGoalList goals={goals} onReorder={reorderGoals} />
+            )}
           </div>
         </div>
       </Modal>

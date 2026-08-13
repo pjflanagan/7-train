@@ -82,6 +82,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className={styles.addForm}>
+            <p className={styles.formTitle}>Add a link</p>
             <div className={styles.inputs}>
               <TextInput 
                 placeholder="Link title" 
@@ -97,8 +98,13 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
                 }}
               />
             </div>
-            <Button onClick={handleAdd} disabled={!title.trim() || !url.trim()}>
-              Add Link
+            <Button
+              variant="primary"
+              className={styles.addButton}
+              onClick={handleAdd}
+              disabled={!title.trim() || !url.trim()}
+            >
+              Add link
             </Button>
           </div>
         </div>

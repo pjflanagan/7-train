@@ -27,21 +27,26 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onCancel
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} title={title} maxWidth="400px">
-      <div className={styles.body}>
-        <div className={styles.message}>{message}</div>
-        <div className={styles.actions}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title={title}
+      maxWidth="400px"
+      footer={
+        <>
           <Button variant="secondary" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button 
-            variant={isDestructive ? 'danger' : 'primary'} 
+          <Button
+            variant={isDestructive ? 'danger' : 'primary'}
             onClick={onConfirm}
           >
             {confirmLabel}
           </Button>
-        </div>
-      </div>
+        </>
+      }
+    >
+      <div className={styles.message}>{message}</div>
     </Modal>
   );
 };
