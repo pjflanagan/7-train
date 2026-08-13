@@ -2,18 +2,23 @@ import { WorkoutType, CalendarItem, HelpfulLink } from './types';
 
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
+/**
+ * Goal colors. Held around the same lightness so no chip reads as louder than
+ * its neighbours, and mid-toned enough to stay legible on both themes.
+ */
 export const PRESET_COLORS = [
-  '#EE352E', // Tomato Red (1, 2, 3)
-  '#00933C', // Apple Green (4, 5, 6)
-  '#B933AD', // Raspberry Purple (7)
-  '#0039A6', // Blue (A, C, E)
-  '#FF6319', // Orange (B, D, F, M)
-  '#6CBE45', // Lime Green (G)
-  '#996633', // Terracotta Brown (J, Z)
-  '#A7A9AC', // Light Slate Gray (L)
-  '#FCCC0A', // Sunflower Yellow (N, Q, R, W)
-  '#808183', // Dark Slate Gray (S Shuttles)
-  '#00ADD0'  // Turquoise / Teal (T Second Ave)
+  '#E5484D', // red
+  '#F76B15', // orange
+  '#FFB224', // amber
+  '#9BBF2E', // lime
+  '#30A46C', // green
+  '#12A594', // teal
+  '#00A2C7', // cyan
+  '#3E63DD', // blue
+  '#5B5BD6', // indigo
+  '#8E4EC6', // violet
+  '#D6409F', // pink
+  '#8B8D98'  // slate
 ];
 
 export const DEFAULT_LINKS: HelpfulLink[] = [
@@ -31,19 +36,9 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     icon: 'run',
     metric: 'distance',
     unit: 'miles',
-    target: 10,
-    color: '#EE352E', // MTA Red (1, 2, 3)
-    workoutTypes: ['Long Run', 'Tempo Run', 'Intervals']
-  },
-  {
-    id: 'type-lift',
-    name: 'Lift',
-    icon: 'gym',
-    metric: 'times',
-    unit: 'times',
-    target: 3,
-    color: '#B933AD', // MTA Purple (7)
-    workoutTypes: ['Chest Day', 'Leg Day', 'Arms']
+    target: 12,
+    color: '#E5484D', // red
+    workoutTypes: ['Long run', 'Tempo run']
   },
   {
     id: 'type-bike',
@@ -51,9 +46,9 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     icon: 'bike',
     metric: 'distance',
     unit: 'miles',
-    target: 25,
-    color: '#00933C', // MTA Apple Green (4, 5, 6)
-    workoutTypes: ['Road Bike', 'Mountain Bike']
+    target: 20,
+    color: '#F76B15', // orange
+    workoutTypes: []
   },
   {
     id: 'type-swim',
@@ -61,9 +56,19 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     icon: 'swim',
     metric: 'duration',
     unit: 'mins',
-    target: 90,
-    color: '#0039A6', // MTA Blue (A, C, E)
-    workoutTypes: ['Laps', 'Technique']
+    target: 60,
+    color: '#00A2C7', // cyan
+    workoutTypes: []
+  },
+  {
+    id: 'type-lift',
+    name: 'Lift',
+    icon: 'gym',
+    metric: 'times',
+    unit: 'times',
+    target: 5,
+    color: '#8E4EC6', // violet
+    workoutTypes: ['Chest', 'Arms', 'Back', 'Shoulders', 'Core']
   },
   {
     id: 'type-yoga',
@@ -71,9 +76,10 @@ export const DEFAULT_WORKOUT_TYPES: WorkoutType[] = [
     icon: 'yoga',
     metric: 'duration',
     unit: 'mins',
-    target: 60,
-    color: '#FF6319', // MTA Orange (B, D, F, M)
-    workoutTypes: ['Vinyasa', 'Hatha']
+    target: null,
+    optional: true,
+    color: '#30A46C', // green
+    workoutTypes: []
   }
 ];
 
@@ -89,8 +95,8 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       typeId: 'type-run',
       day: 'monday',
       weekStart,
-      value: 3,
-      workoutType: 'Long Run'
+      value: 4,
+      workoutType: 'Tempo run'
     },
     {
       id: 'item-2',
@@ -98,7 +104,7 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       day: 'tuesday',
       weekStart,
       value: 1,
-      workoutType: 'Chest Day'
+      workoutType: 'Chest'
     },
     {
       id: 'item-3',
@@ -106,15 +112,31 @@ export function getDefaultCalendarItems(weekStart: string): CalendarItem[] {
       day: 'wednesday',
       weekStart,
       value: 12,
-      workoutType: 'Road Bike'
+      workoutType: null
     },
     {
       id: 'item-4',
-      typeId: 'type-yoga',
+      typeId: 'type-swim',
       day: 'thursday',
       weekStart,
       value: 30,
-      workoutType: 'Vinyasa'
+      workoutType: null
+    },
+    {
+      id: 'item-5',
+      typeId: 'type-yoga',
+      day: 'friday',
+      weekStart,
+      value: 45,
+      workoutType: null
+    },
+    {
+      id: 'item-6',
+      typeId: 'type-run',
+      day: 'saturday',
+      weekStart,
+      value: 8,
+      workoutType: 'Long run'
     }
   ];
 }

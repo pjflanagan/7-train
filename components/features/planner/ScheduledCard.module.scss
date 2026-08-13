@@ -38,6 +38,18 @@
     color: var(--accent-error);
     background-color: rgba(239, 68, 68, 0.1);
   }
+
+  // Kept out of the way until the card is hovered — faded rather than removed,
+  // so nothing reflows. Gated on real hover so touch devices, which never
+  // hover, always show it. Focus keeps it reachable by keyboard.
+  @media (hover: hover) {
+    opacity: 0;
+
+    .card:hover &,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
 }
 
 .icon {
