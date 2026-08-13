@@ -1,30 +1,13 @@
-import {
-  GiRun,
-  GiWeightLiftingUp,
-  GiBiceps,
-  GiCycling,
-  GiMeditation,
-  GiWalk,
-  GiHiking,
-  GiMountainClimbing,
-  GiRollerSkate,
-  GiSkateboard,
-  GiSkier,
-  GiSurfBoard,
-  GiCanoe,
-  GiTennisRacket,
-  GiSoccerBall,
-  GiBasketballBall,
-  GiCartwheel,
-  GiBoxingGlove,
-  GiJumpingRope,
-  GiStairs,
-  GiHelp,
-} from 'react-icons/gi';
-// Game Icons has no swimmer or riding cyclist worth the name, so these two come
-// from Font Awesome's person set.
-import { FaPersonSwimming, FaPersonBiking } from 'react-icons/fa6';
+import { FaPersonSwimming, FaPersonBiking, FaPersonRunning, FaDumbbell, FaMountain, FaPersonSkiing, FaPersonWalking, FaPersonSkating, FaPersonSkiingNordic, FaPersonSnowboarding, FaPersonHiking, FaStairs, FaMedal, FaHeartPulse } from 'react-icons/fa6';
 import type { IconType } from 'react-icons';
+import { FaBasketballBall } from 'react-icons/fa';
+import { RiBoxingFill } from 'react-icons/ri';
+import { MdOutlineRollerSkating, MdRowing, MdSkateboarding, MdSportsGymnastics, MdSportsTennis, MdSurfing } from 'react-icons/md';
+import { PiSoccerBallFill } from 'react-icons/pi';
+import { LuBicepsFlexed } from 'react-icons/lu';
+import { TbJumpRope, TbOlympics } from 'react-icons/tb';
+import { GrYoga } from 'react-icons/gr';
+import { GiCarabiner } from 'react-icons/gi';
 
 /**
  * Keys are persisted on activities, so they are the stable part — the `Icon` behind
@@ -32,29 +15,34 @@ import type { IconType } from 'react-icons';
  * migration. `legacy` maps the original Material ligature for imported data.
  */
 export const ACTIVITY_ICONS = {
-  run:        { label: 'Run',         Icon: GiRun,              legacy: 'directions_run' },
-  gym:        { label: 'Gym',         Icon: GiWeightLiftingUp,  legacy: 'fitness_center' },
-  bicep:      { label: 'Muscle',      Icon: GiBiceps,           legacy: null },
-  bike:       { label: 'Bike',        Icon: FaPersonBiking,     legacy: 'directions_bike' },
-  mtb:        { label: 'Mountain bike', Icon: GiCycling,        legacy: null },
-  swim:       { label: 'Swim',        Icon: FaPersonSwimming,   legacy: 'pool' },
-  yoga:       { label: 'Yoga',        Icon: GiMeditation,       legacy: 'self_improvement' },
-  walk:       { label: 'Walk',        Icon: GiWalk,             legacy: 'directions_walk' },
-  hike:       { label: 'Hike',        Icon: GiHiking,           legacy: null },
-  climb:      { label: 'Climb',       Icon: GiMountainClimbing, legacy: null },
-  skate:      { label: 'Skate',       Icon: GiRollerSkate,      legacy: 'roller_skating' },
-  skateboard: { label: 'Skateboard',  Icon: GiSkateboard,       legacy: null },
-  ski:        { label: 'Ski',         Icon: GiSkier,            legacy: null },
-  surf:       { label: 'Surf',        Icon: GiSurfBoard,        legacy: null },
-  row:        { label: 'Row',         Icon: GiCanoe,            legacy: 'rowing' },
-  tennis:     { label: 'Tennis',      Icon: GiTennisRacket,     legacy: 'sports_tennis' },
-  soccer:     { label: 'Soccer',      Icon: GiSoccerBall,       legacy: null },
-  basketball: { label: 'Basketball',  Icon: GiBasketballBall,   legacy: null },
-  gymnastics: { label: 'Gymnastics',  Icon: GiCartwheel,        legacy: 'sports_gymnastics' },
-  combat:     { label: 'Combat',      Icon: GiBoxingGlove,      legacy: 'sports_kabaddi' },
-  jumpRope:   { label: 'Jump rope',   Icon: GiJumpingRope,      legacy: null },
-  stairs:     { label: 'Stairs',      Icon: GiStairs,           legacy: null },
-  other:      { label: 'Other',       Icon: GiHelp,             legacy: 'help_outline' },
+  run: { label: 'Run', Icon: FaPersonRunning, legacy: 'directions_run' },
+  bike: { label: 'Bike', Icon: FaPersonBiking, legacy: 'directions_bike' },
+  swim: { label: 'Swim', Icon: FaPersonSwimming, legacy: 'pool' },
+  gym: { label: 'Gym', Icon: FaDumbbell, legacy: 'fitness_center' },
+  tennis: { label: 'Tennis', Icon: MdSportsTennis, legacy: 'sports_tennis' },
+  yoga: { label: 'Yoga', Icon: GrYoga, legacy: 'self_improvement' },
+  stairs: { label: 'Stairs', Icon: FaStairs, legacy: null },
+  walk: { label: 'Walk', Icon: FaPersonWalking, legacy: 'directions_walk' },
+  hike: { label: 'Hike', Icon: FaPersonHiking, legacy: null },
+  climb: { label: 'Climb', Icon: GiCarabiner, legacy: null },
+  bicep: { label: 'Muscle', Icon: LuBicepsFlexed, legacy: null },
+  iceSkating: { label: 'Ice Skating', Icon: FaPersonSkating, legacy: null },
+  skate: { label: 'Skate', Icon: MdOutlineRollerSkating, legacy: 'roller_skating' },
+  skateboard: { label: 'Skateboard', Icon: MdSkateboarding, legacy: null },
+  snowboard: { label: 'Snowboard', Icon: FaPersonSnowboarding, legacy: null, },
+  ski: { label: 'Ski', Icon: FaPersonSkiing, legacy: null },
+  crossCountrySki: { label: 'Cross Country Ski', Icon: FaPersonSkiingNordic, legacy: null },
+  surf: { label: 'Surf', Icon: MdSurfing, legacy: null },
+  row: { label: 'Row', Icon: MdRowing, legacy: 'rowing' },
+  soccer: { label: 'Soccer', Icon: PiSoccerBallFill, legacy: null },
+  basketball: { label: 'Basketball', Icon: FaBasketballBall, legacy: null },
+  gymnastics: { label: 'Gymnastics', Icon: TbOlympics, legacy: 'sports_gymnastics' },
+  combat: { label: 'Boxing', Icon: RiBoxingFill, legacy: 'sports_kabaddi' },
+  karate: { label: 'Karate', Icon: MdSportsGymnastics, legacy: null },
+  jumpRope: { label: 'Jump rope', Icon: TbJumpRope, legacy: null },
+  other: { label: 'Other', Icon: FaMedal, legacy: 'help_outline' },
+  mtb: { label: 'Mountain', Icon: FaMountain, legacy: null },
+  heart: { label: 'Heart', Icon: FaHeartPulse, legacy: null }
 } as const;
 
 export type IconKey = keyof typeof ACTIVITY_ICONS;
