@@ -3,15 +3,14 @@ import React, { useState } from 'react';
 import styles from './AppHeader.module.scss';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { SevenLogo } from '@/components/elements/SevenLogo/SevenLogo';
-import { MdFitnessCenter, MdSettings, MdLink } from 'react-icons/md';
+import { MdFitnessCenter, MdLink } from 'react-icons/md';
 import { MyWorkoutsModal } from '@/components/features/goals/MyWorkoutsModal';
 import { LinksModal } from '@/components/features/links/LinksModal';
-import { SettingsModal } from '@/components/features/settings/SettingsModal';
+import { ProfileMenu } from '@/components/features/auth/ProfileMenu';
 
 export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <>
@@ -32,12 +31,7 @@ export const AppHeader: React.FC = () => {
             <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
               <MdLink size={20} />
             </IconButton>
-            <IconButton
-              aria-label="Settings"
-              onClick={() => setIsSettingsOpen(true)}
-            >
-              <MdSettings size={20} />
-            </IconButton>
+            <ProfileMenu />
           </div>
         </div>
       </header>
@@ -47,10 +41,6 @@ export const AppHeader: React.FC = () => {
         onClose={() => setIsMyWeekOpen(false)}
       />
       <LinksModal isOpen={isLinksOpen} onClose={() => setIsLinksOpen(false)} />
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
     </>
   );
 };
