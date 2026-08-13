@@ -69,6 +69,43 @@ describe('estimateDurationMinutes', () => {
     expect(km).toBeLessThan(miles);
   });
 
+  it('prefers the goal\'s own pace over the per-icon table', () => {
+    const minutes = estimateDurationMinutes(
+      item({ value: 4 }),
+      goal({ metric: 'distance', unit: 'miles', icon: 'run', paceMinutes: 12 })
+    );
+    // 4 × 12 = 48, up to the next quarter hour — not the 9 min/mile default.
+    expect(minutes).toBe(60);
+  });
+
+  it('reads a set pace as per the goal\'s own unit, without converting', () => {
+    const minutes = estimateDurationMinutes(
+      item({ value: 10 }),
+      goal({ metric: 'distance', unit: 'km', paceMinutes: 6 })
+    );
+    expect(minutes).toBe(60);
+  });
+
+  it('rounds an estimated distance up to the next quarter hour', () => {
+    const minutes = estimateDurationMinutes(
+      item({ value: 3 }),
+      goal({ metric: 'distance', unit: 'miles', paceMinutes: 10 })
+    );
+    // 30 exactly stays put; 31 would round up rather than down.
+    expect(minutes).toBe(30);
+    expect(
+      estimateDurationMinutes(item({ value: 3.1 }), goal({ metric: 'distance', paceMinutes: 10 }))
+    ).toBe(45);
+  });
+
+  it('uses the typical session length for a count goal', () => {
+    const minutes = estimateDurationMinutes(
+      item({ value: 1 }),
+      goal({ metric: 'times', unit: 'times', typicalDurationMinutes: 50 })
+    );
+    expect(minutes).toBe(60);
+  });
+
   it('falls back to a flat session for a count goal', () => {
     expect(estimateDurationMinutes(item({ value: 1 }), goal({ metric: 'times' }))).toBe(45);
   });

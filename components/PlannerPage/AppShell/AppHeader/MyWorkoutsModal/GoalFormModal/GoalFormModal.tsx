@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WorkoutTypeSchema, WorkoutType } from '@/lib/types';
+import { estimateDurationMinutes, formatDuration } from '@/lib/schedule';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
 import { TextInput } from '@/components/elements/TextInput/TextInput';
@@ -52,6 +53,8 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
       target: 0,
       color: DEFAULT_GOAL_COLOR,
       optional: false,
+      paceMinutes: null,
+      typicalDurationMinutes: null,
       workoutTypes: [],
       links: []
     }
@@ -63,12 +66,18 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
   });
 
   const metric = useWatch({ control, name: 'metric' });
+  const unit = useWatch({ control, name: 'unit' });
   const isOptional = useWatch({ control, name: 'optional' });
+  const paceMinutes = useWatch({ control, name: 'paceMinutes' });
 
   useEffect(() => {
     if (metric === 'times') {
       setValue('unit', 'times');
     }
+    // Only one of the two typical-length inputs is ever on screen; drop the
+    // other so a metric switch cannot leave a stale estimate behind it.
+    if (metric !== 'distance') setValue('paceMinutes', null);
+    if (metric !== 'times') setValue('typicalDurationMinutes', null);
   }, [metric, setValue]);
 
   // An optional workout has no weekly target; drop any value carried over from
@@ -93,6 +102,8 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
           target: 0,
           color: DEFAULT_GOAL_COLOR,
           optional: false,
+          paceMinutes: null,
+          typicalDurationMinutes: null,
           workoutTypes: [],
           links: []
         });
@@ -158,6 +169,54 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({ isOpen, onClose, g
                   <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles, mins" />
                 )}
               </div>
+              {metric === 'distance' && (
+                <div className={styles.field}>
+                  <Controller
+                    control={control}
+                    name="paceMinutes"
+                    render={({ field }) => (
+                      <NumberInput
+                        label={`Typical pace (mins per ${unit || 'unit'})`}
+                        value={field.value ?? ''}
+                        step="any"
+                        min={0}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          field.onChange(raw === '' ? null : Number(raw));
+                        }}
+                        error={errors.paceMinutes?.message}
+                      />
+                    )}
+                  />
+                  <p className={styles.hint}>
+                    {paceMinutes
+                      ? `Blocks out ${formatDuration(estimateDurationMinutes({ value: 3 }, { metric: 'distance', paceMinutes } as WorkoutType))} for a 3 ${unit || 'unit'} session, rounded up to the nearest 15 mins.`
+                      : 'Used to work out how long each session blocks out on the calendar, rounded up to the nearest 15 mins.'}
+                  </p>
+                </div>
+              )}
+              {metric === 'times' && (
+                <div className={styles.field}>
+                  <Controller
+                    control={control}
+                    name="typicalDurationMinutes"
+                    render={({ field }) => (
+                      <NumberInput
+                        label="Typical workout duration (mins)"
+                        value={field.value ?? ''}
+                        step={15}
+                        min={0}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          field.onChange(raw === '' ? null : Number(raw));
+                        }}
+                        error={errors.typicalDurationMinutes?.message}
+                      />
+                    )}
+                  />
+                  <p className={styles.hint}>How long each session blocks out on the calendar by default.</p>
+                </div>
+              )}
               {!isOptional && (
                 <Controller
                   control={control}

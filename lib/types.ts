@@ -17,6 +17,16 @@ export const WorkoutTypeSchema = z.object({
   target: z.number().nullable(),
   color: z.string(),
   optional: z.boolean().optional(),
+  /**
+   * Typical pace in minutes per `unit`, on a distance workout. What a scheduled
+   * item's length is estimated from, in place of the rough per-icon table.
+   */
+  paceMinutes: z.number().positive().nullable().optional(),
+  /**
+   * Typical session length in minutes, on a `times` workout — there is no value
+   * to derive one from, so this is the whole estimate.
+   */
+  typicalDurationMinutes: z.number().int().positive().nullable().optional(),
   workoutTypes: z.array(z.string()).optional(),
   links: z.array(HelpfulLinkSchema).optional()
 });

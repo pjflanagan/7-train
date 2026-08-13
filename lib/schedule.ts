@@ -37,6 +37,11 @@ export function snapToSlot(minutes: number): number {
   return Math.round(minutes / SLOT_MINUTES) * SLOT_MINUTES;
 }
 
+/** Snap up, so an estimated length never books less time than it needs. */
+export function ceilToSlot(minutes: number): number {
+  return Math.ceil(minutes / SLOT_MINUTES) * SLOT_MINUTES;
+}
+
 export function clampStartMinutes(minutes: number): number {
   return Math.min(MAX_START_MINUTES, Math.max(0, snapToSlot(minutes)));
 }
@@ -88,8 +93,10 @@ function isHourUnit(unit: string): boolean {
  * How long the item should block out on the calendar.
  *
  * A `duration` goal already says so — its value _is_ the length, so the
- * calendar reflects it exactly. Distance and count goals get an estimate: a
- * per-mile pace for the goal's activity, or a flat session length.
+ * calendar reflects it exactly. Distance goals multiply out the goal's typical
+ * pace, and `times` goals use its typical session length; both round up to the
+ * next quarter hour. Either falls back to a rough guess when the goal has not
+ * been told what is typical.
  */
 export function estimateDurationMinutes(
   item: Pick<CalendarItem, 'value'>,
@@ -105,10 +112,18 @@ export function estimateDurationMinutes(
     return Math.max(SLOT_MINUTES, snapToSlot(minutes));
   }
 
+  if (goal.metric === 'times' && goal.typicalDurationMinutes) {
+    return clampDuration(ceilToSlot(goal.typicalDurationMinutes));
+  }
+
   if (goal.metric === 'distance' && value > 0) {
-    const pace = PACE_PER_MILE[goal.icon] ?? PACE_PER_MILE.run;
-    const miles = isMetricUnit(goal.unit) ? value * KM_PER_MILE : value;
-    return Math.max(SLOT_MINUTES, snapToSlot(miles * pace));
+    // A pace the user gave is per the goal's own unit; the per-icon table is
+    // per mile, so only that one needs the distance converting first.
+    const minutes = goal.paceMinutes
+      ? value * goal.paceMinutes
+      : (isMetricUnit(goal.unit) ? value * KM_PER_MILE : value) *
+        (PACE_PER_MILE[goal.icon] ?? PACE_PER_MILE.run);
+    return Math.max(SLOT_MINUTES, ceilToSlot(minutes));
   }
 
   return FALLBACK_DURATION_MINUTES;
