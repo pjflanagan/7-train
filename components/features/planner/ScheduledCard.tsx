@@ -38,57 +38,69 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
     opacity: isDragging ? 0.5 : 1,
   } as React.CSSProperties;
 
+  const subTypes = goal.workoutTypes ?? [];
+  // A "times" goal is always one occurrence, so "1 times" is noise.
+  const hasValue = goal.metric !== 'times';
+
   return (
-    <div 
-      className={styles.card} 
+    <div
+      className={styles.card}
       style={style}
       ref={setNodeRef}
     >
-      <div className={styles.headerRow}>
-        <div className={styles.header} {...attributes} {...listeners}>
-          {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
-          <span className={styles.title}>{goal.name}</span>
-        </div>
-        <button 
-          className={styles.removeButton} 
-          onClick={() => removeItem(item.id)}
+      {/* The band is the drag handle, so it sits darker than the card body and
+          reads as something to grab. The icon doubles as the remove button:
+          hovering it swaps the glyph for an x, so the band carries nothing but
+          the workout's name. */}
+      <div className={styles.header} {...attributes} {...listeners}>
+        <button
+          className={styles.removeButton}
+          // The band drags, so the button keeps its own pointer events.
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            removeItem(item.id);
+          }}
           title="Remove item"
           aria-label="Remove item"
         >
-          <MdClose size={16} />
+          {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
+          <MdClose size={16} className={styles.removeIcon} />
         </button>
+        <span className={styles.title}>{goal.name}</span>
       </div>
-      
-      <TimeChip item={item} goal={goal} />
 
-      {goal.workoutTypes && goal.workoutTypes.length > 0 && (
-        <Select
-          size="sm"
-          className={styles.subtagSelect}
-          aria-label={`${goal.name} type`}
-          value={item.workoutType || ''}
-          onChange={(e) => setItemSubType(item.id, e.target.value)}
-        >
-          {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
-              carries what the control is for. */}
-          <option value="">-</option>
-          {goal.workoutTypes.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </Select>
-      )}
+      <div className={styles.body}>
+        <TimeChip item={item} goal={goal} />
 
-      {/* A "times" goal is always one occurrence, so "1 times" is noise. */}
-      {goal.metric !== 'times' && (
-        <div className={styles.valueRow}>
-          <InlineNumberInput
-            value={item.value || 0}
-            onCommit={(val) => updateItemValue(item.id, val)}
-            className={styles.valueInput}
-          />
-          <span className={styles.unit}>{goal.unit}</span>
-        </div>
-      )}
+        {subTypes.length > 0 && (
+          <Select
+            size="sm"
+            className={styles.subtagSelect}
+            aria-label={`${goal.name} type`}
+            value={item.workoutType || ''}
+            onChange={(e) => setItemSubType(item.id, e.target.value)}
+          >
+            {/* No sub-type chosen. A dash keeps the pill quiet; the aria-label
+                carries what the control is for. */}
+            <option value="">-</option>
+            {subTypes.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Select>
+        )}
+
+        {hasValue && (
+          <div className={styles.valueRow}>
+            <InlineNumberInput
+              value={item.value || 0}
+              onCommit={(val) => updateItemValue(item.id, val)}
+              className={styles.valueInput}
+            />
+            <span className={styles.unit}>{goal.unit}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

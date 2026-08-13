@@ -102,14 +102,7 @@ body {
 
 // While a drag is in flight the planner must not scroll under the pointer —
 // the drop targets would move out from under it. Set by PlannerDndProvider.
-html.is-dragging,
-html.is-dragging body {
-  overflow: hidden;
-  touch-action: none;
-  overscroll-behavior: none;
-}
-
-html.is-dragging [data-scroll-lock] {
-  overflow: hidden !important;
-  touch-action: none;
-}
+// Nothing freezes the page during a drag. dnd-kit re-measures its droppables
+// on scroll, so the feed moving under the pointer is handled; a root-level
+// `overflow: hidden` is not, because any drag that ends without the class
+// coming back off leaves the app permanently unscrollable.

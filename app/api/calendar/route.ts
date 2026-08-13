@@ -81,8 +81,13 @@ export async function GET(request: Request) {
       const props = itemPropsFromEvent(event);
       // Anything not written by us — or an all-day event someone hand-made —
       // is left alone rather than dragged into the planner.
-      if (!props || !event.start?.dateTime) continue;
-      events.push({ ...props, eventId: event.id, start: event.start.dateTime });
+      if (!props || !event.start?.dateTime || !event.end?.dateTime) continue;
+      events.push({
+        ...props,
+        eventId: event.id,
+        start: event.start.dateTime,
+        end: event.end.dateTime,
+      });
     }
 
     return NextResponse.json({ calendarId, events });

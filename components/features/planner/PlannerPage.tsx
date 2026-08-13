@@ -37,7 +37,6 @@ function WeekFeed() {
     <div className={styles.feed}>
       <div
         className={styles.scroller}
-        data-scroll-lock=""
         {...focusTriggers}
         ref={(node) => {
           scrollRef.current = node;

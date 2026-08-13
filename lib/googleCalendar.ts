@@ -249,4 +249,5 @@ export interface PulledEvent {
   workoutType: string | null;
   value: number;
   start: string;
+  end: string;
 }

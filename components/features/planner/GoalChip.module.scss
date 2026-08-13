@@ -9,18 +9,29 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--space-3) var(--space-2);
   min-width: 12rem;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
 
+// Darker than the chip below it, because the band is the grab point: dragging
+// it drops the goal onto a day.
 .header {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin: 0 calc(var(--space-3) * -1);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 // A tinted disc with the glyph in the muted tone, rather than a solid puck of

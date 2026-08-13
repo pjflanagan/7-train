@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, DragOverlay } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { usePlannerDnd } from '@/hooks/usePlannerDnd';
@@ -6,18 +6,12 @@ import { usePlannerStore } from '@/lib/store';
 import { DragPreviewCard } from './DragPreviewCard';
 
 export function PlannerDndProvider({ children }: { children: React.ReactNode }) {
-  const { activeId, activeData, handleDragStart, handleDragEnd } = usePlannerDnd();
+  const { activeId, activeData, handleDragStart, handleDragEnd, handleDragCancel } =
+    usePlannerDnd();
 
-  // The week feed must hold still while something is in the air: dnd-kit's
-  // auto-scroll is off, and the page itself is frozen via a root-level class
-  // so wheel and touch scrolling cannot move the drop targets either.
-  useEffect(() => {
-    const root = document.documentElement;
-    if (activeId) root.classList.add('is-dragging');
-    else root.classList.remove('is-dragging');
-    return () => root.classList.remove('is-dragging');
-  }, [activeId]);
-  
+  // Auto-scroll stays off — the week feed pages more weeks in as it scrolls,
+  // so a drag that scrolls the feed loads content the drag never asked for.
+  // The feed is otherwise left alone: dnd-kit re-measures droppables on scroll.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
@@ -38,7 +32,13 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
       : { typeId: activeData?.typeId, tag: activeData?.tag };
 
   return (
-    <DndContext autoScroll={false} sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      autoScroll={false}
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       {children}
       <DragOverlay dropAnimation={null}>
         {activeId ? <DragPreviewCard typeId={preview.typeId} tag={preview.tag} /> : null}

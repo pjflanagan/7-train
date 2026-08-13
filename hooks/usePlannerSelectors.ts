@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { usePlannerStore, noteKey } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { WeekStartsOn } from '@/lib/dates';
-import { byStartTime } from '@/lib/schedule';
+import { byStartTime, DEFAULT_START_MINUTES } from '@/lib/schedule';
 
 type DayName = typeof DAYS[number];
 
@@ -48,3 +48,6 @@ export const useLinks = () => usePlannerStore((state) => state.links);
 
 export const useWeekStartsOn = () =>
   usePlannerStore((state) => (state.weekStartsOn ?? 1) as WeekStartsOn);
+
+export const useDefaultStartMinutes = () =>
+  usePlannerStore((state) => state.defaultStartMinutes ?? DEFAULT_START_MINUTES);

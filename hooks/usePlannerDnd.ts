@@ -26,6 +26,16 @@ export function usePlannerDnd() {
     setActiveData(event.active.data.current as PlannerDndData);
   };
 
+  /**
+   * A drag that ends without a drop — Escape, or the pointer being captured by
+   * a control inside the handle. Nothing moves, but the active id has to clear:
+   * the page is frozen while it is set, so leaving it behind locks scrolling.
+   */
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setActiveData(null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     setActiveData(null);
@@ -75,5 +85,5 @@ export function usePlannerDnd() {
     }
   };
 
-  return { activeId, activeData, handleDragStart, handleDragEnd };
+  return { activeId, activeData, handleDragStart, handleDragEnd, handleDragCancel };
 }

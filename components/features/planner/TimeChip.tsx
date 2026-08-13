@@ -5,8 +5,9 @@ import clsx from 'clsx';
 import { usePlannerStore } from '@/lib/store';
 import { CalendarItem, WorkoutType } from '@/lib/types';
 import {
+  clampDuration,
   clampStartMinutes,
-  estimateDurationMinutes,
+  durationMinutesOf,
   formatDuration,
   formatTimeOfDay,
   isExactDuration,
@@ -26,76 +27,115 @@ export interface TimeChipProps {
 /**
  * When a workout happens, and how long it runs.
  *
- * Drag the chip up or down to move the workout through the day in quarter
- * hours; arrow keys do the same for anyone not using a pointer. The duration
- * beside it is the goal's own number for a duration goal, and an estimate
- * otherwise — the tilde says which.
+ * Drag either chip up or down in quarter hours — the first moves the workout
+ * through the day, the second stretches or shrinks it; arrow keys do the same
+ * for anyone not using a pointer. Both are mirrored to Google Calendar. Until
+ * someone sets a length, it is the goal's own number for a duration goal and
+ * an estimate otherwise.
  */
 export function TimeChip({ item, goal }: TimeChipProps) {
   const setItemTime = usePlannerStore((state) => state.setItemTime);
   const nudgeItemTime = usePlannerStore((state) => state.nudgeItemTime);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<{ startY: number; startMinutes: number } | null>(null);
+  const setItemDuration = usePlannerStore((state) => state.setItemDuration);
+  const nudgeItemDuration = usePlannerStore((state) => state.nudgeItemDuration);
+  const [dragging, setDragging] = useState<'time' | 'duration' | null>(null);
+  const dragRef = useRef<{ startY: number; minutes: number } | null>(null);
 
   const startMinutes = startMinutesOf(item);
-  const duration = estimateDurationMinutes(item, goal);
-  const isExact = isExactDuration(goal);
+  const duration = durationMinutesOf(item, goal);
+  const isExact = isExactDuration(item, goal);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+  function beginDrag(
+    event: React.PointerEvent<HTMLButtonElement>,
+    which: 'time' | 'duration',
+    minutes: number
+  ) {
     if (event.button !== 0) return;
     event.preventDefault();
     // Dragging the chip must not also drag the card out of its column, so the
     // pointer is captured here and never reaches the sortable listeners.
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = { startY: event.clientY, startMinutes };
-    setIsDragging(true);
+    dragRef.current = { startY: event.clientY, minutes };
+    setDragging(which);
+  }
+
+  const handleTimeDown = (event: React.PointerEvent<HTMLButtonElement>) =>
+    beginDrag(event, 'time', startMinutes);
+
+  const handleDurationDown = (event: React.PointerEvent<HTMLButtonElement>) =>
+    beginDrag(event, 'duration', duration);
+
+  const handleTimeMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || dragging !== 'time') return;
+    const slots = Math.round((event.clientY - drag.startY) / PIXELS_PER_SLOT);
+    const next = clampStartMinutes(drag.minutes + slots * SLOT_MINUTES);
+    if (next !== startMinutes) setItemTime(item.id, next);
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+  const handleDurationMove = (event: React.PointerEvent<HTMLButtonElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag || dragging !== 'duration') return;
+    // Dragging down lengthens the workout, the way the bottom edge of an event
+    // behaves in a calendar.
     const slots = Math.round((event.clientY - drag.startY) / PIXELS_PER_SLOT);
-    const next = clampStartMinutes(drag.startMinutes + slots * SLOT_MINUTES);
-    if (next !== startMinutes) setItemTime(item.id, next);
+    const next = clampDuration(drag.minutes + slots * SLOT_MINUTES);
+    if (next !== duration) setItemDuration(item.id, next);
   };
 
   const endDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (!dragRef.current) return;
     event.currentTarget.releasePointerCapture(event.pointerId);
     dragRef.current = null;
-    setIsDragging(false);
+    setDragging(null);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+  function arrowKeys(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    nudge: (id: string, slots: number) => void
+  ) {
     const step = event.shiftKey ? 4 : 1;
     if (event.key === 'ArrowUp') {
       event.preventDefault();
-      nudgeItemTime(item.id, -step);
+      nudge(item.id, -step);
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
-      nudgeItemTime(item.id, step);
+      nudge(item.id, step);
     }
-  };
+  }
 
   return (
     <div className={styles.row}>
       <button
         type="button"
-        className={clsx(styles.chip, isDragging && styles.isDragging)}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
+        className={clsx(styles.chip, dragging === 'time' && styles.isDragging)}
+        onPointerDown={handleTimeDown}
+        onPointerMove={handleTimeMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => arrowKeys(e, nudgeItemTime)}
         aria-label={`Start time ${formatTimeOfDay(startMinutes)}. Drag or use arrow keys to change.`}
       >
         {formatTimeOfDay(startMinutes)}
       </button>
-      <span className={styles.duration} title={isExact ? undefined : 'Estimated'}>
-        {isExact ? '' : '~'}
+      <button
+        type="button"
+        className={clsx(
+          styles.chip,
+          styles.duration,
+          dragging === 'duration' && styles.isDragging
+        )}
+        onPointerDown={handleDurationDown}
+        onPointerMove={handleDurationMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={(e) => arrowKeys(e, nudgeItemDuration)}
+        title={isExact ? undefined : 'Estimated'}
+        aria-label={`Length ${formatDuration(duration)}. Drag or use arrow keys to change.`}
+      >
         {formatDuration(duration)}
-      </span>
+      </button>
     </div>
   );
 }

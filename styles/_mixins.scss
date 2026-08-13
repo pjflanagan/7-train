@@ -16,7 +16,14 @@
 @mixin scroll-area() {
   overflow-y: auto;
   // A scroll that runs out shouldn't start scrolling whatever is behind it.
+  // Only ever put this on something that genuinely scrolls: on a box with no
+  // overflow it silently swallows the wheel instead of passing it up.
   overscroll-behavior: contain;
+  @include thin-scrollbar();
+}
+
+// Just the bar styling, for scrollers that must let the wheel chain onward.
+@mixin thin-scrollbar() {
   &::-webkit-scrollbar {
     width: 6px;
     height: 6px;

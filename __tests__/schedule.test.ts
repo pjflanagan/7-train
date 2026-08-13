@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   byStartTime,
+  clampDuration,
   clampStartMinutes,
+  durationMinutesOf,
   estimateDurationMinutes,
   formatDuration,
   isExactDuration,
@@ -80,8 +82,30 @@ describe('estimateDurationMinutes', () => {
   });
 
   it('marks only duration goals as exact', () => {
-    expect(isExactDuration(goal({ metric: 'duration' }))).toBe(true);
-    expect(isExactDuration(goal({ metric: 'distance' }))).toBe(false);
+    expect(isExactDuration(item(), goal({ metric: 'duration' }))).toBe(true);
+    expect(isExactDuration(item(), goal({ metric: 'distance' }))).toBe(false);
+  });
+
+  it('treats a hand-set length as exact', () => {
+    expect(isExactDuration(item({ durationMinutes: 30 }), goal({ metric: 'distance' }))).toBe(
+      true
+    );
+  });
+});
+
+describe('durationMinutesOf', () => {
+  it('prefers a hand-set length over the estimate', () => {
+    expect(durationMinutesOf(item({ value: 6, durationMinutes: 30 }), goal({}))).toBe(30);
+  });
+
+  it('falls back to the estimate when nothing was set', () => {
+    expect(durationMinutesOf(item({ value: 6 }), goal({ icon: 'run' }))).toBe(60);
+  });
+
+  it('snaps and bounds a dragged length', () => {
+    expect(clampDuration(38)).toBe(45);
+    expect(clampDuration(0)).toBe(15);
+    expect(clampDuration(10 * 60)).toBe(8 * 60);
   });
 });
 

@@ -10,8 +10,9 @@ import { Button } from '@/components/elements/Button/Button';
 import { Select } from '@/components/elements/Select/Select';
 import { Tabs, TabConfig } from '@/components/elements/Tabs/Tabs';
 import { useWeather, useWeatherStore } from '@/hooks/useWeather';
-import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
+import { useDefaultStartMinutes, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
+import { startTimeOptions } from '@/lib/schedule';
 import styles from './SettingsModal.module.scss';
 
 export interface SettingsModalProps {
@@ -44,6 +45,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const setTempUnit = usePlannerStore((state) => state.setTempUnit);
   const weekStartsOn = useWeekStartsOn();
   const setWeekStartsOn = usePlannerStore((state) => state.setWeekStartsOn);
+  const defaultStartMinutes = useDefaultStartMinutes();
+  const setDefaultStartMinutes = usePlannerStore((state) => state.setDefaultStartMinutes);
+  const startTimes = startTimeOptions();
 
   const handleTempUnitChange = (unit: 'C' | 'F') => {
     setTempUnit(unit);
@@ -114,6 +118,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   onChange={(e) => setWeekStartsOn(Number(e.target.value) as WeekStartsOn)}
                 >
                   {WEEK_START_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </Select>
+              </div>
+              {/* Only the first workout of a day takes this; later ones still
+                  stack after the one before them. */}
+              <div className={styles.row}>
+                <span className={styles.text}>Default workout time</span>
+                <Select
+                  className={styles.control}
+                  value={String(defaultStartMinutes)}
+                  onChange={(e) => setDefaultStartMinutes(Number(e.target.value))}
+                >
+                  {startTimes.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </Select>

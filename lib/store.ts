@@ -7,9 +7,10 @@ import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weeklyTargetKey } from './progress';
 import {
   byStartTime,
+  clampDuration,
   clampStartMinutes,
   DEFAULT_START_MINUTES,
-  estimateDurationMinutes,
+  durationMinutesOf,
   SLOT_MINUTES,
   startMinutesOf
 } from './schedule';
@@ -37,6 +38,10 @@ type PlannerStore = PlannerState & {
   setItemTime: (id: string, startMinutes: number) => void;
   /** Nudge a time by whole slots, the keyboard equivalent of dragging it. */
   nudgeItemTime: (id: string, slots: number) => void;
+  /** Set how long an item runs. Minutes, snapped to 15. */
+  setItemDuration: (id: string, durationMinutes: number) => void;
+  /** Stretch or shrink a duration by whole slots, for the keyboard. */
+  nudgeItemDuration: (id: string, slots: number) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
   setGoogleSheetId: (sheetId: string | null) => void;
@@ -66,6 +71,8 @@ type PlannerStore = PlannerState & {
 
   setTempUnit: (unit: 'C' | 'F') => void;
   setWeekStartsOn: (weekStartsOn: WeekStartsOn) => void;
+  /** Where a new workout lands on an otherwise empty day. */
+  setDefaultStartMinutes: (startMinutes: number) => void;
   /** Replace every persisted field at once, used by backup import. */
   replaceAll: (state: PlannerState) => void;
   resetAll: () => void;
@@ -83,6 +90,7 @@ function buildInitialState(): PlannerState {
     lastViewedMonday: null,
     tempUnit: 'F',
     weekStartsOn: 1,
+    defaultStartMinutes: DEFAULT_START_MINUTES,
     googleCalendarId: null,
     googleSheetId: null,
   };
@@ -96,15 +104,43 @@ const newId = (prefix: string) =>
  * that day, or the default morning slot when the day is empty.
  */
 function nextFreeSlot(state: PlannerState, day: DayName, weekStart: string): number {
+  const defaultStart = clampStartMinutes(state.defaultStartMinutes ?? DEFAULT_START_MINUTES);
   const dayItems = state.items.filter(i => i.day === day && i.weekStart === weekStart);
-  if (dayItems.length === 0) return DEFAULT_START_MINUTES;
+  if (dayItems.length === 0) return defaultStart;
 
   const latestEnd = dayItems.reduce((end, item) => {
     const goal = state.goals.find(g => g.id === item.typeId);
-    return Math.max(end, startMinutesOf(item) + estimateDurationMinutes(item, goal));
-  }, DEFAULT_START_MINUTES);
+    return Math.max(end, startMinutesOf(item) + durationMinutesOf(item, goal));
+  }, defaultStart);
 
   return clampStartMinutes(latestEnd);
+}
+
+/** The moment a workout finishes: its start plus however long it runs. */
+function endOf(state: PlannerState, item: CalendarItem): number {
+  const goal = state.goals.find(g => g.id === item.typeId);
+  return startMinutesOf(item) + durationMinutesOf(item, goal);
+}
+
+/**
+ * The time a workout takes when it is dropped into a day at `index`.
+ *
+ * Dropping something after another workout means exactly that: it starts when
+ * that one ends. Nothing else on the day moves — the workouts it was dropped
+ * between keep the times they were given.
+ *
+ * `ordered` is the day already in its new order, the dragged workout included.
+ */
+function startAtIndex(state: PlannerState, ordered: CalendarItem[], index: number): number {
+  const previous = ordered[index - 1];
+  if (previous) return clampStartMinutes(endOf(state, previous));
+
+  // Dropped at the top of the day: it only has to be no later than what now
+  // follows it, so a workout dragged up there keeps its own earlier time.
+  const moved = ordered[index];
+  const next = ordered[index + 1];
+  if (!next) return startMinutesOf(moved);
+  return Math.min(startMinutesOf(moved), startMinutesOf(next));
 }
 
 export const usePlannerStore = create<PlannerStore>()(
@@ -174,11 +210,10 @@ export const usePlannerStore = create<PlannerStore>()(
           const inTarget = (i: CalendarItem) =>
             i.day === targetDay && i.weekStart === targetWeekStart;
           const targetDayItems = byStartTime(newItems.filter(inTarget));
-          // Dropped between two workouts, so take the time of the one it
-          // displaced — the day stays in the order the drop implied.
-          const displaced = targetDayItems[newIndex];
-          if (displaced) updatedItem.startMinutes = startMinutesOf(displaced);
           targetDayItems.splice(newIndex, 0, updatedItem);
+          // Dropped after a workout, so it starts when that one ends; the rest
+          // of the day is left where it was.
+          updatedItem.startMinutes = startAtIndex(state, targetDayItems, newIndex);
           newItems = [...newItems.filter(i => !inTarget(i)), ...targetDayItems];
         } else {
           newItems.push(updatedItem);
@@ -191,13 +226,15 @@ export const usePlannerStore = create<PlannerStore>()(
         const dayItems = byStartTime(state.items.filter(inDay));
         const otherItems = state.items.filter(i => !inDay(i));
 
-        // Reordering swaps which workout sits in which slot; the day's set of
-        // times is unchanged, so nothing silently drifts into the evening.
-        const slots = dayItems.map(startMinutesOf);
-        const reordered = arrayMove(dayItems, oldIndex, newIndex).map((item, index) => ({
-          ...item,
-          startMinutes: slots[index]
-        }));
+        // Only the dragged workout is re-timed: it starts when the one it was
+        // dropped after ends. The workouts it moved past keep their times
+        // rather than trading slots with it.
+        const reordered = arrayMove(dayItems, oldIndex, newIndex);
+        const moved = {
+          ...reordered[newIndex],
+          startMinutes: startAtIndex(state, reordered, newIndex)
+        };
+        reordered[newIndex] = moved;
 
         return { items: [...otherItems, ...reordered] };
       }),
@@ -212,6 +249,21 @@ export const usePlannerStore = create<PlannerStore>()(
             ? { ...i, startMinutes: clampStartMinutes(startMinutesOf(i) + slots * SLOT_MINUTES) }
             : i
         )
+      })),
+      setItemDuration: (id, durationMinutes) => set((state) => ({
+        items: state.items.map(i =>
+          i.id === id ? { ...i, durationMinutes: clampDuration(durationMinutes) } : i
+        )
+      })),
+      nudgeItemDuration: (id, slots) => set((state) => ({
+        items: state.items.map(i => {
+          if (i.id !== id) return i;
+          const goal = state.goals.find(g => g.id === i.typeId);
+          return {
+            ...i,
+            durationMinutes: clampDuration(durationMinutesOf(i, goal) + slots * SLOT_MINUTES)
+          };
+        })
       })),
 
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
@@ -294,6 +346,9 @@ export const usePlannerStore = create<PlannerStore>()(
 
       setTempUnit: (tempUnit) => set({ tempUnit }),
       setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
+      setDefaultStartMinutes: (startMinutes) => set({
+        defaultStartMinutes: clampStartMinutes(startMinutes)
+      }),
       replaceAll: (state) => set(state),
       resetAll: () => set(buildInitialState())
     }),

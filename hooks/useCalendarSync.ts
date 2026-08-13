@@ -17,7 +17,7 @@ import {
   parseDateLocal,
   WeekStartsOn,
 } from '@/lib/dates';
-import { estimateDurationMinutes, startMinutesOf } from '@/lib/schedule';
+import { clampDuration, durationMinutesOf, startMinutesOf } from '@/lib/schedule';
 
 /**
  * Keeps the plan and the user's `Workouts` calendar in step.
@@ -51,7 +51,7 @@ function itemSignature(item: CalendarItem, goal: WorkoutType | undefined): strin
     item.value,
     item.workoutType ?? '',
     startMinutesOf(item),
-    estimateDurationMinutes(item, goal),
+    durationMinutesOf(item, goal),
   ].join('|');
 }
 
@@ -85,7 +85,7 @@ function draftFor(
 ): EventDraftPayload {
   const dateKey = formatDateLocal(dateForDay(item.weekStart, item.day, weekStartsOn));
   const start = startMinutesOf(item);
-  const duration = estimateDurationMinutes(item, goal);
+  const duration = durationMinutesOf(item, goal);
 
   return {
     itemId: item.id,
@@ -109,6 +109,14 @@ function itemFromEvent(
   const start = new Date(event.start);
   if (Number.isNaN(start.getTime())) return null;
 
+  // Google owns the event's length too, so a drag of its bottom edge over
+  // there comes back as this item's duration.
+  const end = event.end ? new Date(event.end) : null;
+  const durationMinutes =
+    end && !Number.isNaN(end.getTime()) && end > start
+      ? clampDuration((end.getTime() - start.getTime()) / 60000)
+      : undefined;
+
   return {
     id: event.itemId,
     typeId: event.typeId,
@@ -117,6 +125,7 @@ function itemFromEvent(
     value: event.value,
     workoutType: event.workoutType,
     startMinutes: start.getHours() * 60 + start.getMinutes(),
+    durationMinutes,
     googleEventId: event.eventId,
   };
 }

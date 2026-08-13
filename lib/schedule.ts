@@ -11,7 +11,7 @@ import { CalendarItem, WorkoutType } from './types';
 /** Times snap to quarter hours, both when dragged and when read back from Google. */
 export const SLOT_MINUTES = 15;
 
-/** Where an item lands when nothing has said otherwise. */
+/** Where an item lands when nothing — not even a setting — has said otherwise. */
 export const DEFAULT_START_MINUTES = 7 * 60;
 
 /** Latest start we allow, so a workout never runs past midnight unseen. */
@@ -50,6 +50,22 @@ export function startMinutesOf(item: CalendarItem): number {
 export function formatTimeOfDay(minutes: number): string {
   const date = new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60);
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+/** Earliest and latest a default start time may be set to. */
+const START_OPTION_FROM = 4 * 60;
+const START_OPTION_TO = 22 * 60;
+
+/**
+ * The times offered as a default start, on the half hour. Quarter hours are
+ * draggable per workout; a list of 73 of them is not a setting anyone reads.
+ */
+export function startTimeOptions(): { value: number; label: string }[] {
+  const options = [];
+  for (let minutes = START_OPTION_FROM; minutes <= START_OPTION_TO; minutes += 30) {
+    options.push({ value: minutes, label: formatTimeOfDay(minutes) });
+  }
+  return options;
 }
 
 /** "45 min" / "1h 30m", for the duration line on a card. */
@@ -98,9 +114,33 @@ export function estimateDurationMinutes(
   return FALLBACK_DURATION_MINUTES;
 }
 
-/** True when the duration is the goal's own number rather than a guess. */
-export function isExactDuration(goal: WorkoutType | undefined): boolean {
-  return goal?.metric === 'duration';
+/** Shortest and longest a workout may be dragged to. */
+export const MIN_DURATION_MINUTES = SLOT_MINUTES;
+export const MAX_DURATION_MINUTES = 8 * 60;
+
+export function clampDuration(minutes: number): number {
+  return Math.min(MAX_DURATION_MINUTES, Math.max(MIN_DURATION_MINUTES, snapToSlot(minutes)));
+}
+
+/**
+ * How long the item actually blocks out: what someone set by hand, or the
+ * estimate when they never touched it.
+ */
+export function durationMinutesOf(
+  item: Pick<CalendarItem, 'value' | 'durationMinutes'>,
+  goal: WorkoutType | undefined
+): number {
+  return item.durationMinutes != null
+    ? clampDuration(item.durationMinutes)
+    : estimateDurationMinutes(item, goal);
+}
+
+/** True when the duration is set or read off the goal rather than guessed. */
+export function isExactDuration(
+  item: Pick<CalendarItem, 'durationMinutes'>,
+  goal: WorkoutType | undefined
+): boolean {
+  return item.durationMinutes != null || goal?.metric === 'duration';
 }
 
 /** Sort a day's items by start time, keeping insertion order for ties. */

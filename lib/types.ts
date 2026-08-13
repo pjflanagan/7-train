@@ -35,6 +35,11 @@ export const CalendarItemSchema = z.object({
    * Absent on items created before times existed; treat as the default slot.
    */
   startMinutes: z.number().int().min(0).max(1439).optional(),
+  /**
+   * How long the workout runs, in minutes, snapped to 15. Absent until someone
+   * sets it, and then it wins over the estimate read off the goal.
+   */
+  durationMinutes: z.number().int().min(15).max(1440).optional(),
   /** The Google Calendar event this item is mirrored to, once it has one. */
   googleEventId: z.string().nullable().optional()
 });
@@ -65,6 +70,12 @@ export const PlannerStateSchema = z.object({
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),
   tempUnit: z.enum(['C', 'F']).optional().default('F'),
+  /**
+   * When a newly added workout lands on an empty day, in minutes from local
+   * midnight. Workouts added to a day that already has some still stack after
+   * the last one.
+   */
+  defaultStartMinutes: z.number().int().min(0).max(1439).optional().default(7 * 60),
   /** 0 = Sunday ... 6 = Saturday. */
   weekStartsOn: z.number().int().min(0).max(6).optional().default(1),
   /** The `Workouts` calendar we created in Google, once we have made one. */

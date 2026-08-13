@@ -7,56 +7,74 @@
 
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2);
   background-color: var(--goal-surface);
+  overflow: hidden;
   border: 1px solid var(--goal-border);
   border-radius: var(--radius-md);
 }
 
-.headerRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-1);
-}
-
+// Darker than the card it sits on, because it is the grab point: the whole
+// band drags the workout to another day.
 .header {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   min-width: 0;
-  flex: 1;
+  padding: var(--space-1) var(--space-2);
+  background-color: color-mix(in srgb, var(--bg-primary) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--goal-color) 25%, transparent);
   cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+}
+
+// The goal's icon until it is hovered, an x after: one slot, two meanings, so
+// the far side of the band stays free for the time.
 .removeButton {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--goal-ink);
   cursor: pointer;
   padding: 0;
   border-radius: var(--radius-xs);
   transition: var(--transition-smooth);
 
-  &:hover {
-    color: var(--accent-error);
-    background-color: var(--accent-error-soft);
+  .removeIcon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    opacity: 0;
+    transition: var(--transition-smooth);
   }
 
-  // Kept out of the way until the card is hovered — faded rather than removed,
-  // so nothing reflows. Gated on real hover so touch devices, which never
-  // hover, always show it. Focus keeps it reachable by keyboard.
+  // Touch devices never hover, so the x can only be reached by focus there;
+  // the icon stays put rather than flickering under a tap.
   @media (hover: hover) {
-    opacity: 0;
+    &:hover .icon,
+    &:focus-visible .icon {
+      opacity: 0;
+    }
 
-    .card:hover &,
-    &:focus-visible {
+    &:hover .removeIcon,
+    &:focus-visible .removeIcon {
       opacity: 1;
+      color: var(--accent-error);
     }
   }
 }
@@ -65,6 +83,7 @@
   font-size: var(--icon-sm);
   flex: 0 0 auto;
   color: var(--goal-ink);
+  transition: var(--transition-smooth);
 }
 
 .title {
