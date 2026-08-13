@@ -32,12 +32,11 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
   if (!goal) return null;
 
   const style = {
-    borderColor: goal.color,
-    backgroundColor: `${goal.color}10`,
+    '--goal-color': goal.color,
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
+  } as React.CSSProperties;
 
   return (
     <div 
@@ -47,7 +46,7 @@ export function ScheduledCard({ item }: { item: CalendarItem }) {
     >
       <div className={styles.headerRow}>
         <div className={styles.header} {...attributes} {...listeners}>
-          {React.createElement(getIconByKey(goal.icon), { className: styles.icon, style: { color: goal.color } })}
+          {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
           <span className={styles.title}>{goal.name}</span>
         </div>
         <button 

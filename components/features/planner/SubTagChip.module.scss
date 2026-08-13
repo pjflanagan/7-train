@@ -1,18 +1,24 @@
+@use '@/styles/mixins' as *;
+
+// These live in the goal chip, so they take the context tones: a tinted pill
+// with the colour in the text, not a solid block of it.
 .subtag {
+  @include goal-tones-context();
+
   font-size: var(--font-2xs);
   padding: var(--space-05) var(--space-2);
-  background-color: var(--bg-tertiary);
-  color: var(--text-on-accent);
+  background-color: var(--goal-surface);
+  color: var(--goal-ink);
   font-weight: 600;
   line-height: 1.4;
-  border: 1px solid transparent;
+  border: 1px solid var(--goal-border);
   border-radius: var(--radius-pill);
   white-space: nowrap;
   cursor: grab;
 }
 
-// Already on the board this week: no colour fill, just an outline, so the
-// remaining sub-tags are the ones that read as available.
+// Already on the board this week: the tint goes too, so the remaining
+// sub-tags are the ones that read as available.
 .isScheduled {
   background-color: transparent;
   border-color: var(--border-color);

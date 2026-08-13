@@ -35,10 +35,10 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
     <div 
       ref={setNodeRef}
       className={styles.chip} 
-      style={{ opacity: isDragging ? 0.5 : 1 }}
+      style={{ '--goal-color': goal.color, opacity: isDragging ? 0.5 : 1 } as React.CSSProperties}
     >
       <div className={styles.header} {...attributes} {...listeners}>
-        <span className={styles.iconBadge} style={{ backgroundColor: goal.color }}>
+        <span className={styles.iconBadge}>
           {React.createElement(getIconByKey(goal.icon), { className: styles.icon })}
         </span>
         <span className={styles.name}>{goal.name}</span>
@@ -92,7 +92,11 @@ export function GoalChip({ goal, weekStart }: { goal: WorkoutType; weekStart: st
       )}
       {/* The bar closes the chip, under the sub-type pills it summarises. */}
       {!goal.optional && (
-        <ProgressBar percent={progress?.percent || 0} color={goal.color} className={styles.progressBar} />
+        <ProgressBar
+          percent={progress?.percent || 0}
+          color="var(--goal-solid)"
+          className={styles.progressBar}
+        />
       )}
       {hasLinks && (
         <GoalLinksPickerModal

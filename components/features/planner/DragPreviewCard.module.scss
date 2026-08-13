@@ -1,16 +1,19 @@
 @use '@/styles/mixins' as *;
 
+// What rides under the cursor is a weekday event in flight, so it wears the
+// same full-strength tones as the card it will land as.
 .preview {
-  @include card-surface;
+  @include goal-tones-event();
+
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-sm);
   font-weight: 600;
-  border-width: 1px;
-  border-style: solid;
-  // Tinted by the goal's own colour, set inline.
+  background-color: var(--goal-surface);
+  border: 1px solid var(--goal-border);
+  border-radius: var(--radius-md);
   backdrop-filter: blur(2px);
   box-shadow: var(--shadow-md);
   cursor: grabbing;
@@ -24,6 +27,7 @@
   width: var(--space-6);
   height: var(--space-6);
   border-radius: 50%;
+  background-color: var(--goal-color);
   color: var(--text-on-accent);
 }
 
@@ -38,6 +42,7 @@
 .tag {
   padding: var(--space-05) var(--space-2);
   border-radius: var(--radius-pill);
+  background-color: var(--goal-color);
   font-size: var(--font-2xs);
   font-weight: 600;
   color: var(--text-on-accent);
