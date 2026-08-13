@@ -33,16 +33,74 @@
   &:focus {
     color: var(--text-main);
   }
+}
 
+// The real control: focusable and clickable, but invisible — `timeDisplay`
+// sits on top and shows the card's own compact format instead of whatever
+// fixed layout the browser renders a time value in.
+.timeField {
+  position: relative;
+}
+
+.timeInput {
+  @include focus-ring();
+
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: transparent;
+  cursor: text;
+
+  // Chromium still paints the picker indicator over transparent text; this
+  // is the "little clock icon" the field is meant to read without.
   &::-webkit-calendar-picker-indicator {
-    cursor: pointer;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
   }
 }
 
-// Scoped through the row so it outranks InlineNumberInput's own padding,
-// whichever stylesheet lands first — the right half of the row, so the two
-// read as columns down a day.
-.row .duration {
-  padding: 0;
+.timeDisplay {
+  display: block;
   text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-2xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  pointer-events: none;
+  transition: var(--transition-smooth);
+
+  .timeInput:hover ~ &,
+  .timeInput:focus ~ & {
+    color: var(--text-main);
+  }
+}
+
+.durationField {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-05);
+  min-width: 0;
+}
+
+// Scoped through the field so it outranks InlineNumberInput's own padding
+// and width, whichever stylesheet lands first.
+.durationField .chip {
+  width: auto;
+  flex: 0 1 auto;
+  min-width: 1.5em;
+}
+
+.durationUnit {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  font-size: var(--font-2xs);
 }

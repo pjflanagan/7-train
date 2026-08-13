@@ -20,6 +20,14 @@
   }
 }
 
+// A day that already has events keeps a slot to drop into, just a fixed
+// strip below them rather than the whole rest of the column.
+.compact {
+  flex: 0 0 auto;
+  min-height: 3rem;
+  height: 3rem;
+}
+
 // Pinned to the viewport, since a day column is narrower than this list and the
 // week board clips what overflows it.
 .panel {

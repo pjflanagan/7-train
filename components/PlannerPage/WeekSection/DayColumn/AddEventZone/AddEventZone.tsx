@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
@@ -15,17 +16,20 @@ const VIEWPORT_MARGIN = 8;
 export interface AddEventZoneProps {
   day: typeof DAYS[number];
   weekStart: string;
+  /** A day already carrying events shrinks the zone to a fixed strip rather than filling the column. */
+  compact?: boolean;
 }
 
 /**
- * The empty half of a day: a drop target for dragged activities, and — because the
+ * The rest of a day: a drop target for dragged activities, and — because the
  * activity strip only exists on the current week — the way to add a workout to a
- * week whose strip is nowhere on screen.
+ * week whose strip is nowhere on screen. Stays on screen even once a day has
+ * events, just smaller, so there's always somewhere to drop another one.
  *
  * The picker is portalled rather than anchored inline: a day column is narrower
  * than the list, and the week board clips its own overflow.
  */
-export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
+export function AddEventZone({ day, weekStart, compact }: AddEventZoneProps) {
   const activities = usePlannerStore((state) => state.activities);
   const weeklyTargets = usePlannerStore((state) => state.weeklyTargets);
   const addEvent = usePlannerStore((state) => state.addEvent);
@@ -70,7 +74,7 @@ export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
     <>
       <button
         type="button"
-        className={styles.zone}
+        className={clsx(styles.zone, compact && styles.compact)}
         onClick={open}
         aria-label={`Add a workout to ${day}`}
         aria-haspopup="menu"

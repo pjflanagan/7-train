@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import clsx from 'clsx';
 import { usePlannerStore } from '@/lib/store';
 import { useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { ScheduledEvent, Activity } from '@/lib/types';
@@ -10,6 +9,7 @@ import {
   clampDuration,
   clampStartMinutes,
   durationMinutesOf,
+  formatChipTime,
   isExactDuration,
   startMinutesOf,
 } from '@/lib/schedule';
@@ -50,26 +50,38 @@ export function TimeChip({ event, activity }: TimeChipProps) {
 
   return (
     <div className={styles.row} onPointerDown={(e) => e.stopPropagation()}>
-      <input
-        type="time"
-        className={styles.chip}
-        value={toTimeInputValue(startMinutes)}
-        step={900}
-        onChange={(e) => {
-          const minutes = fromTimeInputValue(e.target.value);
-          if (minutes !== null) setEventTime(event.id, clampStartMinutes(minutes));
-        }}
-        // The 24-hour clock setting only governs our own formatted display —
-        // a native control renders in whatever the browser/OS prefers.
-        aria-label={`Start time, in ${use24Hour ? '24' : '12'}-hour clock`}
-      />
-      <InlineNumberInput
-        value={duration}
-        onCommit={(val) => setEventDuration(event.id, clampDuration(val))}
-        className={clsx(styles.chip, styles.duration)}
-        title={isExact ? undefined : 'Estimated'}
-        aria-label="Length, in minutes"
-      />
+      <div className={styles.timeField}>
+        <input
+          type="time"
+          className={styles.timeInput}
+          value={toTimeInputValue(startMinutes)}
+          step={900}
+          onChange={(e) => {
+            const minutes = fromTimeInputValue(e.target.value);
+            if (minutes !== null) setEventTime(event.id, clampStartMinutes(minutes));
+          }}
+          // Chrome/Edge open the native editor on focus; browsers without
+          // `showPicker` just fall back to a plain focused field.
+          onFocus={(e) => e.currentTarget.showPicker?.()}
+          aria-label={`Start time, in ${use24Hour ? '24' : '12'}-hour clock`}
+        />
+        {/* The field's own value renders in the browser's fixed format (always
+            "05:30 PM"); this sits over it so the card can show its own
+            tighter "5:30pm" instead. Clicks pass through to the input beneath. */}
+        <span className={styles.timeDisplay} aria-hidden="true">
+          {formatChipTime(startMinutes, use24Hour)}
+        </span>
+      </div>
+      <div className={styles.durationField}>
+        <InlineNumberInput
+          value={duration}
+          onCommit={(val) => setEventDuration(event.id, clampDuration(val))}
+          className={styles.chip}
+          title={isExact ? undefined : 'Estimated'}
+          aria-label="Length, in minutes"
+        />
+        <span className={styles.durationUnit}>mins</span>
+      </div>
     </div>
   );
 }

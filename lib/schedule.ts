@@ -61,6 +61,16 @@ export function formatTimeOfDay(minutes: number, use24Hour = false): string {
   });
 }
 
+/**
+ * "5:30pm" — tighter than `formatTimeOfDay`'s "5:30 PM" for a card small
+ * enough that every character counts. 24-hour mode is already this compact,
+ * so it passes through untouched.
+ */
+export function formatChipTime(minutes: number, use24Hour = false): string {
+  const formatted = formatTimeOfDay(minutes, use24Hour);
+  return use24Hour ? formatted : formatted.replace(/\s/g, '').toLowerCase();
+}
+
 /** Earliest and latest a default start time may be set to. */
 const START_OPTION_FROM = 4 * 60;
 const START_OPTION_TO = 22 * 60;
