@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePlannerStore } from '@/lib/store';
 import { LuCalendarArrowDown, LuCalendarX } from 'react-icons/lu';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
@@ -33,11 +33,17 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
     if (!isPast && previousWeek !== currentWeek && previousWeek !== weekStart) {
       options.push('previous');
     }
+    if (!isPast) options.push('default');
     return options;
   }, [isPast, weekStart, currentWeek, previousWeek]);
 
-  const handleCopy = (source: CopySource, parts: { schedule: boolean; activities: boolean }) => {
-    copyWeek(source === 'current' ? currentWeek : previousWeek, weekStart, parts);
+  const handleCopy = (
+    source: CopySource,
+    parts: { schedule: boolean; notes: boolean; activities: boolean }
+  ) => {
+    const fromWeekStart =
+      source === 'current' ? currentWeek : source === 'previous' ? previousWeek : null;
+    copyWeek(fromWeekStart, weekStart, parts);
   };
 
   return (

@@ -50,14 +50,17 @@ type PlannerStore = PlannerState & {
 
   setNote: (day: DayName, weekStart: string, note: string) => void;
   /**
-   * Pull another week into this one. The schedule (workouts and day notes) and
-   * the activity targets are copied independently, so a week can inherit one
-   * without the other. Whichever part is copied overwrites what was there.
+   * Pull another week into this one. The schedule, day notes, and the activity
+   * targets are copied independently, so a week can inherit any subset of
+   * them. Whichever part is copied overwrites what was there.
+   * A null `fromWeekStart` resets targets to each activity's baseline instead
+   * of copying another week's bent values; schedule and notes are skipped in
+   * that case.
    */
   copyWeek: (
-    fromWeekStart: string,
+    fromWeekStart: string | null,
     toWeekStart: string,
-    parts?: { schedule?: boolean; activities?: boolean }
+    parts?: { schedule?: boolean; notes?: boolean; activities?: boolean }
   ) => void;
   clearWeek: (weekStart: string) => void;
 
@@ -308,11 +311,10 @@ export const usePlannerStore = create<PlannerStore>()(
         return { notes: { ...state.notes, [key]: note } };
       }),
       copyWeek: (fromWeekStart, toWeekStart, parts) => set((state) => {
-        const { schedule = true, activities = true } = parts ?? {};
+        const { schedule = true, notes = true, activities = true } = parts ?? {};
 
         let events = state.events;
-        const newNotes = { ...state.notes };
-        if (schedule) {
+        if (schedule && fromWeekStart !== null) {
           const fromEvents = state.events.filter(i => i.weekStart === fromWeekStart);
           const retainedEvents = state.events.filter(i => i.weekStart !== toWeekStart);
 
@@ -325,7 +327,10 @@ export const usePlannerStore = create<PlannerStore>()(
             googleEventId: null
           }));
           events = [...retainedEvents, ...copiedEvents];
+        }
 
+        const newNotes = { ...state.notes };
+        if (notes && fromWeekStart !== null) {
           DAYS.forEach(day => {
             const from = state.notes[noteKey(fromWeekStart, day)];
             if (from) {
@@ -337,12 +342,18 @@ export const usePlannerStore = create<PlannerStore>()(
         }
 
         // A copied week brings its bent targets with it, so the copy is a
-        // faithful duplicate rather than a week snapped back to baseline.
+        // faithful duplicate rather than a week snapped back to baseline —
+        // unless there's no source week at all, in which case snapping back
+        // to baseline is the whole point.
         const weeklyTargets = { ...(state.weeklyTargets || {}) };
         if (activities) {
           state.activities.forEach(activity => {
-            const from = weeklyTargets[weeklyTargetKey(fromWeekStart, activity.id)];
             const toKey = weeklyTargetKey(toWeekStart, activity.id);
+            if (fromWeekStart === null) {
+              delete weeklyTargets[toKey];
+              return;
+            }
+            const from = weeklyTargets[weeklyTargetKey(fromWeekStart, activity.id)];
             if (from === undefined) delete weeklyTargets[toKey];
             else weeklyTargets[toKey] = from;
           });

@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { MdToday } from 'react-icons/md';
+import { LuArrowUp, LuArrowDown } from 'react-icons/lu';
 import { AppShell } from './AppShell/AppShell';
 import { Spinner } from '@/components/elements/Spinner/Spinner';
 import { WeekSection } from './WeekSection/WeekSection';
@@ -29,6 +28,7 @@ function WeekFeed() {
     loadEarlier,
     loadLater,
     isCurrentWeekVisible,
+    currentWeekDirection,
     scrollToCurrentWeek,
   } = useInfiniteWeeks({ currentWeekStart });
   const focusTriggers = useScheduleFocusTriggers();
@@ -66,8 +66,12 @@ function WeekFeed() {
           className={styles.jumpToToday}
           onClick={scrollToCurrentWeek}
         >
-          <MdToday size={18} aria-hidden="true" />
-          This week
+          {currentWeekDirection === 'up' ? (
+            <LuArrowUp size={18} aria-hidden="true" />
+          ) : (
+            <LuArrowDown size={18} aria-hidden="true" />
+          )}
+          Jump to today
         </button>
       )}
     </div>

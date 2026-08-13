@@ -89,13 +89,22 @@ export function useInfiniteWeeks({ currentWeekStart }: InfiniteWeeksOptions) {
 
   // Whether the current week is on screen, so the caller can offer a way back.
   const [isCurrentWeekVisible, setIsCurrentWeekVisible] = useState(true);
+  // Which way to scroll to reach it, so the "jump back" control can point there.
+  const [currentWeekDirection, setCurrentWeekDirection] = useState<'up' | 'down'>('down');
 
   useEffect(() => {
     const target = currentWeekRef.current;
     if (!target) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsCurrentWeekVisible(entry.isIntersecting),
+      ([entry]) => {
+        setIsCurrentWeekVisible(entry.isIntersecting);
+        if (!entry.isIntersecting && entry.rootBounds) {
+          setCurrentWeekDirection(
+            entry.boundingClientRect.top < entry.rootBounds.top ? 'up' : 'down'
+          );
+        }
+      },
       { root: getScroller() ?? null }
     );
     observer.observe(target);
@@ -119,6 +128,7 @@ export function useInfiniteWeeks({ currentWeekStart }: InfiniteWeeksOptions) {
     loadEarlier,
     loadLater,
     isCurrentWeekVisible,
+    currentWeekDirection,
     scrollToCurrentWeek,
   };
 }

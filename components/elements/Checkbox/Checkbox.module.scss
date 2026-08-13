@@ -51,4 +51,9 @@
   color: var(--text-main);
   cursor: pointer;
   user-select: none;
+
+  .checkbox:disabled ~ & {
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
 }

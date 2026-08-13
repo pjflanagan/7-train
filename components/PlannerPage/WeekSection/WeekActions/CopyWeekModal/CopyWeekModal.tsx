@@ -4,43 +4,64 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
 import { Checkbox } from '@/components/elements/Checkbox/Checkbox';
+import { SegmentedControl } from '@/components/elements/SegmentedControl/SegmentedControl';
 import styles from './CopyWeekModal.module.scss';
 
-export type CopySource = 'current' | 'previous';
+export type CopySource = 'current' | 'previous' | 'default';
 
 interface CopyWeekModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Which source weeks this week is allowed to pull from. */
   sources: CopySource[];
-  onCopy: (source: CopySource, parts: { schedule: boolean; activities: boolean }) => void;
+  onCopy: (
+    source: CopySource,
+    parts: { schedule: boolean; notes: boolean; activities: boolean }
+  ) => void;
 }
 
 const sourceLabels: Record<CopySource, string> = {
   current: 'Current week',
   previous: 'Previous week',
+  default: 'Default targets',
 };
 
 /** Picks a source week and which parts of it — schedule, activities, or both — to pull in. */
 export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModalProps) {
   const [source, setSource] = useState<CopySource>(sources[0] ?? 'current');
-  const [schedule, setSchedule] = useState(true);
   const [activities, setActivities] = useState(true);
+  const [schedule, setSchedule] = useState(true);
+  const [notes, setNotes] = useState(false);
 
   // Reopening starts fresh rather than resuming whatever was half-picked last time.
   useEffect(() => {
     if (isOpen) {
       setSource(sources[0] ?? 'current');
-      setSchedule(true);
       setActivities(true);
+      setSchedule(true);
+      setNotes(false);
     }
   }, [isOpen, sources]);
 
-  const nothingSelected = !schedule && !activities;
+  const nothingSelected = !schedule && !notes && !activities;
+  const isDefault = source === 'default';
+
+  // Default targets have no schedule or notes to bring along, so those
+  // options are moot there.
+  useEffect(() => {
+    if (isDefault) {
+      setSchedule(false);
+      setNotes(false);
+    }
+  }, [isDefault]);
 
   const handleCopy = () => {
     if (nothingSelected) return;
-    onCopy(source, { schedule, activities });
+    onCopy(source, {
+      schedule: isDefault ? false : schedule,
+      notes: isDefault ? false : notes,
+      activities,
+    });
     onClose();
   };
 
@@ -62,33 +83,34 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
       }
     >
       <div className={styles.body}>
-        <fieldset className={styles.group}>
-          <legend className={styles.legend}>Copy from</legend>
-          {sources.map((option) => (
-            <label key={option} className={styles.radioRow}>
-              <input
-                type="radio"
-                name="copy-source"
-                value={option}
-                checked={source === option}
-                onChange={() => setSource(option)}
-              />
-              <span>{sourceLabels[option]}</span>
-            </label>
-          ))}
-        </fieldset>
+        <div className={styles.group}>
+          <span className={styles.legend}>Copy from</span>
+          <SegmentedControl
+            name="copy-source"
+            value={source}
+            onChange={setSource}
+            options={sources.map((option) => ({ value: option, label: sourceLabels[option] }))}
+          />
+        </div>
 
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Copy what</legend>
           <Checkbox
-            label="Schedule (events and notes)"
-            checked={schedule}
-            onChange={(e) => setSchedule(e.target.checked)}
-          />
-          <Checkbox
             label="Weekly targets"
             checked={activities}
             onChange={(e) => setActivities(e.target.checked)}
+          />
+          <Checkbox
+            label="Schedule"
+            checked={schedule && !isDefault}
+            disabled={isDefault}
+            onChange={(e) => setSchedule(e.target.checked)}
+          />
+          <Checkbox
+            label="Notes"
+            checked={notes && !isDefault}
+            disabled={isDefault}
+            onChange={(e) => setNotes(e.target.checked)}
           />
         </fieldset>
 
