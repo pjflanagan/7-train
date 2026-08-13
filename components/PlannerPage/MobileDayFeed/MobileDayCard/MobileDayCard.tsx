@@ -2,7 +2,8 @@
 
 import React from 'react';
 import clsx from 'clsx';
-import { useDayEvents, useActivities, useNote, useWeekStartsOn, useUse24HourClock } from '@/hooks/usePlannerSelectors';
+import { useWeekActivities, useDayEvents, useNote, useWeekStartsOn, useUse24HourClock } from '@/hooks/usePlannerSelectors';
+import { resolveEventActivity } from '@/lib/activitySnapshot';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
 import { getIconByKey } from '@/lib/icons';
@@ -33,7 +34,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
   const weekStart = getWeekStartKey(date, weekStartsOn);
 
   const events = useDayEvents(day, weekStart);
-  const activities = useActivities();
+  const activities = useWeekActivities(weekStart);
   const note = useNote(day, weekStart);
   const { data: weather } = useWeather();
   const forecast = weather?.days.find((d) => d.date === dateKey);
@@ -59,7 +60,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
       {events.length > 0 && (
         <ul className={styles.events}>
           {events.map((event) => {
-            const activity = activities.find((g) => g.id === event.typeId);
+            const activity = resolveEventActivity(event, activities);
             if (!activity) return null;
             const Icon = getIconByKey(activity.icon);
 

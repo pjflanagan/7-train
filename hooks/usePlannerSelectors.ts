@@ -3,11 +3,51 @@ import { usePlannerStore, noteKey } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { WeekStartsOn } from '@/lib/dates';
 import { byStartTime, DEFAULT_START_MINUTES } from '@/lib/schedule';
+import { resolveEventActivity } from '@/lib/activitySnapshot';
+import { weekActivityKey, activitiesForWeek } from '@/lib/progress';
+import { ScheduledEvent } from '@/lib/types';
 
 type DayName = typeof DAYS[number];
 
 export const useActivities = () => usePlannerStore((state) => state.activities);
 export const useActivity = (id: string) => usePlannerStore((state) => state.activities.find(g => g.id === id));
+
+/**
+ * An event's activity — its own week's copy, else the snapshot the event took
+ * when that week stopped aiming at it.
+ *
+ * Resolving off a snapshot builds a fresh object, so it happens in a memo
+ * rather than inside the store selector, which must return a stable value.
+ */
+export const useEventActivity = (
+  event: Pick<ScheduledEvent, 'typeId' | 'weekStart' | 'activitySnapshot'>
+) => {
+  const activities = useWeekActivities(event.weekStart);
+  const { typeId, activitySnapshot } = event;
+  return useMemo(
+    () => resolveEventActivity({ typeId, activitySnapshot }, activities),
+    [typeId, activitySnapshot, activities]
+  );
+};
+
+/**
+ * The activities a given week is actually aiming at. A week holds targets only
+ * once they've been put there — copied from another week or from the defaults —
+ * so a week nobody has planned yet shows no targets at all rather than a rail
+ * of empty ones. Presence of the entry is what counts, not its size: an
+ * optional activity legitimately aims at zero.
+ */
+export const useWeekActivities = (weekStart: string) => {
+  const weekActivities = usePlannerStore((state) => state.weekActivities);
+  return useMemo(
+    () => activitiesForWeek(weekStart, weekActivities),
+    [weekActivities, weekStart]
+  );
+};
+
+/** One week's copy of an activity, if that week is aiming at it at all. */
+export const useWeekActivity = (weekStart: string, id: string) =>
+  usePlannerStore((state) => state.weekActivities?.[weekActivityKey(weekStart, id)]);
 
 /** A day's events in the order they happen. */
 export const useDayEvents = (day: DayName, weekStart: string) => {

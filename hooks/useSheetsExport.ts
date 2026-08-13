@@ -24,7 +24,8 @@ export function useSheetsExport() {
     const scheduled = entriesFromSchedule(
       store.events,
       store.notes,
-      (store.weekStartsOn ?? 1) as WeekStartsOn
+      (store.weekStartsOn ?? 1) as WeekStartsOn,
+      store.weekActivities
     );
     const rows = historyRows(
       [...store.history, ...scheduled].sort((a, b) => a.date.localeCompare(b.date)),

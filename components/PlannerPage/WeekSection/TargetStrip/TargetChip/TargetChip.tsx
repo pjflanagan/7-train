@@ -11,6 +11,7 @@ import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
+import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
 import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinksPickerModal/ActivityLinksPickerModal';
 import { SubTagChip } from './SubTagChip/SubTagChip';
 import styles from './TargetChip.module.scss';
@@ -18,6 +19,7 @@ import styles from './TargetChip.module.scss';
 export function TargetChip({ activity, weekStart }: { activity: Activity; weekStart: string }) {
   const { progressMap } = useWeekProgress(weekStart);
   const setActivityTarget = usePlannerStore(state => state.setActivityTarget);
+  const removeWeekActivity = usePlannerStore(state => state.removeWeekActivity);
   const progress = progressMap[activity.id];
   const scheduledSubTags = useScheduledSubTags(weekStart, activity.id);
   const [isLinksOpen, setIsLinksOpen] = useState(false);
@@ -31,13 +33,20 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
     // duplicate draggable ids make dnd-kit resolve the drag to whichever copy
     // registered last (the bottom-most week).
     id: `activity-${weekStart}-${activity.id}`,
-    data: { kind: 'activity', typeId: activity.id },
+    data: { kind: 'activity', typeId: activity.id, weekStart },
   });
 
   return (
-    <div 
+    <RemovableCard
+      // The chip is a grid item in the rail, so the wrapper is what has to
+      // claim both rows when the chip is a tall one.
+      className={clsx(hasBody && styles.hasBody)}
+      label={`Remove ${activity.name} from this week`}
+      onRemove={() => removeWeekActivity(weekStart, activity.id)}
+    >
+    <div
       ref={setNodeRef}
-      className={clsx(styles.chip, hasBody && styles.hasBody)}
+      className={styles.chip}
       style={{ '--activity-color': activity.color, opacity: isDragging ? 0.5 : 1 } as React.CSSProperties}
     >
       <div className={styles.header} {...attributes} {...listeners}>
@@ -110,5 +119,6 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
         />
       )}
     </div>
+    </RemovableCard>
   );
 }

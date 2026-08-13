@@ -98,7 +98,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const getConfirmDetails = () => {
     switch (confirmAction) {
       case 'reset':
-        return { title: 'Factory reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
+        return { title: 'Full reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
       case 'clear':
         return { title: 'Clear all data', message: 'Are you sure you want to erase everything? Every activity, event, note, target, link, and history entry will be gone, with nothing put back in their place. This cannot be undone.', isDestructive: true };
       case 'import':
@@ -207,7 +207,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {activeTab === 'danger' && (
             <div className={styles.section}>
               <div className={styles.row}>
-                <span className={styles.text}>Factory reset to default data</span>
+                <span className={styles.text}>Reset to example data</span>
                 <Button onClick={() => setConfirmAction('reset')} variant="danger">Reset app</Button>
               </div>
               <div className={styles.row}>

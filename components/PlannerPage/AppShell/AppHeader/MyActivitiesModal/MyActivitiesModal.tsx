@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
 import { SortableActivityList } from './SortableActivityList/SortableActivityList';
-import { ActivityFormModal } from './ActivityFormModal/ActivityFormModal';
+import { ActivityFormModal } from '@/components/PlannerPage/ActivityFormModal/ActivityFormModal';
 import { usePlannerStore } from '@/lib/store';
 import { MdAdd } from 'react-icons/md';
 import styles from './MyActivitiesModal.module.scss';

@@ -2,18 +2,18 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ScheduledEvent } from '@/lib/types';
-import { useActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
+import { useEventActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
-import { MdClose } from 'react-icons/md';
+import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
 import { TimeChip } from './TimeChip/TimeChip';
 import { formatTimeOfDay, startMinutesOf } from '@/lib/schedule';
 import styles from './EventCard.module.scss';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
-  const activity = useActivity(event.typeId);
+  const activity = useEventActivity(event);
   const use24Hour = useUse24HourClock();
   const updateEventValue = usePlannerStore(state => state.updateEventValue);
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
@@ -40,7 +40,14 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
     opacity: isDragging ? 0.5 : 1,
   } as React.CSSProperties;
 
-  const subTypes = activity.workoutTypes ?? [];
+  // A workout type removed from the activity is gone from future planning, but
+  // an event already tagged with it keeps saying what it was — so the event's
+  // own type stays in the list even once the activity has stopped offering it.
+  const offered = activity.workoutTypes ?? [];
+  const subTypes =
+    event.workoutType && !offered.includes(event.workoutType)
+      ? [...offered, event.workoutType]
+      : offered;
   // An "instance" activity is always one occurrence, so "1 times" is noise.
   const hasValue = activity.metric !== 'instance';
   // A duration activity's value is its length, so the number entry sits where the
@@ -59,14 +66,14 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   );
 
   return (
+    <RemovableCard label="Remove event" onRemove={() => removeEvent(event.id)}>
     <div
       className={styles.card}
       style={style}
       ref={setNodeRef}
     >
       {/* The band is the drag handle, so it sits darker than the card body and
-          reads as something to grab. Remove waits at the far end until the card
-          is hovered, so a wall of x's never competes with the plan itself. */}
+          reads as something to grab. */}
       <div className={styles.header} {...attributes} {...listeners}>
         {isDuration ? (
           // A duration activity's own value already says how long it runs, so
@@ -76,19 +83,6 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
         ) : (
           <TimeChip event={event} activity={activity} />
         )}
-        <button
-          className={styles.removeButton}
-          // The band drags, so the button keeps its own pointer events.
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            removeEvent(event.id);
-          }}
-          title="Remove event"
-          aria-label="Remove event"
-        >
-          <MdClose size={14} />
-        </button>
       </div>
 
       <div className={styles.body}>
@@ -117,5 +111,6 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
         {hasValue && valueEntry}
       </div>
     </div>
+    </RemovableCard>
   );
 }

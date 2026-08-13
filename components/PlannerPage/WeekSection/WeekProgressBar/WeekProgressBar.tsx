@@ -8,6 +8,9 @@ export function WeekProgressBar({ weekStart }: { weekStart: string }) {
   const { overall } = useWeekProgress(weekStart);
   const percent = Math.min(100, Math.max(0, overall.percent));
 
+  // Nothing targeted this week, so there is no progress to be at.
+  if (overall.total === 0) return null;
+
   return (
     <div
       className={styles.container}

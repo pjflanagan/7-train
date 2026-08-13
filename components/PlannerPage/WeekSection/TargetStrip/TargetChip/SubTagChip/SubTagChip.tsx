@@ -20,7 +20,7 @@ export function SubTagChip({
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `subtag-${weekStart}-${typeId}-${tag}`,
-    data: { kind: 'subtag', typeId, tag },
+    data: { kind: 'subtag', typeId, tag, weekStart },
   });
 
   return (

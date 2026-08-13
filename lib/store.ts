@@ -4,7 +4,8 @@ import { PlannerState, Activity, ScheduledEvent, HelpfulLink } from './types';
 import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
-import { weeklyTargetKey } from './progress';
+import { weekActivityKey, activitiesForWeek } from './progress';
+import { buildActivitySnapshot } from './activitySnapshot';
 import {
   byStartTime,
   clampDuration,
@@ -20,11 +21,29 @@ type DayName = typeof DAYS[number];
 export const noteKey = (weekStart: string, day: DayName) => `${weekStart}-${day}`;
 
 type PlannerStore = PlannerState & {
+  /**
+   * "My activities" is the template a week can be built from, and nothing more.
+   * These four touch it alone: no week, and nothing already scheduled, moves
+   * because the template did.
+   */
   addActivity: (activity: Activity) => void;
   updateActivity: (id: string, activity: Partial<Activity>) => void;
   deleteActivity: (id: string) => void;
   reorderActivities: (oldIndex: number, newIndex: number) => void;
-  /** Bends an activity's target for one week only; the baseline `target` is untouched. */
+
+  /**
+   * Put an activity on one week. Week-only by design: adding a week's activity
+   * never writes it back to the template.
+   */
+  addWeekActivity: (weekStart: string, activity: Activity) => void;
+  /** Edit one week's copy of an activity. The template is untouched. */
+  updateWeekActivity: (weekStart: string, id: string, updates: Partial<Activity>) => void;
+  /**
+   * Take an activity off one week. Anything already scheduled against it stays
+   * where it is, holding on to what the activity was.
+   */
+  removeWeekActivity: (weekStart: string, id: string) => void;
+  /** How much of an activity one week aims at. */
   setActivityTarget: (id: string, target: number, weekStart: string) => void;
 
   addEvent: (event: Omit<ScheduledEvent, 'id'>) => void;
@@ -85,7 +104,15 @@ function buildInitialState(): PlannerState {
     activities: DEFAULT_ACTIVITIES,
     events: getDefaultEvents(weekStart),
     notes: {},
-    weeklyTargets: {},
+    // A week holds only what has been copied into it, so the seeded week is
+    // filled from the template outright — otherwise a first run shows a plan
+    // with nothing to hit.
+    weekActivities: Object.fromEntries(
+      DEFAULT_ACTIVITIES.map(activity => [
+        weekActivityKey(weekStart, activity.id),
+        { ...activity }
+      ])
+    ),
     links: DEFAULT_LINKS,
     history: [],
     lastViewedMonday: null,
@@ -159,65 +186,75 @@ export const usePlannerStore = create<PlannerStore>()(
     (set) => ({
       ...buildInitialState(),
 
+      // Template only. A week that was built from this activity keeps the copy
+      // it was given, so editing or deleting here never reaches a plan.
       addActivity: (activity) => set((state) => ({ activities: [...state.activities, activity] })),
-      updateActivity: (id, updates) => set((state) => {
-        const current = state.activities.find(g => g.id === id);
-        const targetChanged = !!current && 'target' in updates && Number(updates.target) !== Number(current.target);
-        const metricChanged = !!current && 'metric' in updates && updates.metric !== current.metric;
-
-        // A changed default must not reshape weeks that already exist: every
-        // week without its own override gets the old baseline pinned down
-        // before the activity picks up its new one, so only weeks that don't
-        // exist yet ever see the new default.
-        let weeklyTargets = state.weeklyTargets;
-        if (current && (targetChanged || metricChanged)) {
-          const weekStarts = new Set<string>();
-          state.events.forEach(e => weekStarts.add(e.weekStart));
-          Object.keys(weeklyTargets || {}).forEach(key => weekStarts.add(key.split(':')[0]));
-
-          const pinned = { ...(weeklyTargets || {}) };
-          let changed = false;
-          weekStarts.forEach(weekStart => {
-            const key = weeklyTargetKey(weekStart, id);
-            if (pinned[key] === undefined) {
-              pinned[key] = Number(current.target) || 0;
-              changed = true;
-            }
-          });
-          if (changed) weeklyTargets = pinned;
-        }
-
-        return {
-          activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g),
-          weeklyTargets
-        };
-      }),
-      deleteActivity: (id) => set((state) => {
-        const weeklyTargets = { ...(state.weeklyTargets || {}) };
-        Object.keys(weeklyTargets).forEach(key => {
-          if (key.endsWith(`:${id}`)) delete weeklyTargets[key];
-        });
-        return {
-          activities: state.activities.filter(g => g.id !== id),
-          events: state.events.filter(i => i.typeId !== id),
-          weeklyTargets
-        };
-      }),
+      updateActivity: (id, updates) => set((state) => ({
+        activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g)
+      })),
+      deleteActivity: (id) => set((state) => ({
+        activities: state.activities.filter(g => g.id !== id)
+      })),
       reorderActivities: (oldIndex, newIndex) => set((state) => ({
         activities: arrayMove(state.activities, oldIndex, newIndex)
       })),
-      setActivityTarget: (id, target, weekStart) => set((state) => {
-        const key = weeklyTargetKey(weekStart, id);
-        const activity = state.activities.find(g => g.id === id);
-        const weeklyTargets = { ...(state.weeklyTargets || {}) };
-        // Back at the baseline there is nothing to remember, so drop the
-        // override and let the week follow the activity again.
-        if (activity && (Number(activity.target) || 0) === target) {
-          delete weeklyTargets[key];
-        } else {
-          weeklyTargets[key] = target;
+
+      addWeekActivity: (weekStart, activity) => set((state) => ({
+        weekActivities: {
+          ...(state.weekActivities || {}),
+          [weekActivityKey(weekStart, activity.id)]: activity
         }
-        return { weeklyTargets };
+      })),
+      updateWeekActivity: (weekStart, id, updates) => set((state) => {
+        const key = weekActivityKey(weekStart, id);
+        const current = state.weekActivities?.[key];
+        if (!current) return {};
+
+        // How an event's `value` is read — its metric and its unit — is the one
+        // thing an edit cannot reach backwards and change. Re-measuring
+        // swimming from miles to minutes describes swimming from now on; the
+        // sessions already on the week keep the meaning they were entered with,
+        // so they take a snapshot on the way past. An event that already holds
+        // one keeps it: the first freeze is the truthful one.
+        const remeasured =
+          ('metric' in updates && updates.metric !== current.metric) ||
+          ('unit' in updates && updates.unit !== current.unit);
+
+        return {
+          weekActivities: { ...state.weekActivities, [key]: { ...current, ...updates } },
+          events: remeasured
+            ? state.events.map(i =>
+                i.typeId === id && i.weekStart === weekStart && !i.activitySnapshot
+                  ? { ...i, activitySnapshot: buildActivitySnapshot(current) }
+                  : i
+              )
+            : state.events
+        };
+      }),
+      removeWeekActivity: (weekStart, id) => set((state) => {
+        const key = weekActivityKey(weekStart, id);
+        const removed = state.weekActivities?.[key];
+        const weekActivities = { ...(state.weekActivities || {}) };
+        delete weekActivities[key];
+        // The week stops aiming at it, but a session already on the calendar
+        // stays real — it snapshots the icon, name, and value formatting it
+        // needs to keep rendering on its own.
+        return {
+          weekActivities,
+          events: removed
+            ? state.events.map(i =>
+                i.typeId === id && i.weekStart === weekStart && !i.activitySnapshot
+                  ? { ...i, activitySnapshot: buildActivitySnapshot(removed) }
+                  : i
+              )
+            : state.events
+        };
+      }),
+      setActivityTarget: (id, target, weekStart) => set((state) => {
+        const key = weekActivityKey(weekStart, id);
+        const current = state.weekActivities?.[key];
+        if (!current) return {};
+        return { weekActivities: { ...state.weekActivities, [key]: { ...current, target } } };
       }),
 
       addEvent: (event) => set((state) => ({
@@ -341,37 +378,40 @@ export const usePlannerStore = create<PlannerStore>()(
           });
         }
 
-        // A copied week brings its bent targets with it, so the copy is a
-        // faithful duplicate rather than a week snapped back to baseline —
-        // unless there's no source week at all, in which case snapping back
-        // to baseline is the whole point.
-        const weeklyTargets = { ...(state.weeklyTargets || {}) };
+        // Filling a week means copying activities into it — from another week,
+        // or from the template when there is no source week, which is what
+        // "default activities" means. Either way the week gets its own copies:
+        // editing them afterwards moves nothing but this week.
+        let weekActivities = state.weekActivities;
         if (activities) {
-          state.activities.forEach(activity => {
-            const toKey = weeklyTargetKey(toWeekStart, activity.id);
-            if (fromWeekStart === null) {
-              delete weeklyTargets[toKey];
-              return;
-            }
-            const from = weeklyTargets[weeklyTargetKey(fromWeekStart, activity.id)];
-            if (from === undefined) delete weeklyTargets[toKey];
-            else weeklyTargets[toKey] = from;
+          const kept = Object.fromEntries(
+            Object.entries(state.weekActivities || {}).filter(
+              ([key]) => !key.startsWith(`${toWeekStart}:`)
+            )
+          );
+          const source =
+            fromWeekStart === null
+              ? state.activities
+              : activitiesForWeek(fromWeekStart, state.weekActivities);
+          source.forEach(activity => {
+            kept[weekActivityKey(toWeekStart, activity.id)] = { ...activity };
           });
+          weekActivities = kept;
         }
 
-        return { events, notes: newNotes, weeklyTargets };
+        return { events, notes: newNotes, weekActivities };
       }),
       clearWeek: (weekStart) => set((state) => {
         const newNotes = { ...state.notes };
         DAYS.forEach(day => { delete newNotes[noteKey(weekStart, day)]; });
-        const weeklyTargets = { ...(state.weeklyTargets || {}) };
-        Object.keys(weeklyTargets).forEach(key => {
-          if (key.startsWith(`${weekStart}:`)) delete weeklyTargets[key];
+        const weekActivities = { ...(state.weekActivities || {}) };
+        Object.keys(weekActivities).forEach(key => {
+          if (key.startsWith(`${weekStart}:`)) delete weekActivities[key];
         });
         return {
           events: state.events.filter(i => i.weekStart !== weekStart),
           notes: newNotes,
-          weeklyTargets
+          weekActivities
         };
       }),
 
@@ -395,7 +435,7 @@ export const usePlannerStore = create<PlannerStore>()(
     }),
     {
       name: 'workout-week',
-      version: 4,
+      version: 6,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

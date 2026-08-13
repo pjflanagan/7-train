@@ -8,6 +8,8 @@ import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { PulledEvent } from '@/lib/googleCalendar';
 import { ScheduledEvent, Activity } from '@/lib/types';
+import { resolveEventActivity } from '@/lib/activitySnapshot';
+import { activitiesForWeek } from '@/lib/progress';
 import {
   addWeeks,
   dateForDay,
@@ -185,19 +187,34 @@ export function useCalendarSync(): void {
         const store = usePlannerStore.getState();
         store.setGoogleCalendarId(calendarId);
 
-        const activityIds = new Set(store.activities.map((activity) => activity.id));
+        // An event belongs to its own week's activities, so what a pulled event
+        // can be drawn as depends on the week it lands in.
+        const knownInWeek = (event: ScheduledEvent) =>
+          activitiesForWeek(event.weekStart, store.weekActivities).some(
+            (activity) => activity.id === event.typeId
+          );
+        // A pulled event whose activity we already snapshotted locally (it was
+        // deleted from "My activities") keeps that snapshot rather than being
+        // dropped as unrecognized.
+        const localById = new Map(store.events.map((event) => [event.id, event]));
         const pulled: ScheduledEvent[] = [];
         const synced = new Map<string, SyncedEvent>();
 
         for (const pulledEvent of events) {
           const event = eventFromGoogle(pulledEvent, weekStartsOn);
-          // An event for an activity this device does not have is left in Google
-          // untouched; activities are local, so we simply cannot draw it.
-          if (!event || !activityIds.has(event.typeId)) continue;
-          pulled.push(event);
-          synced.set(event.id, {
+          if (!event) continue;
+          const activitySnapshot = localById.get(event.id)?.activitySnapshot;
+          // An event for an activity this device has never had, and never
+          // snapshotted, is left in Google untouched; we simply cannot draw it.
+          if (!knownInWeek(event) && !activitySnapshot) continue;
+          const finalEvent = activitySnapshot ? { ...event, activitySnapshot } : event;
+          pulled.push(finalEvent);
+          synced.set(finalEvent.id, {
             eventId: pulledEvent.eventId,
-            signature: eventSignature(event, store.activities.find((g) => g.id === event.typeId)),
+            signature: eventSignature(
+              finalEvent,
+              resolveEventActivity(finalEvent, activitiesForWeek(finalEvent.weekStart, store.weekActivities))
+            ),
           });
         }
 
@@ -256,7 +273,10 @@ export function useCalendarSync(): void {
       const seen = new Set<string>();
 
       for (const event of store.events) {
-        const activity = store.activities.find((g) => g.id === event.typeId);
+        const activity = resolveEventActivity(
+          event,
+          activitiesForWeek(event.weekStart, store.weekActivities)
+        );
         if (!activity) continue;
 
         seen.add(event.id);
@@ -311,8 +331,11 @@ export function useCalendarSync(): void {
         for (const draft of [...create, ...update]) {
           const eventId = eventIds[draft.eventId];
           const event = after.events.find((i) => i.id === draft.eventId);
-          const activity = after.activities.find((g) => g.id === draft.typeId);
           if (!eventId || !event) continue;
+          const activity = resolveEventActivity(
+            event,
+            activitiesForWeek(event.weekStart, after.weekActivities)
+          );
           synced.set(draft.eventId, { eventId, signature: eventSignature(event, activity) });
         }
 

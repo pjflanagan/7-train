@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { usePlannerStore } from '@/lib/store';
+import { useWeekActivities } from '@/hooks/usePlannerSelectors';
 import { getIconByKey } from '@/lib/icons';
 import { defaultEventValue } from '@/lib/progress';
 import styles from './AddEventZone.module.scss';
@@ -30,8 +31,9 @@ export interface AddEventZoneProps {
  * than the list, and the week board clips its own overflow.
  */
 export function AddEventZone({ day, weekStart, compact }: AddEventZoneProps) {
-  const activities = usePlannerStore((state) => state.activities);
-  const weeklyTargets = usePlannerStore((state) => state.weeklyTargets);
+  // Only what this week is aiming at: scheduling is planning against the
+  // week's own activities, not against the "My activities" template.
+  const activities = useWeekActivities(weekStart);
   const addEvent = usePlannerStore((state) => state.addEvent);
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -101,7 +103,7 @@ export function AddEventZone({ day, weekStart, compact }: AddEventZoneProps) {
                     typeId: activity.id,
                     day,
                     weekStart,
-                    value: defaultEventValue(activity, weekStart, weeklyTargets, activities)
+                    value: defaultEventValue(activity, activities)
                   });
                   setAnchor(null);
                 }}

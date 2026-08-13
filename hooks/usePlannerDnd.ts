@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
-import { defaultEventValue } from '@/lib/progress';
+import { defaultEventValue, activitiesForWeek } from '@/lib/progress';
 
 export interface PlannerDndData {
   kind: 'activity' | 'subtag' | 'event' | 'column';
@@ -21,8 +21,9 @@ export function usePlannerDnd() {
   const moveEvent = usePlannerStore(state => state.moveEvent);
   const reorderDay = usePlannerStore(state => state.reorderDay);
   const events = usePlannerStore(state => state.events);
-  const activities = usePlannerStore(state => state.activities);
-  const weeklyTargets = usePlannerStore(state => state.weeklyTargets);
+  // Dragging an activity onto a day drops the week's own copy of it, so the
+  // starting value comes off what that week is aiming at.
+  const weekActivities = usePlannerStore(state => state.weekActivities);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -53,14 +54,16 @@ export function usePlannerDnd() {
 
     if (activeData.kind === 'activity' && overData.kind === 'column') {
       if (activeData.typeId && overData.day && overData.weekStart) {
-        const activity = activities.find(a => a.id === activeData.typeId);
-        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets, activities) : 1;
+        const weekList = activitiesForWeek(overData.weekStart, weekActivities);
+        const activity = weekList.find(a => a.id === activeData.typeId);
+        const value = activity ? defaultEventValue(activity, weekList) : 1;
         addEvent({ typeId: activeData.typeId, day: overData.day, weekStart: overData.weekStart, value });
       }
     } else if (activeData.kind === 'subtag' && overData.kind === 'column') {
       if (activeData.typeId && activeData.tag && overData.day && overData.weekStart) {
-        const activity = activities.find(a => a.id === activeData.typeId);
-        const value = activity ? defaultEventValue(activity, overData.weekStart, weeklyTargets, activities) : 1;
+        const weekList = activitiesForWeek(overData.weekStart, weekActivities);
+        const activity = weekList.find(a => a.id === activeData.typeId);
+        const value = activity ? defaultEventValue(activity, weekList) : 1;
         addEvent({ typeId: activeData.typeId, workoutType: activeData.tag, day: overData.day, weekStart: overData.weekStart, value });
       }
     } else if (activeData.kind === 'event') {

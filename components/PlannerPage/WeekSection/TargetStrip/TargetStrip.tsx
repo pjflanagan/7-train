@@ -2,13 +2,14 @@
 
 import React, { useEffect } from 'react';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
-import { useActivities } from '@/hooks/usePlannerSelectors';
+import { useWeekActivities } from '@/hooks/usePlannerSelectors';
 import { useHorizontalOverflow } from '@/hooks/useHorizontalOverflow';
 import { TargetChip } from './TargetChip/TargetChip';
+import { AddTargetCard } from './AddTargetCard/AddTargetCard';
 import styles from './TargetStrip.module.scss';
 
 export function TargetStrip({ weekStart }: { weekStart: string }) {
-  const activities = useActivities();
+  const activities = useWeekActivities(weekStart);
   const { ref, canScrollLeft, canScrollRight, scrollBy, measure } =
     useHorizontalOverflow<HTMLDivElement>();
 
@@ -32,6 +33,9 @@ export function TargetStrip({ weekStart }: { weekStart: string }) {
         {activities.map(activity => (
           <TargetChip key={activity.id} activity={activity} weekStart={weekStart} />
         ))}
+        {/* Last in the rail, and on a week with no targets yet, the only thing
+            in it — so an empty week still offers somewhere to start. */}
+        <AddTargetCard weekStart={weekStart} />
       </div>
 
       {canScrollRight && (

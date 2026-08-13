@@ -1,0 +1,58 @@
+@use '@/styles/mixins' as mixins;
+
+// How far the badge hangs off the corner. Containers that clip need this much
+// room, so it's shared rather than written twice.
+$overhang: 0.4rem;
+
+.wrapper {
+  position: relative;
+  // The card inside is the thing with a shape; the wrapper only carries the
+  // badge, so it hands its own size straight through.
+  display: flex;
+  min-width: 0;
+
+  > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.badge {
+  position: absolute;
+  top: -$overhang;
+  right: -$overhang;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 0;
+  color: var(--text-muted);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition-smooth);
+  @include mixins.focus-ring();
+
+  &:hover {
+    color: var(--bg-elevated);
+    background-color: var(--accent-error);
+    border-color: var(--accent-error);
+  }
+
+  // Touch devices never hover, so it has to stay reachable there.
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.wrapper:hover .badge,
+.badge:focus-visible {
+  opacity: 1;
+}

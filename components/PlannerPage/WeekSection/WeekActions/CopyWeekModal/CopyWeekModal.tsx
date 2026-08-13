@@ -23,7 +23,7 @@ interface CopyWeekModalProps {
 const sourceLabels: Record<CopySource, string> = {
   current: 'Current week',
   previous: 'Previous week',
-  default: 'Default targets',
+  default: 'My activities',
 };
 
 /** Picks a source week and which parts of it — schedule, activities, or both — to pull in. */
@@ -46,7 +46,7 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
   const nothingSelected = !schedule && !notes && !activities;
   const isDefault = source === 'default';
 
-  // Default targets have no schedule or notes to bring along, so those
+  // The template has no schedule or notes to bring along, so those
   // options are moot there.
   useEffect(() => {
     if (isDefault) {
@@ -96,7 +96,7 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Copy what</legend>
           <Checkbox
-            label="Weekly targets"
+            label="Activities and targets"
             checked={activities}
             onChange={(e) => setActivities(e.target.checked)}
           />

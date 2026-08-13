@@ -27,10 +27,17 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
       : undefined
   );
 
+  // Every drag happens inside one week, and an activity is only ever that
+  // week's copy of it, so the preview has to be told which week to read.
   const preview =
     activeData?.kind === 'event'
-      ? { typeId: draggedEvent?.typeId, tag: draggedEvent?.workoutType ?? undefined }
-      : { typeId: activeData?.typeId, tag: activeData?.tag };
+      ? {
+          typeId: draggedEvent?.typeId,
+          weekStart: draggedEvent?.weekStart,
+          tag: draggedEvent?.workoutType ?? undefined,
+          activitySnapshot: draggedEvent?.activitySnapshot,
+        }
+      : { typeId: activeData?.typeId, weekStart: activeData?.weekStart, tag: activeData?.tag };
 
   return (
     <DndContext
@@ -47,7 +54,14 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
     >
       {children}
       <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
-        {activeId ? <DragPreviewCard typeId={preview.typeId} tag={preview.tag} /> : null}
+        {activeId ? (
+          <DragPreviewCard
+            typeId={preview.typeId}
+            weekStart={preview.weekStart}
+            tag={preview.tag}
+            activitySnapshot={'activitySnapshot' in preview ? preview.activitySnapshot : undefined}
+          />
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

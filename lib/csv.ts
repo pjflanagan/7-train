@@ -1,6 +1,8 @@
 import { HistoryEntry, Activity, ScheduledEvent } from './types';
 import { dayLabel, dateForDay, formatDateLocal, WeekStartsOn } from './dates';
 import { DAYS } from './constants';
+import { activitiesForWeek, WeekActivities } from './progress';
+import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 
 /**
  * Flatten scheduled events and day notes into dated rows.
@@ -12,7 +14,8 @@ import { DAYS } from './constants';
 export function entriesFromSchedule(
   events: ScheduledEvent[],
   notes: Record<string, string>,
-  weekStartsOn: WeekStartsOn = 1
+  weekStartsOn: WeekStartsOn = 1,
+  weekActivities?: WeekActivities
 ): HistoryEntry[] {
   const entries: HistoryEntry[] = [];
   const weekStarts = new Set(events.map(i => i.weekStart));
@@ -36,7 +39,18 @@ export function entriesFromSchedule(
             typeId: event.typeId,
             workoutType: event.workoutType || null,
             value: event.value,
-            notes: note
+            notes: note,
+            // Each week names its activities itself, so a row carries what its
+            // own week called it rather than trusting a shared lookup later.
+            activitySnapshot:
+              event.activitySnapshot ??
+              (() => {
+                const activity = resolveEventActivity(
+                  event,
+                  activitiesForWeek(event.weekStart, weekActivities)
+                );
+                return activity ? buildActivitySnapshot(activity) : undefined;
+              })()
           });
         });
       } else if (note) {
@@ -66,14 +80,15 @@ export function historyRows(history: HistoryEntry[], types: Activity[]): string[
   return [
     HEADERS,
     ...history.map(event => {
-      const type = event.typeId ? types.find(t => t.id === event.typeId) : null;
+      const snapshot = event.activitySnapshot;
+      const type = snapshot ? null : (event.typeId ? types.find(t => t.id === event.typeId) : null);
       return [
         event.date,
         dayLabel(event.day),
-        type ? type.name : (event.typeId || ''),
+        type ? type.name : (snapshot?.name ?? event.typeId ?? ''),
         event.workoutType || '',
         event.value !== null && event.value !== undefined ? String(event.value) : '',
-        type ? type.unit : '',
+        type ? type.unit : (snapshot?.unit ?? ''),
         event.notes || ''
       ];
     })
@@ -97,9 +112,10 @@ export function exportCsv(history: HistoryEntry[], types: Activity[]): string {
   const csvRows = [headers.join(",")];
 
   history.forEach(event => {
-    const type = event.typeId ? types.find(t => t.id === event.typeId) : null;
-    const categoryName = type ? type.name : (event.typeId || '');
-    const unit = type ? type.unit : '';
+    const snapshot = event.activitySnapshot;
+    const type = snapshot ? null : (event.typeId ? types.find(t => t.id === event.typeId) : null);
+    const categoryName = type ? type.name : (snapshot?.name ?? event.typeId ?? '');
+    const unit = type ? type.unit : (snapshot?.unit ?? '');
     const dayNameCap = dayLabel(event.day);
 
     const row = [

@@ -6,7 +6,7 @@ import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { ConfirmDialog } from '@/components/elements/ConfirmDialog/ConfirmDialog';
 import { MdDragIndicator, MdEdit, MdDelete, MdLink } from 'react-icons/md';
 import { usePlannerStore } from '@/lib/store';
-import { ActivityFormModal } from '@/components/PlannerPage/AppShell/AppHeader/MyActivitiesModal/ActivityFormModal/ActivityFormModal';
+import { ActivityFormModal } from '@/components/PlannerPage/ActivityFormModal/ActivityFormModal';
 import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinksPickerModal/ActivityLinksPickerModal';
 import styles from './ActivityRow.module.scss';
 import clsx from 'clsx';

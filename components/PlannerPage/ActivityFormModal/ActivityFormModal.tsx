@@ -22,6 +22,13 @@ export interface ActivityFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   activity?: Activity;
+  /**
+   * The week being edited, when this modal was opened from a week's rail. The
+   * activity then belongs to that week alone: it is never written back to "My
+   * activities", which is only the template a week can be built from. Without
+   * it, the modal edits the template and no week moves.
+   */
+  weekStart?: string;
 }
 
 const TABS: TabConfig[] = [
@@ -37,10 +44,12 @@ const DEFAULT_ACTIVITY_COLOR = '#8E4EC6';
 /** Lets the footer's submit button reach the form it sits outside of. */
 const FORM_ID = 'activity-form';
 
-export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, activity }) => {
+export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, activity, weekStart }) => {
   const [activeTab, setActiveTab] = useState('basic');
   const addActivity = usePlannerStore((s) => s.addActivity);
   const updateActivity = usePlannerStore((s) => s.updateActivity);
+  const addWeekActivity = usePlannerStore((s) => s.addWeekActivity);
+  const updateWeekActivity = usePlannerStore((s) => s.updateWeekActivity);
   
   const { control, handleSubmit, reset, register, setValue, formState: { errors } } = useForm<Activity>({
     resolver: zodResolver(ActivitySchema),
@@ -140,7 +149,11 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   }, [isOpen, activity, reset]);
 
   const onSubmit = (data: Activity) => {
-    if (activity) {
+    if (weekStart) {
+      // Opened from a week: this activity is that week's, start to finish.
+      if (activity) updateWeekActivity(weekStart, activity.id, data);
+      else addWeekActivity(weekStart, data);
+    } else if (activity) {
       updateActivity(activity.id, data);
     } else {
       addActivity(data);
@@ -179,7 +192,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                 render={({ field }) => (
                   <Checkbox
                     label="Optional (does not count towards weekly progress)"
-                    checked={field.value}
+                    checked={field.value ?? false}
                     onChange={field.onChange}
                   />
                 )}

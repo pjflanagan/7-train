@@ -1,0 +1,29 @@
+@use '@/styles/mixins' as mixins;
+
+// Matches a target chip's footprint so the rail keeps its rhythm, but wordless
+// and dashed: a slot, not a labelled control.
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12rem;
+  width: 100%;
+  padding: var(--space-2);
+  background: none;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  @include mixins.focus-ring();
+
+  &:hover {
+    border-color: var(--accent-primary);
+    background-color: var(--accent-primary-soft);
+    color: var(--accent-primary);
+  }
+}
+
+.icon {
+  font-size: var(--icon-md);
+}

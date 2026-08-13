@@ -62,39 +62,6 @@
   opacity: 0.6;
 }
 
-// Waits at the end of the band and only surfaces on hover, so a full week of
-// cards isn't a grid of delete buttons.
-.removeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: var(--radius-xs);
-  color: var(--text-muted);
-  cursor: pointer;
-  opacity: 0;
-  transition: var(--transition-smooth);
-
-  &:hover {
-    color: var(--accent-error);
-  }
-
-  // Touch devices never hover, so it has to stay visible there rather than
-  // being unreachable.
-  @media (hover: none) {
-    opacity: 1;
-  }
-}
-
-.card:hover .removeButton,
-.removeButton:focus-visible {
-  opacity: 1;
-}
-
 .icon {
   font-size: var(--icon-sm);
   flex: 0 0 auto;

@@ -1,18 +1,25 @@
 import React from 'react';
-import { useActivity } from '@/hooks/usePlannerSelectors';
+import { useWeekActivities } from '@/hooks/usePlannerSelectors';
+import { resolveEventActivity } from '@/lib/activitySnapshot';
+import { ScheduledEvent } from '@/lib/types';
 import { getIconByKey } from '@/lib/icons';
 import styles from './DragPreviewCard.module.scss';
 
 export interface DragPreviewCardProps {
   /** The workout type being dragged, when the drag carries one. */
   typeId?: string;
+  /** The week the drag started in — an activity is always one week's copy. */
+  weekStart?: string;
   /** Sub-tag, for a sub-tag drag — shown instead of the bare activity name. */
   tag?: string;
+  /** The snapshot to fall back to when the dragged event's activity was deleted. */
+  activitySnapshot?: ScheduledEvent['activitySnapshot'];
 }
 
 /** What rides under the cursor: the activity's icon, name, and colour. */
-export function DragPreviewCard({ typeId, tag }: DragPreviewCardProps) {
-  const activity = useActivity(typeId ?? '');
+export function DragPreviewCard({ typeId, weekStart, tag, activitySnapshot }: DragPreviewCardProps) {
+  const activities = useWeekActivities(weekStart ?? '');
+  const activity = resolveEventActivity({ typeId: typeId ?? '', activitySnapshot }, activities);
 
   if (!activity) return <div className={styles.preview}>{tag ?? 'Workout'}</div>;
 

@@ -69,7 +69,10 @@ describe('migrateStore v2 -> v3', () => {
     const result = migrateStore(v2, 2) as Record<string, unknown>;
 
     expect(result.notes).toEqual(v2.notes);
-    expect(result.weeklyTargets).toEqual(v2.weeklyTargets);
+    // The v2 target survives as the week's own copy of the activity, aiming
+    // at the same number.
+    expect(result.weeklyTargets).toBeUndefined();
+    expect((result.weekActivities as Record<string, { target: number }>)['w:a'].target).toBe(3);
   });
 
   it('renames on the way through a v1 migration too', () => {
@@ -77,8 +80,11 @@ describe('migrateStore v2 -> v3', () => {
     expect(result.events).toHaveLength(3);
   });
 
-  it('leaves already-migrated state alone', () => {
+  it('carries an already-migrated schedule through unchanged', () => {
     const v3 = { activities: [], events: [{ id: '1', weekStart: '2020-01-06' }], notes: {} };
-    expect(migrateStore(v3, 3)).toBe(v3);
+    const result = migrateStore(v3, 3) as Record<string, unknown>;
+    expect(result.activities).toEqual(v3.activities);
+    expect(result.events).toEqual(v3.events);
+    expect(result.notes).toEqual(v3.notes);
   });
 });

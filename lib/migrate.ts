@@ -213,6 +213,75 @@ function migrateV3toV4(state: Record<string, unknown>): Record<string, unknown> 
   return { ...state, activities };
 }
 
+/**
+ * v4 -> v5: a week used to fall back to each activity's baseline target when it
+ * had no entry of its own, which quietly tied every unbent week to the
+ * activity's default — edit the default and history moved. A week now aims at
+ * exactly what it holds, and a new week holds nothing until targets are copied
+ * into it. Weeks that already existed keep the numbers they were showing, so
+ * the fallback they relied on is written down before it goes away.
+ */
+function migrateV4toV5(state: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(state.activities)) return state;
+
+  const weeklyTargets = { ...((state.weeklyTargets as Record<string, number>) ?? {}) };
+  const weekStarts = new Set<string>();
+  if (Array.isArray(state.events)) {
+    state.events.forEach((raw) => {
+      const weekStart = (raw as Record<string, unknown>).weekStart;
+      if (typeof weekStart === 'string') weekStarts.add(weekStart);
+    });
+  }
+  Object.keys(weeklyTargets).forEach((key) => weekStarts.add(key.split(':')[0]));
+  Object.keys((state.notes as Record<string, string>) ?? {}).forEach((key) =>
+    weekStarts.add(key.slice(0, 10))
+  );
+  // The week in view counts as existing even when nothing has been put in it
+  // yet — it was showing baseline targets a moment ago.
+  const weekStartsOn = typeof state.weekStartsOn === 'number' ? state.weekStartsOn : 1;
+  weekStarts.add(getWeekStartKey(new Date(), weekStartsOn as 0 | 1 | 2 | 3 | 4 | 5 | 6));
+
+  state.activities.forEach((raw) => {
+    const activity = raw as Record<string, unknown>;
+    if (typeof activity.id !== 'string') return;
+    weekStarts.forEach((weekStart) => {
+      const key = `${weekStart}:${activity.id}`;
+      if (weeklyTargets[key] === undefined) weeklyTargets[key] = Number(activity.target) || 0;
+    });
+  });
+
+  return { ...state, weeklyTargets };
+}
+
+/**
+ * v5 -> v6: a week held only a number per activity, which meant every week
+ * still read its name, icon and units out of the one shared list — rename an
+ * activity and every week that ever used it was renamed with it. "My
+ * activities" is now the template a week is *built from*: filling a week copies
+ * the activities into it, and the week's copies are what it plans against. Each
+ * week's numbers become its own copies here.
+ */
+function migrateV5toV6(state: Record<string, unknown>): Record<string, unknown> {
+  const { weeklyTargets, ...rest } = state;
+  if (!weeklyTargets || !Array.isArray(state.activities)) return rest;
+
+  const byId = new Map(
+    state.activities.map((raw) => {
+      const activity = raw as Record<string, unknown>;
+      return [activity.id as string, activity];
+    })
+  );
+
+  const weekActivities: Record<string, unknown> = {};
+  Object.entries(weeklyTargets as Record<string, number>).forEach(([key, target]) => {
+    const id = key.slice(key.indexOf(':') + 1);
+    const template = byId.get(id);
+    if (template) weekActivities[key] = { ...template, target };
+  });
+
+  return { ...rest, weekActivities };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -220,5 +289,7 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 2) state = migrateV1toV2(state);
   if (version < 3) state = migrateV2toV3(state);
   if (version < 4) state = migrateV3toV4(state);
+  if (version < 5) state = migrateV4toV5(state);
+  if (version < 6) state = migrateV5toV6(state);
   return state;
 }

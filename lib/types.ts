@@ -32,6 +32,23 @@ export const ActivitySchema = z.object({
 });
 export type Activity = z.infer<typeof ActivitySchema>;
 
+/**
+ * What an event keeps of its activity once "My activities" no longer has it —
+ * deleting an activity (say, an injury ends a runner's running) doesn't erase
+ * that they ran in the past, so the event holds onto enough to keep rendering
+ * on its own.
+ */
+export const ActivitySnapshotSchema = z.object({
+  name: z.string(),
+  icon: z.custom<IconKey>((val) => typeof val === 'string' && val in ACTIVITY_ICONS),
+  metric: z.enum(['distance', 'duration', 'instance']),
+  unit: z.string(),
+  color: z.string(),
+  paceMinutes: z.number().positive().nullable().optional(),
+  typicalDurationMinutes: z.number().int().positive().nullable().optional(),
+});
+export type ActivitySnapshot = z.infer<typeof ActivitySnapshotSchema>;
+
 export const ScheduledEventSchema = z.object({
   id: z.string(),
   typeId: z.string(),
@@ -61,7 +78,9 @@ export const ScheduledEventSchema = z.object({
    * id, say) deliberately leaves it alone, so syncing never makes a side look
    * newer than the other just by running.
    */
-  updatedAt: z.string().optional()
+  updatedAt: z.string().optional(),
+  /** Set when the activity this event points at (`typeId`) has been deleted. */
+  activitySnapshot: ActivitySnapshotSchema.optional()
 });
 export type ScheduledEvent = z.infer<typeof ScheduledEventSchema>;
 
@@ -72,7 +91,9 @@ export const HistoryEntrySchema = z.object({
   typeId: z.string().nullable(),
   workoutType: z.string().nullable().optional(),
   value: z.number().nullable(),
-  notes: z.string().nullable().optional()
+  notes: z.string().nullable().optional(),
+  /** Carried over from the source event when its activity has been deleted. */
+  activitySnapshot: ActivitySnapshotSchema.optional()
 });
 export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 
@@ -81,11 +102,13 @@ export const PlannerStateSchema = z.object({
   events: z.array(ScheduledEventSchema),
   notes: z.record(z.string(), z.string()), // `${weekStart}-${day}` -> text
   /**
-   * Per-week overrides of an activity's weekly target, keyed `${weekStart}:${activityId}`.
-   * An activity's `target` stays the baseline; editing the tally on a week's chip
-   * only bends that one week.
+   * What each week is aiming at, keyed `${weekStart}:${activityId}`. A week
+   * holds its own copy of every activity it plans, taken from `activities` when
+   * the week was filled — so `activities` is the template a week can be built
+   * from ("My activities"), and a week can then be edited without the template
+   * or any other week moving. A week holds nothing until it is filled.
    */
-  weeklyTargets: z.record(z.string(), z.number()).optional().default({}),
+  weekActivities: z.record(z.string(), ActivitySchema).optional().default({}),
   links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),

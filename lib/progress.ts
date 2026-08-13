@@ -16,21 +16,25 @@ export type OverallProgress = {
   percent: number;
 };
 
-export type WeeklyTargets = Record<string, number>;
+/** Every week's own copies of the activities it plans, keyed by `weekActivityKey`. */
+export type WeekActivities = Record<string, Activity>;
 
-export const weeklyTargetKey = (weekStart: string, activityId: string) => `${weekStart}:${activityId}`;
+export const weekActivityKey = (weekStart: string, activityId: string) => `${weekStart}:${activityId}`;
 
 /**
- * The target an activity runs against in one week: its per-week override when the
- * user has bent that week, otherwise the activity's baseline target.
+ * The activities one week is aiming at, in the order they were put there.
+ * A week that has not been filled yet returns none — it does not fall back to
+ * "My activities", which is only the template a week can be built from.
  */
-export function getEffectiveTarget(
-  activity: Activity,
+export function activitiesForWeek(
   weekStart: string,
-  weeklyTargets?: WeeklyTargets
-): number {
-  const override = weeklyTargets?.[weeklyTargetKey(weekStart, activity.id)];
-  return Number(override ?? activity.target) || 0;
+  weekActivities: WeekActivities | undefined
+): Activity[] {
+  if (!weekActivities) return [];
+  const prefix = `${weekStart}:`;
+  return Object.entries(weekActivities)
+    .filter(([key]) => key.startsWith(prefix))
+    .map(([, activity]) => activity);
 }
 
 /**
@@ -66,33 +70,21 @@ function sessionShare(activities: Activity[]): number {
  * `times` activity's target already counts sessions one at a time, so every
  * event is one instance of it — never a fraction of the week's target.
  */
-export function defaultEventValue(
-  activity: Activity,
-  weekStart: string,
-  weeklyTargets: WeeklyTargets | undefined,
-  activities: Activity[]
-): number {
+export function defaultEventValue(activity: Activity, activities: Activity[]): number {
   if (activity.metric === 'instance') return 1;
-  const target = getEffectiveTarget(activity, weekStart, weeklyTargets);
+  const target = Number(activity.target) || 0;
   if (target <= 0) return 1;
   return roundToMagnitude(target * sessionShare(activities)) || 1;
 }
 
-export function calculateProgress(
-  types: Activity[],
-  events: ScheduledEvent[],
-  weekStart?: string,
-  weeklyTargets?: WeeklyTargets
-): ProgressMap {
+export function calculateProgress(types: Activity[], events: ScheduledEvent[]): ProgressMap {
   const progressMap: ProgressMap = {};
 
   types.forEach(type => {
     progressMap[type.id] = {
       type: type,
       current: 0,
-      target: type.optional
-        ? 0
-        : (weekStart ? getEffectiveTarget(type, weekStart, weeklyTargets) : Number(type.target) || 0),
+      target: type.optional ? 0 : Number(type.target) || 0,
       percent: 0,
       isDone: false
     };
