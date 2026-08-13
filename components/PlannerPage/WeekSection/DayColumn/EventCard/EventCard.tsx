@@ -46,7 +46,7 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
     event.workoutType && !offered.includes(event.workoutType)
       ? [...offered, event.workoutType]
       : offered;
-  // An "instance" activity is always one occurrence, so "1 times" is noise.
+  // An "instance" activity is always one occurrence, so "1 sessions" is noise.
   const hasValue = activity.metric !== 'instance';
   // A duration activity's value is its length, so the number entry sits where the
   // length control would be instead of repeating it a line further down.

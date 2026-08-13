@@ -21,7 +21,7 @@ function normalizeActivity(raw: unknown): Activity {
   // Legacy imports predate the `instance` rename, so their raw metric is still `times`.
   if ((activity.metric as string) === 'times') {
     activity.metric = 'instance';
-    activity.unit = 'times';
+    activity.unit = 'sessions';
   }
   if (activity.metric === 'duration') activity.unit = 'mins';
   return ActivitySchema.parse(activity);
@@ -324,6 +324,47 @@ function migrateV6toV7(state: Record<string, unknown>): Record<string, unknown> 
   return { ...state, activities, weekActivities, events, history };
 }
 
+/**
+ * v7 -> v8: the metric is `instance` in the code, but the word on screen was
+ * "times" — "5 times" says nothing about what was counted. A session is what the
+ * user actually plans, so that is the unit now. Only the label changes; an
+ * activity someone renamed the unit on themselves is left alone.
+ */
+function migrateV7toV8(state: Record<string, unknown>): Record<string, unknown> {
+  const withSessionUnit = (raw: unknown): unknown => {
+    const record = raw as Record<string, unknown>;
+    if (!record || typeof record !== 'object') return raw;
+    if (record.metric !== 'instance' || record.unit !== 'times') return raw;
+    return { ...record, unit: 'sessions' };
+  };
+
+  const activities = Array.isArray(state.activities)
+    ? state.activities.map(withSessionUnit)
+    : state.activities;
+
+  const weekActivities =
+    state.weekActivities && typeof state.weekActivities === 'object'
+      ? Object.fromEntries(
+          Object.entries(state.weekActivities as Record<string, unknown>).map(([key, value]) => [
+            key,
+            withSessionUnit(value),
+          ])
+        )
+      : state.weekActivities;
+
+  // An event whose activity was deleted carries its own frozen copy of it.
+  const withSnapshot = (raw: unknown): unknown => {
+    const record = raw as Record<string, unknown>;
+    if (!record?.activitySnapshot) return raw;
+    return { ...record, activitySnapshot: withSessionUnit(record.activitySnapshot) };
+  };
+
+  const events = Array.isArray(state.events) ? state.events.map(withSnapshot) : state.events;
+  const history = Array.isArray(state.history) ? state.history.map(withSnapshot) : state.history;
+
+  return { ...state, activities, weekActivities, events, history };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -334,5 +375,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 5) state = migrateV4toV5(state);
   if (version < 6) state = migrateV5toV6(state);
   if (version < 7) state = migrateV6toV7(state);
+  if (version < 8) state = migrateV7toV8(state);
   return state;
 }

@@ -439,7 +439,7 @@ export const usePlannerStore = create<PlannerStore>()(
     }),
     {
       name: 'workout-week',
-      version: 7,
+      version: 8,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

@@ -74,7 +74,7 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     name: 'Lift',
     icon: 'gym',
     metric: 'instance',
-    unit: 'times',
+    unit: 'sessions',
     target: 5,
     color: '#8E4EC6', // violet
     workoutTypes: ['Chest', 'Arms', 'Back', 'Shoulders', 'Core']

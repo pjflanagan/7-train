@@ -140,7 +140,7 @@ function isMetricUnit(unit: string): boolean {
  *
  * A `duration` activity already says so — its value _is_ the length, so the
  * calendar reflects it exactly. Distance activities multiply out the activity's typical
- * pace, and `times` activities use its typical session length; both round up to the
+ * pace, and `instance` activities use its typical session length; both round up to the
  * next quarter hour. Either falls back to a rough guess when the activity has not
  * been told what is typical.
  */

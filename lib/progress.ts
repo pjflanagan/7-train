@@ -67,7 +67,7 @@ function sessionShare(activities: Activity[]): number {
  * week's effective target — see `sessionShare` — rounded to a number that
  * reads as a plan rather than an exact division. Falls back to a bare 1 when
  * the activity has no target to divide (optional activities, a fresh 0). A
- * `times` activity's target already counts sessions one at a time, so every
+ * `instance` activity's target already counts sessions one at a time, so every
  * event is one instance of it — never a fraction of the week's target.
  */
 export function defaultEventValue(activity: Activity, activities: Activity[]): number {

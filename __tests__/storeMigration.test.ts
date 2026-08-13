@@ -88,3 +88,46 @@ describe('migrateStore v2 -> v3', () => {
     expect(result.notes).toEqual(v3.notes);
   });
 });
+
+describe('migrateStore v7 -> v8', () => {
+  const v7 = {
+    activities: [
+      { id: 'lift', metric: 'instance', unit: 'times' },
+      { id: 'run', metric: 'distance', unit: 'miles' },
+      { id: 'yoga', metric: 'instance', unit: 'classes' },
+    ],
+    weekActivities: {
+      '2020-01-06:lift': { id: 'lift', metric: 'instance', unit: 'times' },
+    },
+    events: [
+      { id: '1', activitySnapshot: { id: 'gone', metric: 'instance', unit: 'times' } },
+      { id: '2' },
+    ],
+    history: [{ id: 'h', activitySnapshot: { id: 'gone', metric: 'instance', unit: 'times' } }],
+  };
+
+  type Unitful = { unit?: string };
+  type V8 = {
+    activities: Unitful[];
+    weekActivities: Record<string, Unitful>;
+    events: Array<{ id: string; activitySnapshot?: Unitful }>;
+    history: Array<{ activitySnapshot: Unitful }>;
+  };
+
+  it('relabels the instance unit everywhere it is stored', () => {
+    const result = migrateStore(v7, 7) as V8;
+
+    expect(result.activities[0].unit).toBe('sessions');
+    expect(result.weekActivities['2020-01-06:lift'].unit).toBe('sessions');
+    expect(result.events[0].activitySnapshot?.unit).toBe('sessions');
+    expect(result.history[0].activitySnapshot.unit).toBe('sessions');
+  });
+
+  it('leaves other metrics and hand-written units alone', () => {
+    const result = migrateStore(v7, 7) as V8;
+
+    expect(result.activities[1].unit).toBe('miles');
+    expect(result.activities[2].unit).toBe('classes');
+    expect(result.events[1]).toEqual({ id: '2' });
+  });
+});

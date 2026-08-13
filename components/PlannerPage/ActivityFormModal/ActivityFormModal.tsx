@@ -88,7 +88,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
 
   useEffect(() => {
     if (metric === 'instance') {
-      setValue('unit', 'times');
+      setValue('unit', 'sessions');
     }
     if (metric === 'duration') {
       setValue('unit', 'mins');
@@ -207,7 +207,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                 <Select label="Metric" {...register('metric')} error={errors.metric?.message}>
                   <option value="distance">Distance</option>
                   <option value="duration">Duration</option>
-                  <option value="instance">Times</option>
+                  <option value="instance">Sessions</option>
                 </Select>
                 {metric === 'distance' && (
                   <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles" />

@@ -25,7 +25,7 @@ describe('migrate', () => {
     const state = importLegacy();
     expect(state).not.toBeNull();
     expect(state?.activities?.[0].icon).toBe('gym'); // mapped properly
-    expect(state?.activities?.[0].unit).toBe('times'); // forced by times metric
+    expect(state?.activities?.[0].unit).toBe('sessions'); // forced by the instance metric
     
     // verify it cleaned up
     expect(localStorage.getItem('workout_week_types')).toBeNull();

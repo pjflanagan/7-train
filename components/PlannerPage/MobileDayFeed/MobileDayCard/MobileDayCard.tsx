@@ -78,7 +78,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
                     <span className={styles.subType}>{event.workoutType}</span>
                   )}
                 </span>
-                {/* A "times" activity is always one occurrence, so "1 times" is noise. */}
+                {/* An "instance" activity is always one occurrence, so "1 sessions" is noise. */}
                 {activity.metric !== 'instance' && event.value > 0 && (
                   <span className={styles.value}>
                     {event.value}
