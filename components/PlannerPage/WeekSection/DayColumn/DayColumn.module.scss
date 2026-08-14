@@ -1,3 +1,4 @@
+// The whole day — label, events, notes — is one cell and one drop target.
 .column {
   display: flex;
   flex-direction: column;
@@ -26,5 +27,5 @@
 
 // Today's column, so the current day stays findable in a long scroll.
 .isToday {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-elevated);
 }

@@ -39,7 +39,6 @@
 .board {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   // Seven 7.5rem columns plus their gaps need ~55.5rem, and the section adds
   // 2.5rem of padding around them — so below 60rem the board has to scroll and
   // above it never can. It stays a plain block up there rather than a scroll
@@ -52,6 +51,13 @@
     overflow-x: auto;
     overflow-y: hidden;
     @include mixins.thin-scrollbar();
+
+    // Bleeds past the section's padding so a day scrolling out of view runs to
+    // the edge of the screen instead of being clipped by a margin. The padding
+    // moves onto the rows themselves — as their own width rather than the
+    // scroller's, so the trailing side survives the overflow — which keeps the
+    // resting position lined up with the rest of the section.
+    margin-inline: calc(var(--space-5) * -1);
   }
 }
 
@@ -59,4 +65,9 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(7.5rem, 1fr));
   gap: var(--space-2);
+
+  @media (max-width: 60rem) {
+    padding-inline: var(--space-5);
+    min-width: min-content;
+  }
 }

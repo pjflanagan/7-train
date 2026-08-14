@@ -1,19 +1,21 @@
-// Column geometry mirrors `.grid` in WeekSection.module.scss so each label
-// sits over its own day column.
-.row {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(7.5rem, 1fr));
-  gap: var(--space-2);
-}
-
-.day {
+// Sits flush against the top of its column: the negative margins pull it out
+// to the column's own edges, over the column's padding.
+.header {
   display: flex;
   align-items: baseline;
   gap: var(--space-1);
   min-width: 0;
+  margin: calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0;
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+.isToday {
+  border-bottom-color: var(--accent-primary);
+
+  .dayName {
+    color: var(--accent-primary);
+  }
 }
 
 .dayName {
@@ -33,14 +35,4 @@
 .weather {
   margin-left: auto;
   display: inline-flex;
-}
-
-// Today reads as the active column, in the accent colour.
-.isToday {
-  background-color: var(--accent-primary-soft);
-  border-bottom-color: var(--accent-primary);
-
-  .dayName {
-    color: var(--accent-primary);
-  }
 }

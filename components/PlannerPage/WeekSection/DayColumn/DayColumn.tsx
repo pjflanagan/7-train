@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useDndContext, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -5,6 +7,7 @@ import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useDayEvents } from '@/hooks/usePlannerSelectors';
 import { AddEventZone } from './AddEventZone/AddEventZone';
+import { DayHeader } from './DayHeader/DayHeader';
 import { DayNotes } from './DayNotes/DayNotes';
 import { EventCard } from './EventCard/EventCard';
 import styles from './DayColumn.module.scss';
@@ -12,13 +15,17 @@ import styles from './DayColumn.module.scss';
 export interface DayColumnProps {
   day: typeof DAYS[number];
   weekStart: string;
+  /** The calendar date this column stands for. */
+  date: Date;
   isToday?: boolean;
 }
 
-export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
+export function DayColumn({ day, weekStart, date, isToday }: DayColumnProps) {
   const events = useDayEvents(day, weekStart);
   const eventIds = events.map(event => event.id);
 
+  // One droppable for the whole cell, label included: the header is part of the
+  // day, so aiming at it is aiming at the day.
   const { setNodeRef } = useDroppable({
     id: `col-${weekStart}-${day}`,
     data: { kind: 'column', day, weekStart },
@@ -39,6 +46,7 @@ export function DayColumn({ day, weekStart, isToday }: DayColumnProps) {
       className={clsx(styles.column, isOver && styles.isOver, isToday && styles.isToday)}
       ref={setNodeRef}
     >
+      <DayHeader day={day} date={date} isToday={isToday} />
       <div className={styles.itemsList}>
         <SortableContext items={eventIds} strategy={verticalListSortingStrategy}>
           {events.map(event => (
