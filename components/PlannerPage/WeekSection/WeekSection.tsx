@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { WeekProgressBar } from './WeekProgressBar/WeekProgressBar';
 import { WeekActions } from './WeekActions/WeekActions';
 import { TargetStrip } from './TargetStrip/TargetStrip';
@@ -18,7 +19,7 @@ export function WeekSection({ weekStart, currentWeekStart }: WeekSectionProps) {
   const todayKey = formatDateLocal(new Date());
 
   return (
-    <section className={styles.section}>
+    <section className={clsx(styles.section, weekStart === currentWeekStart && styles.isCurrentWeek)}>
       <header className={styles.headerRow}>
         <div className={styles.headerLeft}>
           <h2 className={styles.header}>{weekLabel(weekStart, currentWeekStart)}</h2>

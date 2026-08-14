@@ -8,6 +8,12 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+// The week containing today, lifted just off the page so it can be found while
+// scrolling without competing with today's own column.
+.isCurrentWeek {
+  background-color: color-mix(in srgb, var(--overlay-hover) 50%, transparent);
+}
+
 // Deliberately compact: the week header is a label, the day columns are the
 // content that matters.
 .headerRow {
@@ -58,6 +64,9 @@
     // scroller's, so the trailing side survives the overflow — which keeps the
     // resting position lined up with the rest of the section.
     margin-inline: calc(var(--space-5) * -1);
+
+    // Keeps the scrollbar off the bottom of the columns.
+    padding-bottom: var(--space-2);
   }
 }
 
