@@ -36,6 +36,7 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
           weekStart: draggedEvent?.weekStart,
           tag: draggedEvent?.workoutType ?? undefined,
           activitySnapshot: draggedEvent?.activitySnapshot,
+          activityFrozen: draggedEvent?.activityFrozen,
         }
       : { typeId: activeData?.typeId, weekStart: activeData?.weekStart, tag: activeData?.tag };
 
@@ -60,6 +61,7 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
             weekStart={preview.weekStart}
             tag={preview.tag}
             activitySnapshot={'activitySnapshot' in preview ? preview.activitySnapshot : undefined}
+            activityFrozen={'activityFrozen' in preview ? preview.activityFrozen : undefined}
           />
         ) : null}
       </DragOverlay>

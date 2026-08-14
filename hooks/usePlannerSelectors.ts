@@ -13,20 +13,20 @@ export const useActivities = () => usePlannerStore((state) => state.activities);
 export const useActivity = (id: string) => usePlannerStore((state) => state.activities.find(g => g.id === id));
 
 /**
- * An event's activity — its own week's copy, else the snapshot the event took
- * when that week stopped aiming at it.
+ * An event's activity — its own week's copy, else the copy the event carries.
+ * An event always carries one, so this answers even for a week with no targets.
  *
  * Resolving off a snapshot builds a fresh object, so it happens in a memo
  * rather than inside the store selector, which must return a stable value.
  */
 export const useEventActivity = (
-  event: Pick<ScheduledEvent, 'typeId' | 'weekStart' | 'activitySnapshot'>
+  event: Pick<ScheduledEvent, 'typeId' | 'weekStart' | 'activitySnapshot' | 'activityFrozen'>
 ) => {
   const activities = useWeekActivities(event.weekStart);
-  const { typeId, activitySnapshot } = event;
+  const { typeId, activitySnapshot, activityFrozen } = event;
   return useMemo(
-    () => resolveEventActivity({ typeId, activitySnapshot }, activities),
-    [typeId, activitySnapshot, activities]
+    () => resolveEventActivity({ typeId, activitySnapshot, activityFrozen }, activities),
+    [typeId, activitySnapshot, activityFrozen, activities]
   );
 };
 

@@ -3,36 +3,50 @@
 Right now the plan lives in `localStorage` (`usePlannerStore` + `persist`) and,
 if the user connects it, is mirrored into a `Workouts` Google calendar by
 `hooks/useCalendarSync.ts`. That was a deliberate "no database" call — see
-`_todo/done/2026-08-12-integration-google-continued.md`. It holds up for one
-person on one device. It stops holding up as soon as we add:
+`_todo/done/2026-08-12-integration-google-continued.md`.
 
-- a second device (nothing merges; last pull wins whatever it finds),
-- goals (they are local-only, so an event for an unknown goal is silently
-  skipped),
+**The division of labour has since been decided** (`_todo/google-calendar-as-storage.md`):
+
+> **Google Calendar stores events. A database, if we add one, stores user
+> settings and activities — nothing else.**
+
+An event carries its own `activitySnapshot` and week, so it renders with no help
+from local state. That removes the sharpest reason this document originally
+existed: "an event for an activity this device does not have is silently
+skipped". Read that document first; this one is only about the *other* half —
+the settings that a calendar event has nowhere to put.
+
+What still pushes toward a database:
+
+- a second device, which needs the same activities, targets and settings (events
+  already travel via the calendar),
 - Strava (`_todo/integration-strava.md`) and Garmin
   (`_todo/integration-garmin.md`), which are _readers_ that write back into the
-  same items the calendar is also writing.
+  same events the calendar is also writing,
+- scheduled work (Sheets export, connector pulls) that must run when no browser
+  is open.
 
-That last point is the real reason to do this now. With three writers and one
-reader per item, ad-hoc syncing in each hook does not scale — `useCalendarSync`
-already carries a hand-rolled baseline map, a debounce, a ready flag and an
-in-flight guard, and each new integration would grow its own copy of that.
+With more than one writer per event, ad-hoc syncing in each hook does not scale —
+`useCalendarSync` already carries a hand-rolled baseline map, a debounce, a ready
+flag and an in-flight guard, and each new integration would grow its own copy.
 
-**This document is about building the sync infrastructure first**, then moving
-the calendar onto it, then plugging in the rest.
+**This document is about the settings store and the sync infrastructure**, with
+the calendar staying the event store rather than being demoted to a mirror.
 
 ---
 
 ## Principles
 
 1. **Local-first stays.** The app must work signed out and offline, exactly as
-   it does today. The database is a replica, never a prerequisite for render.
-2. **One sync engine, many connectors.** Debounce, batching, retry, status and
-   conflict resolution live in one place. A connector only says how to read and
-   write one remote.
-3. **The database is the hub.** Google Calendar, Strava and Garmin sync against
-   our rows, not against each other and not against the browser. Two connectors
-   never talk.
+   it does today. Remote storage is a replica, never a prerequisite for render.
+2. **Events live in the calendar.** Google Calendar is the durable store for
+   `events`; a database row for an event exists only as a cache/index, never as
+   the authority. An event is self-describing on the wire.
+3. **The database is for settings.** `activities`, `weekActivities`, `notes`,
+   `links` and the per-user preferences — the things with no calendar
+   representation. Strava and Garmin sync against our event records and reach
+   the calendar through the same connector everything else uses; two connectors
+   never talk directly.
 4. **Writes are batched and debounced.** A user dragging a workout through the
    day produces one write, not forty. Target: no more than one round trip per
    entity per ~1.5s of continuous editing.
@@ -46,13 +60,19 @@ the calendar onto it, then plugging in the rest.
 Five tables. Ids stay client-generated (they already are), so an offline edit
 keeps its identity when it lands.
 
-| Table            | Notes                                                             |
-| ---------------- | ----------------------------------------------------------------- |
-| `users`          | Google `sub` as the external id, plus settings currently in the store (`weekStartsOn`, `tempUnit`, `defaultStartMinutes`, `googleCalendarId`, `googleSheetId`). |
-| `goals`          | `WorkoutTypeSchema`, per user. Today these are local-only — moving them server side is the single biggest win. |
-| `items`          | `CalendarItemSchema`, per user. Indexed on `(userId, weekStart)` because every query is a week window. |
-| `notes`          | `(userId, weekStart, day) -> text`. |
-| `history`        | `HistoryEntrySchema`. Append-mostly; this is what Sheets export reads. |
+| Table              | Notes                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| `users`            | Google `sub` as the external id, plus settings currently in the store (`weekStartsOn`, `tempUnit`, `use24HourClock`, `defaultStartMinutes`, `googleCalendarId`, `googleSheetId`). |
+| `activities`       | `ActivitySchema`, per user — "My activities", the template a week is built from. |
+| `weekActivities`   | `(userId, weekStart, activityId) -> ActivitySchema`. One week's own copy of a target. |
+| `notes`            | `(userId, weekStart, day) -> text`. |
+| `links`            | `HelpfulLinkSchema`, per user. |
+| `history`          | `HistoryEntrySchema`. Append-mostly; this is what Sheets export reads. |
+
+**No `events` table as the authority.** Events are read from and written to
+Google Calendar. If profiling shows the round trip is too slow for a cold load,
+add an `events` cache table populated from the calendar — but it is a cache, its
+rows are disposable, and a conflict is always resolved by re-reading Google.
 
 Every synced row carries, in addition to its domain fields:
 
@@ -65,7 +85,7 @@ externalIds: { google?: string; strava?: string; garmin?: string };
 ```
 
 `updatedAt` and the "bookkeeping does not bump it" rule already exist on
-`CalendarItem` and are load-bearing — keep that comment's intent. `revision` is
+`ScheduledEvent` and are load-bearing — keep that comment's intent. `revision` is
 new and is what makes an incremental pull possible: the client asks for
 `revision > lastSeen` instead of re-reading a 20-week window every load.
 
@@ -75,7 +95,7 @@ days, well past any plausible offline window.
 ### Zod
 
 `lib/types.ts` schemas stay the wire contract. Add a `SyncMetaSchema` and
-compose: `const SyncedItemSchema = CalendarItemSchema.extend(SyncMeta)`. The
+compose: `const SyncedActivitySchema = ActivitySchema.extend(SyncMeta)`. The
 store keeps holding the plain domain types; sync metadata lives beside the data
 in a `syncMeta` map keyed by entity id, so component code never sees it.
 
@@ -105,8 +125,8 @@ components ──dispatch──▶ usePlannerStore  ──subscribe──▶ syn
                                         ┌────────────────────┼──────────────────┐
                                         ▼                    ▼                  ▼
                                   db connector      google calendar        strava/garmin
-                                  (authoritative)     connector             connectors
-                                                                             (pull-only)
+                                (settings, activities)  connector             connectors
+                                                      (events — the store)    (pull-only)
 ```
 
 New files:
@@ -125,7 +145,7 @@ Every store mutation that touches synced data appends an intent:
 ```ts
 interface PendingChange {
   id: string;                     // change id, for idempotency
-  entity: 'goal' | 'item' | 'note' | 'history' | 'settings';
+  entity: 'activity' | 'weekActivity' | 'event' | 'note' | 'link' | 'history' | 'settings';
   entityId: string;
   op: 'upsert' | 'delete';
   at: number;                     // client clock, for ordering
@@ -240,9 +260,10 @@ In the UI:
 ## Migration
 
 The first sign-in after this ships has a populated `localStorage` and an empty
-database. Upload local state as the initial revision, then pull. Where the
-calendar already holds events, match on `googleEventId` — items already carry it
-— so a user who has been syncing to Google does not get doubles.
+database. Upload local settings and activities as the initial revision, then
+pull. Events are not uploaded — they are already in, or on their way to, the
+calendar, and match on `googleEventId`, which events already carry, so a user who
+has been syncing to Google does not get doubles.
 
 Keep `localStorage` as the offline cache afterwards; it stops being the source
 of truth but stays the thing that makes a cold load instant.
@@ -263,20 +284,24 @@ idempotent on change id). No client changes; tested against the API directly.
 the header indicator. At the end of this phase the plan persists to Postgres and
 survives a device switch. Google sync is untouched and still runs its old path.
 
-**3 — Calendar onto the engine.** Rewrite `useCalendarSync` as a connector.
-Delete the bespoke baseline map, debounce and ready flag; the engine owns them.
-Move the pull server side. This is the proof the abstraction is right — if the
-calendar does not fit cleanly, fix the engine before phase 4.
+**3 — Calendar onto the engine.** Rewrite `useCalendarSync` as a connector,
+still reading and writing Google as the event store. Delete the bespoke baseline
+map, debounce and ready flag; the engine owns them. Move the pull server side.
+This is the proof the abstraction is right — if the calendar does not fit
+cleanly, fix the engine before phase 4. Depends on
+`_todo/google-calendar-as-storage.md` phases 1-3 having landed.
 
-**4 — Goals server side.** Removes the "an event for a goal this device does not
-have is skipped" limitation, which is the sharpest edge in the current design.
+**4 — Activities and targets server side.** `activities`, `weekActivities`,
+`notes`, `links` and settings move onto the engine. Events stay in the calendar
+throughout. This is what makes a second device show the same targets, not just
+the same workouts.
 
 **5 — Strava.** First pull-only connector. Exercises `policy` (two-week window,
 rate limits) and source precedence. Adds the activity link on the event per
 `_todo/integration-strava.md`.
 
 **6 — Garmin.** Recorded activities plus recommendations. Recommendations are a
-new entity kind — suggestions, not items — that the user drags into the plan;
+new entity kind — suggestions, not events — that the user drags into the plan;
 they need their own table but ride the same engine.
 
 **7 — Sheets.** Move export server side so it can run scheduled, not only when
@@ -292,7 +317,11 @@ the modal is open.
   JWT-only design in `lib/auth.ts`.
 - **Realtime** — a second open tab is currently invisible. Polling on focus is
   probably enough; skip websockets until someone asks.
+- **History** — it is event-shaped but Google has no notion of "done". Either it
+  stays a database table (the assumption above) or completed events get a
+  `workoutDone` private property and history is derived from the calendar. The
+  table is the safer call; decide before phase 4.
 - **Multiple plans** — Griley's two-calendar case (`_todo/griley-ideas.md`,
-  training for a half and a tri at once) suggests a `plans` table above `goals`
-  and `items`. Cheap to add now as a nullable `planId`, expensive to retrofit.
+  training for a half and a tri at once) suggests a `plans` table above
+  `activities`, plus a calendar per plan rather than one `Workouts` calendar. Cheap to add now as a nullable `planId`, expensive to retrofit.
   Worth deciding before phase 1 lands.

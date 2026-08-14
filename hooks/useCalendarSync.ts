@@ -187,15 +187,14 @@ export function useCalendarSync(): void {
         const store = usePlannerStore.getState();
         store.setGoogleCalendarId(calendarId);
 
-        // An event belongs to its own week's activities, so what a pulled event
-        // can be drawn as depends on the week it lands in.
+        // The wire does not carry the activity yet (see
+        // `_todo/google-calendar-as-storage.md`), so a pulled event takes back
+        // the copy its local twin was holding. Failing that it has to be
+        // recognizable in the week it lands in.
         const knownInWeek = (event: ScheduledEvent) =>
           activitiesForWeek(event.weekStart, store.weekActivities).some(
             (activity) => activity.id === event.typeId
           );
-        // A pulled event whose activity we already snapshotted locally (it was
-        // deleted from "My activities") keeps that snapshot rather than being
-        // dropped as unrecognized.
         const localById = new Map(store.events.map((event) => [event.id, event]));
         const pulled: ScheduledEvent[] = [];
         const synced = new Map<string, SyncedEvent>();
@@ -203,11 +202,17 @@ export function useCalendarSync(): void {
         for (const pulledEvent of events) {
           const event = eventFromGoogle(pulledEvent, weekStartsOn);
           if (!event) continue;
-          const activitySnapshot = localById.get(event.id)?.activitySnapshot;
-          // An event for an activity this device has never had, and never
-          // snapshotted, is left in Google untouched; we simply cannot draw it.
-          if (!knownInWeek(event) && !activitySnapshot) continue;
-          const finalEvent = activitySnapshot ? { ...event, activitySnapshot } : event;
+          const local = localById.get(event.id);
+          // An event for an activity this device has never had, and holds no
+          // copy of, is left in Google untouched; we simply cannot draw it.
+          if (!knownInWeek(event) && !local?.activitySnapshot) continue;
+          const finalEvent = local?.activitySnapshot
+            ? {
+                ...event,
+                activitySnapshot: local.activitySnapshot,
+                activityFrozen: local.activityFrozen
+              }
+            : event;
           pulled.push(finalEvent);
           synced.set(finalEvent.id, {
             eventId: pulledEvent.eventId,

@@ -40,10 +40,13 @@ export const ActivitySchema = z.object({
 export type Activity = z.infer<typeof ActivitySchema>;
 
 /**
- * What an event keeps of its activity once "My activities" no longer has it —
- * deleting an activity (say, an injury ends a runner's running) doesn't erase
- * that they ran in the past, so the event holds onto enough to keep rendering
- * on its own.
+ * An event's own copy of the activity it is — enough to draw the card with no
+ * help from "My activities" or from the week's targets. Every event carries one,
+ * so a schedule loaded on a device that has never seen these activities (or into
+ * a week nobody has set targets for) still renders.
+ *
+ * It tracks the week's activity while that activity still describes the event,
+ * and freezes when it stops — see `activityFrozen`.
  */
 export const ActivitySnapshotSchema = z.object({
   name: z.string(),
@@ -54,6 +57,8 @@ export const ActivitySnapshotSchema = z.object({
   paceMinutes: z.number().positive().nullable().optional(),
   paceDistance: z.number().positive().nullable().optional(),
   typicalDurationMinutes: z.number().int().positive().nullable().optional(),
+  /** The sub-kinds to offer on this event when the activity itself is gone. */
+  workoutTypes: z.array(z.string()).optional(),
 });
 export type ActivitySnapshot = z.infer<typeof ActivitySnapshotSchema>;
 
@@ -87,8 +92,21 @@ export const ScheduledEventSchema = z.object({
    * newer than the other just by running.
    */
   updatedAt: z.string().optional(),
-  /** Set when the activity this event points at (`typeId`) has been deleted. */
-  activitySnapshot: ActivitySnapshotSchema.optional()
+  /**
+   * The event's own copy of its activity. Written whenever an event is created
+   * or edited, so an event describes itself without the week's targets.
+   *
+   * Optional only for events written before this existed; the migration
+   * backfills them, and nothing creates one without it.
+   */
+  activitySnapshot: ActivitySnapshotSchema.optional(),
+  /**
+   * Set once the week's activity stops describing this event — the week removed
+   * it, or re-measured it (swimming in miles becoming swimming in minutes).
+   * From then on the snapshot is the truth and stops tracking, so a logged "30"
+   * stays the 30 miles it was entered as.
+   */
+  activityFrozen: z.boolean().optional()
 });
 export type ScheduledEvent = z.infer<typeof ScheduledEventSchema>;
 

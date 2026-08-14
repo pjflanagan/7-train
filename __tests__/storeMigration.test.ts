@@ -60,7 +60,8 @@ describe('migrateStore v2 -> v3', () => {
     const result = migrateStore(v2, 2) as Record<string, unknown>;
 
     expect(result.activities).toEqual(v2.goals);
-    expect(result.events).toEqual(v2.items);
+    // Later steps add fields of their own, so this is about the rename only.
+    expect(result.events).toMatchObject(v2.items);
     expect(result.goals).toBeUndefined();
     expect(result.items).toBeUndefined();
   });
@@ -84,7 +85,7 @@ describe('migrateStore v2 -> v3', () => {
     const v3 = { activities: [], events: [{ id: '1', weekStart: '2020-01-06' }], notes: {} };
     const result = migrateStore(v3, 3) as Record<string, unknown>;
     expect(result.activities).toEqual(v3.activities);
-    expect(result.events).toEqual(v3.events);
+    expect(result.events).toMatchObject(v3.events);
     expect(result.notes).toEqual(v3.notes);
   });
 });
@@ -128,6 +129,85 @@ describe('migrateStore v7 -> v8', () => {
 
     expect(result.activities[1].unit).toBe('miles');
     expect(result.activities[2].unit).toBe('classes');
-    expect(result.events[1]).toEqual({ id: '2' });
+    expect(result.events[1]).toMatchObject({ id: '2' });
+  });
+});
+
+describe('migrateStore v8 -> v9', () => {
+  const v8 = {
+    activities: [{ id: 'run', name: 'Running', icon: 'run', metric: 'distance', unit: 'miles', color: '#f00' }],
+    weekActivities: {
+      '2020-01-06:run': {
+        id: 'run',
+        name: 'Monday running',
+        icon: 'run',
+        metric: 'distance',
+        unit: 'km',
+        color: '#0f0',
+      },
+    },
+    events: [
+      { id: 'in-week', typeId: 'run', weekStart: '2020-01-06' },
+      { id: 'no-target', typeId: 'run', weekStart: '2020-01-13' },
+      { id: 'unknown', typeId: 'vanished', weekStart: '2020-01-13' },
+      {
+        id: 'tracking',
+        typeId: 'run',
+        weekStart: '2020-01-06',
+        // Measured the same as its week, so this copy was never frozen — it is
+        // only out of date.
+        activitySnapshot: { name: 'Stale name', icon: 'run', metric: 'distance', unit: 'km', color: '#00f' },
+      },
+      {
+        id: 'already',
+        typeId: 'run',
+        weekStart: '2020-01-06',
+        activitySnapshot: { name: 'Old running', icon: 'run', metric: 'distance', unit: 'miles', color: '#00f' },
+      },
+    ],
+  };
+
+  type V9 = {
+    events: Array<{
+      id: string;
+      activitySnapshot: { name: string; unit: string };
+      activityFrozen?: boolean;
+    }>;
+  };
+
+  const eventsById = () => {
+    const result = migrateStore(v8, 8) as V9;
+    return Object.fromEntries(result.events.map(e => [e.id, e]));
+  };
+
+  it('takes the copy from the event\'s own week when that week has one', () => {
+    const event = eventsById()['in-week'];
+    expect(event.activitySnapshot.name).toBe('Monday running');
+    expect(event.activitySnapshot.unit).toBe('km');
+    expect(event.activityFrozen).toBeFalsy();
+  });
+
+  it('falls back to the template for a week with no target', () => {
+    const event = eventsById()['no-target'];
+    expect(event.activitySnapshot.name).toBe('Running');
+    expect(event.activitySnapshot.unit).toBe('miles');
+  });
+
+  it('gives an event nothing knows about a frozen placeholder', () => {
+    const event = eventsById()['unknown'];
+    expect(event.activitySnapshot.name).toBe('Workout');
+    expect(event.activityFrozen).toBe(true);
+  });
+
+  it('refreshes a copy that was still tracking its week', () => {
+    const event = eventsById()['tracking'];
+    expect(event.activitySnapshot.name).toBe('Monday running');
+    expect(event.activityFrozen).toBe(false);
+  });
+
+  it('keeps a copy taken because the week re-measured it, and marks it frozen', () => {
+    const event = eventsById()['already'];
+    expect(event.activitySnapshot.name).toBe('Old running');
+    expect(event.activityFrozen).toBe(true);
   });
 });

@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PlannerState, Activity, ScheduledEvent, HelpfulLink } from './types';
+import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent, HelpfulLink } from './types';
 import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek } from './progress';
-import { buildActivitySnapshot } from './activitySnapshot';
+import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 import {
   byStartTime,
   clampDuration,
@@ -137,18 +137,29 @@ function nextFreeSlot(state: PlannerState, day: DayName, weekStart: string): num
   const dayEvents = state.events.filter(i => i.day === day && i.weekStart === weekStart);
   if (dayEvents.length === 0) return defaultStart;
 
-  const latestEnd = dayEvents.reduce((end, event) => {
-    const activity = state.activities.find(g => g.id === event.typeId);
-    return Math.max(end, startMinutesOf(event) + durationMinutesOf(event, activity));
-  }, defaultStart);
+  const latestEnd = dayEvents.reduce(
+    (end, event) => Math.max(end, startMinutesOf(event) + lengthOf(state, event)),
+    defaultStart
+  );
 
   return clampStartMinutes(latestEnd);
 }
 
+/**
+ * How long a workout runs. Read off the event's own copy of its activity, so a
+ * week with no targets still stacks its workouts at sensible lengths.
+ */
+function lengthOf(state: PlannerState, event: ScheduledEvent): number {
+  const activity = resolveEventActivity(
+    event,
+    activitiesForWeek(event.weekStart, state.weekActivities)
+  );
+  return durationMinutesOf(event, activity);
+}
+
 /** The moment a workout finishes: its start plus however long it runs. */
 function endOf(state: PlannerState, event: ScheduledEvent): number {
-  const activity = state.activities.find(g => g.id === event.typeId);
-  return startMinutesOf(event) + durationMinutesOf(event, activity);
+  return startMinutesOf(event) + lengthOf(state, event);
 }
 
 /**
@@ -170,6 +181,23 @@ function startAtIndex(state: PlannerState, ordered: ScheduledEvent[], index: num
   const next = ordered[index + 1];
   if (!next) return startMinutesOf(moved);
   return Math.min(startMinutesOf(moved), startMinutesOf(next));
+}
+
+/**
+ * The copy of an activity a new event on `weekStart` should carry — the week's
+ * own version of it, else the template in "My activities". A week is filled from
+ * the template, so the two normally agree; the fallback covers an event added to
+ * a week that has no target for it.
+ */
+function snapshotFor(
+  state: PlannerState,
+  weekStart: string,
+  typeId: string
+): ActivitySnapshot | undefined {
+  const activity =
+    state.weekActivities?.[weekActivityKey(weekStart, typeId)] ??
+    state.activities.find(a => a.id === typeId);
+  return activity ? buildActivitySnapshot(activity) : undefined;
 }
 
 /**
@@ -214,21 +242,27 @@ export const usePlannerStore = create<PlannerStore>()(
         // thing an edit cannot reach backwards and change. Re-measuring
         // swimming from miles to minutes describes swimming from now on; the
         // sessions already on the week keep the meaning they were entered with,
-        // so they take a snapshot on the way past. An event that already holds
-        // one keeps it: the first freeze is the truthful one.
+        // so their snapshot freezes on the way past, holding the activity as it
+        // was. An event already frozen keeps what it has: the first freeze is
+        // the truthful one.
+        //
+        // Every other edit — a rename, a colour, a pace — does describe the
+        // sessions already on the week, so their snapshots follow it.
+        const updated = { ...current, ...updates };
         const remeasured =
           ('metric' in updates && updates.metric !== current.metric) ||
           ('unit' in updates && updates.unit !== current.unit);
+        const frozenSnapshot = buildActivitySnapshot(current);
+        const trackingSnapshot = buildActivitySnapshot(updated);
 
         return {
-          weekActivities: { ...state.weekActivities, [key]: { ...current, ...updates } },
-          events: remeasured
-            ? state.events.map(i =>
-                i.typeId === id && i.weekStart === weekStart && !i.activitySnapshot
-                  ? { ...i, activitySnapshot: buildActivitySnapshot(current) }
-                  : i
-              )
-            : state.events
+          weekActivities: { ...state.weekActivities, [key]: updated },
+          events: state.events.map(i => {
+            if (i.typeId !== id || i.weekStart !== weekStart || i.activityFrozen) return i;
+            return remeasured
+              ? { ...i, activitySnapshot: frozenSnapshot, activityFrozen: true }
+              : { ...i, activitySnapshot: trackingSnapshot };
+          })
         };
       }),
       removeWeekActivity: (weekStart, id) => set((state) => {
@@ -237,14 +271,19 @@ export const usePlannerStore = create<PlannerStore>()(
         const weekActivities = { ...(state.weekActivities || {}) };
         delete weekActivities[key];
         // The week stops aiming at it, but a session already on the calendar
-        // stays real — it snapshots the icon, name, and value formatting it
-        // needs to keep rendering on its own.
+        // stays real — its snapshot freezes as the activity last stood, so
+        // re-adding a differently shaped activity under the same id later does
+        // not reach back and change what was already scheduled.
         return {
           weekActivities,
           events: removed
             ? state.events.map(i =>
-                i.typeId === id && i.weekStart === weekStart && !i.activitySnapshot
-                  ? { ...i, activitySnapshot: buildActivitySnapshot(removed) }
+                i.typeId === id && i.weekStart === weekStart && !i.activityFrozen
+                  ? {
+                      ...i,
+                      activitySnapshot: buildActivitySnapshot(removed),
+                      activityFrozen: true
+                    }
                   : i
               )
             : state.events
@@ -263,7 +302,10 @@ export const usePlannerStore = create<PlannerStore>()(
           stamp({
             ...event,
             id: newId('event'),
-            startMinutes: event.startMinutes ?? nextFreeSlot(state, event.day, event.weekStart)
+            startMinutes: event.startMinutes ?? nextFreeSlot(state, event.day, event.weekStart),
+            // An event describes itself from the moment it exists, so it takes
+            // its copy of the activity here rather than leaning on the week.
+            activitySnapshot: event.activitySnapshot ?? snapshotFor(state, event.weekStart, event.typeId)
           })
         ]
       })),
@@ -439,7 +481,7 @@ export const usePlannerStore = create<PlannerStore>()(
     }),
     {
       name: 'workout-week',
-      version: 8,
+      version: 9,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

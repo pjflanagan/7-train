@@ -20,28 +20,32 @@ function activityFromSnapshot(
     typicalDurationMinutes: snapshot.typicalDurationMinutes ?? null,
     // The activity's current sub-kinds are still worth offering on an event
     // whose measurement was frozen — only the meaning of `value` is fixed.
-    workoutTypes: live?.workoutTypes ?? [],
+    workoutTypes: live?.workoutTypes ?? snapshot.workoutTypes ?? [],
   };
 }
 
 /**
- * How an event should be read. An event snapshots its activity the moment that
- * activity stops describing it — deleted, or re-measured (swimming in miles
- * becoming swimming in minutes) — and from then on the snapshot wins. A logged
- * "30" stays the 30 miles it was rather than silently becoming 30 minutes.
+ * How an event should be read.
+ *
+ * Every event carries its own snapshot of its activity, so this answers even
+ * when `activities` is empty — a week with no targets still draws its events.
+ * While the week's activity still describes the event the two agree (the store
+ * re-stamps the snapshot on every edit), and the live copy is preferred so an
+ * edit is never a frame behind. Once the event is frozen — the week dropped the
+ * activity, or re-measured it — the snapshot wins outright.
  */
 export function resolveEventActivity(
-  event: Pick<ScheduledEvent, 'typeId' | 'activitySnapshot'>,
+  event: Pick<ScheduledEvent, 'typeId' | 'activitySnapshot' | 'activityFrozen'>,
   activities: Activity[]
 ): Activity | undefined {
   const live = activities.find((a) => a.id === event.typeId);
-  if (event.activitySnapshot) {
+  if (event.activitySnapshot && (event.activityFrozen || !live)) {
     return activityFromSnapshot(event.typeId, event.activitySnapshot, live);
   }
   return live;
 }
 
-/** What an event holds onto once the activity stops describing it. */
+/** What an event holds onto so it can render on its own. */
 export function buildActivitySnapshot(activity: Activity): ActivitySnapshot {
   return {
     name: activity.name,
@@ -52,5 +56,6 @@ export function buildActivitySnapshot(activity: Activity): ActivitySnapshot {
     paceMinutes: activity.paceMinutes ?? null,
     paceDistance: activity.paceDistance ?? null,
     typicalDurationMinutes: activity.typicalDurationMinutes ?? null,
+    workoutTypes: activity.workoutTypes ?? [],
   };
 }

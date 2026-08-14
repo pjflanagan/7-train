@@ -12,14 +12,25 @@ export interface DragPreviewCardProps {
   weekStart?: string;
   /** Sub-tag, for a sub-tag drag — shown instead of the bare activity name. */
   tag?: string;
-  /** The snapshot to fall back to when the dragged event's activity was deleted. */
+  /** The dragged event's own copy of its activity, when the drag carries one. */
   activitySnapshot?: ScheduledEvent['activitySnapshot'];
+  /** Whether that copy has stopped tracking the week's activity. */
+  activityFrozen?: boolean;
 }
 
 /** What rides under the cursor: the activity's icon, name, and colour. */
-export function DragPreviewCard({ typeId, weekStart, tag, activitySnapshot }: DragPreviewCardProps) {
+export function DragPreviewCard({
+  typeId,
+  weekStart,
+  tag,
+  activitySnapshot,
+  activityFrozen
+}: DragPreviewCardProps) {
   const activities = useWeekActivities(weekStart ?? '');
-  const activity = resolveEventActivity({ typeId: typeId ?? '', activitySnapshot }, activities);
+  const activity = resolveEventActivity(
+    { typeId: typeId ?? '', activitySnapshot, activityFrozen },
+    activities
+  );
 
   if (!activity) return <div className={styles.preview}>{tag ?? 'Workout'}</div>;
 

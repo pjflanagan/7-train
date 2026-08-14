@@ -365,6 +365,81 @@ function migrateV7toV8(state: Record<string, unknown>): Record<string, unknown> 
   return { ...state, activities, weekActivities, events, history };
 }
 
+/**
+ * v8 -> v9: an event used to read its name, icon and units out of its week's
+ * targets, and only kept a copy of its own once the week stopped aiming at it.
+ * That made an event unreadable without the week around it — a plan pulled onto
+ * a device with no targets set drew nothing. Every event carries its own copy
+ * now, taken from its week, or failing that from "My activities".
+ *
+ * A copy tracks the week's activity until that activity stops describing the
+ * event, which is what `activityFrozen` records from here on. Whether an older
+ * event was in that state is read off the copy it already holds: it was frozen
+ * exactly when the week stopped aiming at the activity (nothing to compare
+ * against now) or re-measured it (the metric or unit disagree). Anything else
+ * is a copy that should have been tracking, so it is refreshed rather than
+ * frozen at whatever it happened to say.
+ */
+function migrateV8toV9(state: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(state.events)) return state;
+
+  const weekActivities = (state.weekActivities ?? {}) as Record<string, unknown>;
+  const templates = Array.isArray(state.activities)
+    ? (state.activities as Record<string, unknown>[])
+    : [];
+
+  const snapshotOf = (raw: unknown): unknown => {
+    const a = raw as Record<string, unknown>;
+    return {
+      name: a.name,
+      icon: a.icon,
+      metric: a.metric,
+      unit: a.unit,
+      color: a.color,
+      paceMinutes: a.paceMinutes ?? null,
+      paceDistance: a.paceDistance ?? null,
+      typicalDurationMinutes: a.typicalDurationMinutes ?? null,
+      workoutTypes: Array.isArray(a.workoutTypes) ? a.workoutTypes : [],
+    };
+  };
+
+  const events = state.events.map((raw) => {
+    const event = raw as Record<string, unknown>;
+    const source = (weekActivities[`${event.weekStart}:${event.typeId}`] ??
+      templates.find((a) => a.id === event.typeId)) as Record<string, unknown> | undefined;
+    const held = event.activitySnapshot as Record<string, unknown> | undefined;
+
+    if (held) {
+      const frozen =
+        !source || held.metric !== source.metric || held.unit !== source.unit;
+      return {
+        ...event,
+        activitySnapshot: frozen ? held : snapshotOf(source),
+        activityFrozen: frozen,
+      };
+    }
+
+    // Neither the week nor the template knows this activity any more. The event
+    // still happened, so it gets a plain placeholder rather than being dropped.
+    return {
+      ...event,
+      activitySnapshot: source
+        ? snapshotOf(source)
+        : {
+            name: 'Workout',
+            icon: 'other',
+            metric: 'instance',
+            unit: 'sessions',
+            color: '#94a3b8',
+            workoutTypes: [],
+          },
+      activityFrozen: !source,
+    };
+  });
+
+  return { ...state, events };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -376,5 +451,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 6) state = migrateV5toV6(state);
   if (version < 7) state = migrateV6toV7(state);
   if (version < 8) state = migrateV7toV8(state);
+  if (version < 9) state = migrateV8toV9(state);
   return state;
 }

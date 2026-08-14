@@ -1,4 +1,5 @@
 import { Activity, ScheduledEvent, HelpfulLink } from './types';
+import { buildActivitySnapshot } from './activitySnapshot';
 
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
@@ -98,7 +99,7 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
  * (lib/dates imports DAYS from here).
  */
 export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
-  return [
+  const events: Omit<ScheduledEvent, 'activitySnapshot'>[] = [
     {
       id: 'event-1',
       typeId: 'type-run',
@@ -148,4 +149,13 @@ export function getDefaultEvents(weekStart: string): ScheduledEvent[] {
       workoutType: 'Long run'
     }
   ];
+
+  return events.map(event => ({
+    ...event,
+    // Seeds are events like any other: they carry their own copy of the
+    // activity so they render without the seeded week's targets.
+    activitySnapshot: buildActivitySnapshot(
+      DEFAULT_ACTIVITIES.find(a => a.id === event.typeId)!
+    )
+  }));
 }

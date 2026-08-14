@@ -2,7 +2,7 @@ import { PlannerState, PlannerStateSchema } from './types';
 import { migrateStore } from './migrate';
 
 /** Bumped alongside the zustand `persist` version in `@/lib/store`. */
-export const BACKUP_VERSION = 4;
+export const BACKUP_VERSION = 9;
 
 const BACKUP_FORMAT = 'workout-week-backup';
 

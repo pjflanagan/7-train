@@ -3,6 +3,7 @@ import { usePlannerStore } from '@/lib/store';
 import { getWeekStartKey } from '@/lib/dates';
 import { startMinutesOf } from '@/lib/schedule';
 import { ScheduledEvent, Activity } from '@/lib/types';
+import { buildActivitySnapshot } from '@/lib/activitySnapshot';
 
 const weekStart = getWeekStartKey(new Date(), 1);
 
@@ -17,6 +18,8 @@ const activity: Activity = {
   color: '#000000',
 };
 
+// Every event carries its own copy of its activity, which is what the day's
+// stacking reads its length from — no week target needed.
 const event = (id: string, startMinutes: number): ScheduledEvent => ({
   id,
   typeId: activity.id,
@@ -24,6 +27,7 @@ const event = (id: string, startMinutes: number): ScheduledEvent => ({
   weekStart,
   value: 30,
   startMinutes,
+  activitySnapshot: buildActivitySnapshot(activity),
 });
 
 const startOf = (id: string) =>
