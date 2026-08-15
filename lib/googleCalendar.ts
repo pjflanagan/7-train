@@ -261,9 +261,33 @@ export interface EventDraft {
   weekStart: string;
 }
 
+/**
+ * How far a distance event goes, as it reads in the title — "5 miles".
+ *
+ * Only distance events say it. A duration event's number is already the length
+ * of the block on the calendar, and an instance event is one session, so
+ * neither has anything to add that the event does not already show.
+ *
+ * The unit comes from the event's own copy of its activity, which is what the
+ * app writes on every event, so the title says the same words the card does.
+ */
+function distanceLabel(draft: EventDraft): string | undefined {
+  const activity = draft.activitySnapshot;
+  if (activity?.metric !== 'distance' || !(draft.value > 0)) return undefined;
+
+  const unit = activity.unit.trim();
+  return unit ? `${draft.value} ${unit}` : String(draft.value);
+}
+
+function eventSummary(draft: EventDraft): string {
+  const named = draft.subType ? `${draft.title}: ${draft.subType}` : draft.title;
+  const distance = distanceLabel(draft);
+  return distance ? `${named} — ${distance}` : named;
+}
+
 function eventBody(draft: EventDraft) {
   return {
-    summary: draft.subType ? `${draft.title}: ${draft.subType}` : draft.title,
+    summary: eventSummary(draft),
     description: draft.description,
     start: { dateTime: draft.start, timeZone: draft.timeZone },
     end: { dateTime: draft.end, timeZone: draft.timeZone },

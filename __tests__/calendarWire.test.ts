@@ -37,7 +37,10 @@ const draft: EventDraft = {
 };
 
 /** Captures the body `createEvent` sends, without touching the network. */
-async function writtenProps(withDraft: EventDraft): Promise<Record<string, string>> {
+async function writtenEvent(withDraft: EventDraft): Promise<{
+  summary: string;
+  extendedProperties: { private: Record<string, string> };
+}> {
   let body: string | undefined;
   vi.stubGlobal(
     'fetch',
@@ -47,7 +50,11 @@ async function writtenProps(withDraft: EventDraft): Promise<Record<string, strin
     })
   );
   await createEvent('token', 'cal-1', withDraft);
-  return JSON.parse(body!).extendedProperties.private;
+  return JSON.parse(body!);
+}
+
+async function writtenProps(withDraft: EventDraft): Promise<Record<string, string>> {
+  return (await writtenEvent(withDraft)).extendedProperties.private;
 }
 
 /** A Google event as it comes back, built from what we would have written. */
@@ -109,6 +116,43 @@ describe('what an event carries in Google', () => {
   it('ignores an event that is not one of ours', () => {
     expect(eventPropsFromEvent(eventWith({ somethingElse: 'x' }))).toBeNull();
     expect(eventPropsFromEvent({ id: 'g' })).toBeNull();
+  });
+});
+
+describe('what an event is called in Google', () => {
+  it('says how far a distance event goes, after the activity and its sub-kind', async () => {
+    expect((await writtenEvent(draft)).summary).toBe('Swimming: Drills — 1500 yards');
+  });
+
+  it('says the distance even when the event has no sub-kind', async () => {
+    expect((await writtenEvent({ ...draft, subType: null })).summary).toBe(
+      'Swimming — 1500 yards'
+    );
+  });
+
+  it('leaves a duration or instance event named as it was', async () => {
+    const duration = await writtenEvent({
+      ...draft,
+      activitySnapshot: { ...snapshot, metric: 'duration', unit: 'minutes' },
+    });
+    expect(duration.summary).toBe('Swimming: Drills');
+
+    const instance = await writtenEvent({
+      ...draft,
+      value: 1,
+      activitySnapshot: { ...snapshot, metric: 'instance', unit: 'sessions' },
+    });
+    expect(instance.summary).toBe('Swimming: Drills');
+  });
+
+  it('says nothing about a distance nobody has set yet', async () => {
+    expect((await writtenEvent({ ...draft, value: 0 })).summary).toBe('Swimming: Drills');
+  });
+
+  it('falls back to the plain name on an event with no activity copy', async () => {
+    expect((await writtenEvent({ ...draft, activitySnapshot: undefined })).summary).toBe(
+      'Swimming: Drills'
+    );
   });
 });
 
