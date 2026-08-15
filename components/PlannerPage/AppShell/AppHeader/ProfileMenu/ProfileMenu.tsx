@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MdLogout, MdSettings, MdSync } from 'react-icons/md';
+import { MdDescription, MdLogout, MdPrivacyTip, MdSettings, MdSync } from 'react-icons/md';
 import { FcGoogle } from 'react-icons/fc';
 import { signOut } from 'next-auth/react';
 import { Avatar } from '@/components/elements/Avatar/Avatar';
@@ -56,16 +56,34 @@ export const ProfileMenu: React.FC = () => {
         <MenuItem icon={<MdSettings />} onClick={() => open('settings')}>
           Settings
         </MenuItem>
+        <span className={styles.divider} role="separator" />
+        <MenuItem
+          icon={<MdDescription />}
+          href="/terms"
+          onClick={() => setIsOpen(false)}
+        >
+          Terms of service
+        </MenuItem>
+        <MenuItem
+          icon={<MdPrivacyTip />}
+          href="/privacy"
+          onClick={() => setIsOpen(false)}
+        >
+          Privacy policy
+        </MenuItem>
         {isGoogleAuthConfigured && isSignedIn && (
-          <MenuItem
-            icon={<MdLogout />}
-            onClick={() => {
-              setIsOpen(false);
-              signOut();
-            }}
-          >
-            Logout
-          </MenuItem>
+          <>
+            <span className={styles.divider} role="separator" />
+            <MenuItem
+              icon={<MdLogout />}
+              onClick={() => {
+                setIsOpen(false);
+                signOut();
+              }}
+            >
+              Logout
+            </MenuItem>
+          </>
         )}
       </Menu>
 

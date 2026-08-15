@@ -18,6 +18,13 @@
   }
 }
 
+// Groups the menu: app actions, then the legal links, then sign out.
+.divider {
+  height: 1px;
+  margin: var(--space-1) var(--space-2);
+  background-color: var(--border-color);
+}
+
 // Something needs attention in the account menu — currently a dead Google grant.
 .alertDot {
   position: absolute;

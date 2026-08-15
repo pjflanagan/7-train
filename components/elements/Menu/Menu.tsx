@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import clsx from 'clsx';
 import styles from './Menu.module.scss';
 
@@ -64,11 +65,45 @@ export const Menu: React.FC<MenuProps> = ({
 
 export interface MenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
+  /** Turns the item into a link. Pass this instead of `onClick` for navigation. */
+  href?: string;
+  /** Only meaningful alongside `href`. */
+  target?: string;
 }
 
-export const MenuItem: React.FC<MenuItemProps> = ({ icon, children, className, ...props }) => (
-  <button type="button" role="menuitem" className={clsx(styles.item, className)} {...props}>
-    {icon && <span className={styles.itemIcon}>{icon}</span>}
-    <span className={styles.itemLabel}>{children}</span>
-  </button>
-);
+export const MenuItem: React.FC<MenuItemProps> = ({
+  icon,
+  href,
+  target,
+  children,
+  className,
+  ...props
+}) => {
+  const body = (
+    <>
+      {icon && <span className={styles.itemIcon}>{icon}</span>}
+      <span className={styles.itemLabel}>{children}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        role="menuitem"
+        className={clsx(styles.item, className)}
+        target={target}
+        rel={target === '_blank' ? 'noreferrer' : undefined}
+        onClick={props.onClick as React.MouseEventHandler<HTMLAnchorElement> | undefined}
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" role="menuitem" className={clsx(styles.item, className)} {...props}>
+      {body}
+    </button>
+  );
+};
