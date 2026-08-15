@@ -3,15 +3,16 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { usePlannerStore } from '@/lib/store';
-import { useHydrated } from '@/hooks/useHydrated';
+import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
-import { PulledEvent } from '@/lib/googleCalendar';
+import { PulledEvent, PulledTargets } from '@/lib/googleCalendar';
 import { ScheduledEvent, Activity } from '@/lib/types';
 import { buildActivitySnapshot, resolveEventActivity } from '@/lib/activitySnapshot';
-import { activitiesForWeek } from '@/lib/progress';
+import { activitiesForWeek, weekActivityKey, WeekActivities } from '@/lib/progress';
 import {
+  addDays,
   addWeeks,
   dateForDay,
   dayNameForDate,
@@ -39,6 +40,37 @@ const PULL_WEEKS_FORWARD = 12;
 
 /** Long enough to swallow a burst of edits, short enough to feel immediate. */
 const PUSH_DEBOUNCE_MS = 1200;
+
+/** One week's targets, on their way to Google. */
+interface TargetsPayload {
+  weekStart: string;
+  endDate: string;
+  activities: Activity[];
+  googleEventId?: string;
+}
+
+/** Every week that aims at anything, in ascending order. */
+function weeksWithTargets(weekActivities: WeekActivities | undefined): string[] {
+  const weeks = new Set<string>();
+  for (const key of Object.keys(weekActivities ?? {})) {
+    weeks.add(key.slice(0, key.indexOf(':')));
+  }
+  return [...weeks].sort();
+}
+
+/** A week's targets as we last wrote them, so we only write real changes. */
+interface SyncedTargets {
+  googleEventId: string;
+  signature: string;
+}
+
+/**
+ * What a week aims at, as one comparable string. Order is not meaningful — the
+ * same targets rearranged are the same targets — so it is sorted by id first.
+ */
+function targetsSignature(activities: Activity[]): string {
+  return JSON.stringify([...activities].sort((a, b) => a.id.localeCompare(b.id)));
+}
 
 /** What we last wrote to Google for an event, so we only write real changes. */
 interface SyncedEvent {
@@ -172,7 +204,10 @@ function eventFromGoogle(
  * connecting wants — it uploads the entire plan, every week of it, rather than
  * only the weeks the pull window covers.
  */
-async function pushLocalEvents(synced: Map<string, SyncedEvent>): Promise<void> {
+async function pushLocalEvents(
+  synced: Map<string, SyncedEvent>,
+  syncedTargets: Map<string, SyncedTargets>
+): Promise<void> {
   const store = usePlannerStore.getState();
   const weekStartsOn = (store.weekStartsOn ?? 1) as WeekStartsOn;
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -205,7 +240,38 @@ async function pushLocalEvents(synced: Map<string, SyncedEvent>): Promise<void> 
     .filter(([eventId]) => !seen.has(eventId))
     .map(([, { googleEventId }]) => googleEventId);
 
-  if (create.length === 0 && update.length === 0 && remove.length === 0) return;
+  // Targets, a record per week that aims at anything.
+  const targets: TargetsPayload[] = [];
+  const weeksSeen = new Set<string>();
+
+  for (const weekStart of weeksWithTargets(store.weekActivities)) {
+    weeksSeen.add(weekStart);
+    const activities = activitiesForWeek(weekStart, store.weekActivities);
+    const signature = targetsSignature(activities);
+    const known = syncedTargets.get(weekStart);
+    if (known && known.signature === signature) continue;
+
+    targets.push({
+      weekStart,
+      endDate: addDays(weekStart, 1),
+      activities,
+      googleEventId: known?.googleEventId,
+    });
+  }
+
+  const removeTargets = [...syncedTargets.entries()]
+    .filter(([weekStart]) => !weeksSeen.has(weekStart))
+    .map(([, { googleEventId }]) => googleEventId);
+
+  if (
+    create.length === 0 &&
+    update.length === 0 &&
+    remove.length === 0 &&
+    targets.length === 0 &&
+    removeTargets.length === 0
+  ) {
+    return;
+  }
 
   const response = await fetch('/api/calendar', {
     method: 'POST',
@@ -215,15 +281,18 @@ async function pushLocalEvents(synced: Map<string, SyncedEvent>): Promise<void> 
       create,
       update,
       remove,
+      targets,
+      removeTargets,
     }),
   });
   if (!response.ok) throw new Error((await response.json())?.error ?? 'Push failed');
 
   // A push with nothing to write comes back with no calendar, rather than
   // having made one just to hold the write.
-  const { calendarId, eventIds } = (await response.json()) as {
+  const { calendarId, eventIds, targetEventIds } = (await response.json()) as {
     calendarId: string | null;
     eventIds: Record<string, string>;
+    targetEventIds: Record<string, string>;
   };
 
   const after = usePlannerStore.getState();
@@ -245,6 +314,20 @@ async function pushLocalEvents(synced: Map<string, SyncedEvent>): Promise<void> 
     );
     synced.set(draft.eventId, { googleEventId, signature: eventSignature(event, activity) });
   }
+
+  for (const [weekStart] of syncedTargets) {
+    if (!weeksSeen.has(weekStart)) syncedTargets.delete(weekStart);
+  }
+  for (const draft of targets) {
+    const googleEventId = targetEventIds?.[draft.weekStart];
+    if (!googleEventId) continue;
+    syncedTargets.set(draft.weekStart, {
+      googleEventId,
+      signature: targetsSignature(
+        activitiesForWeek(draft.weekStart, after.weekActivities)
+      ),
+    });
+  }
 }
 
 /**
@@ -256,7 +339,7 @@ export function useCalendarSync(): void {
   // Nothing may touch Google until the persisted plan is actually in the store.
   // Before that `getState()` answers with the seeded defaults, and adopting
   // those would upload a sample week and mark the real plan as handed over.
-  const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
+  const isHydrated = usePlannerHydrated();
   const isConnected =
     isHydrated && isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
 
@@ -266,6 +349,8 @@ export function useCalendarSync(): void {
 
   /** Event id -> what Google already holds. Empty until the first pull lands. */
   const syncedRef = useRef(new Map<string, SyncedEvent>());
+  /** Week start -> the targets record Google already holds for that week. */
+  const syncedTargetsRef = useRef(new Map<string, SyncedTargets>());
   /** Pushing before the pull has landed would fight it, so it waits. */
   const isReadyRef = useRef(false);
 
@@ -274,6 +359,7 @@ export function useCalendarSync(): void {
   useEffect(() => {
     if (baselineNonce === 0) return;
     syncedRef.current = new Map();
+    syncedTargetsRef.current = new Map();
   }, [baselineNonce]);
 
   // Hand the plan over, then let Google win.
@@ -286,6 +372,7 @@ export function useCalendarSync(): void {
     if (!isConnected) {
       isReadyRef.current = false;
       syncedRef.current.clear();
+      syncedTargetsRef.current.clear();
       setStatus('off');
       return;
     }
@@ -300,7 +387,7 @@ export function useCalendarSync(): void {
         setStatus('syncing');
         // An empty baseline means every local event is written, whatever week
         // it falls in — the pull window does not apply to this one.
-        await pushLocalEvents(syncedRef.current);
+        await pushLocalEvents(syncedRef.current, syncedTargetsRef.current);
         if (cancelled) return;
         usePlannerStore.getState().setGoogleAdopted();
       }
@@ -322,9 +409,10 @@ export function useCalendarSync(): void {
 
       const response = await fetch(`/api/calendar?${params}`);
       if (!response.ok) throw new Error((await response.json())?.error ?? 'Pull failed');
-      const { calendarId, events } = (await response.json()) as {
+      const { calendarId, events, targets } = (await response.json()) as {
         calendarId: string;
         events: PulledEvent[];
+        targets: PulledTargets[];
       };
       if (cancelled) return;
 
@@ -368,6 +456,28 @@ export function useCalendarSync(): void {
         (event) => event.weekStart < fromKey || event.weekStart >= toKey
       );
 
+      // Targets, week by week. A week the calendar holds nothing for is a week
+      // aiming at nothing — inside the window that is Google's answer, not an
+      // absence of one.
+      const pulledTargets: WeekActivities = {};
+      const syncedTargets = new Map<string, SyncedTargets>();
+      for (const record of targets) {
+        for (const activity of record.activities) {
+          pulledTargets[weekActivityKey(record.weekStart, activity.id)] = activity;
+        }
+        syncedTargets.set(record.weekStart, {
+          googleEventId: record.googleEventId,
+          signature: targetsSignature(record.activities),
+        });
+      }
+
+      const weekActivities: WeekActivities = { ...pulledTargets };
+      for (const [key, activity] of Object.entries(store.weekActivities ?? {})) {
+        const weekStart = key.slice(0, key.indexOf(':'));
+        // Weeks the pull did not cover keep what this device holds for them.
+        if (weekStart < fromKey || weekStart >= toKey) weekActivities[key] = activity;
+      }
+
       // An event created while the pull was in flight has not been written yet.
       // It is not Google contradicting us, it is us being ahead, so it survives
       // and the next push sends it.
@@ -380,7 +490,9 @@ export function useCalendarSync(): void {
       );
 
       syncedRef.current = synced;
+      syncedTargetsRef.current = syncedTargets;
       store.replaceEvents([...outsideWindow, ...pulled, ...unwritten]);
+      store.replaceWeekActivities(weekActivities);
       isReadyRef.current = true;
       setStatus('synced');
     };
@@ -412,7 +524,7 @@ export function useCalendarSync(): void {
       isPushing = true;
       setStatus('syncing');
       try {
-        await pushLocalEvents(syncedRef.current);
+        await pushLocalEvents(syncedRef.current, syncedTargetsRef.current);
         setStatus('synced');
       } catch (error) {
         console.error('Calendar push failed', error);
@@ -424,7 +536,14 @@ export function useCalendarSync(): void {
     };
 
     const unsubscribe = usePlannerStore.subscribe((state, previous) => {
-      if (state.events === previous.events) return;
+      // Both halves of what the calendar holds: the workouts, and what each
+      // week aims at.
+      if (
+        state.events === previous.events &&
+        state.weekActivities === previous.weekActivities
+      ) {
+        return;
+      }
       clearTimeout(timer);
       timer = setTimeout(push, PUSH_DEBOUNCE_MS);
     });

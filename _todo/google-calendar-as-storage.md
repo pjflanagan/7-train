@@ -178,12 +178,39 @@ Still open: the pull is per-load and unconditional. A delta pull (Google's
 `syncToken`) would make it cheap enough to run more often, and is the natural
 next step if load time starts to show.
 
+## Targets in the calendar (done)
+
+A week's targets are stored as **an all-day event on the day the week starts**,
+in the same `Workouts` calendar. Week-shaped data on a week-shaped thing.
+
+- Marked by `workoutRecord=targets`, so it is read before the schedule and never
+  falls through into it. Absence of that property means "a workout", which is
+  what everything written before this looks like.
+- The activities are JSON, split across `workoutTargets0…N` with
+  `workoutTargetsCount`. Google truncates a property value past 1024 characters
+  **silently**, so chunks are 900 and a missing chunk makes the whole record
+  unreadable rather than half-parsed. The ceiling is 300 properties / 32kB per
+  event; the guard trips at 30 chunks, which no real week reaches.
+- All-day and `transparency: 'transparent'` — it is a note about the week, not
+  time spent, so it does not make the day look busy.
+- `events.list` accepts a `privateExtendedProperty` filter, so these can be
+  found without scanning if a future pull wants only targets.
+
+What this buys: targets follow the plan to another device. What it costs:
+
+- **The user can see and delete it.** It is a visible all-day event, one per
+  planned week. Deleting it loses that week's targets, and the app will not know.
+- **Last write wins.** No revision, no merge — two devices editing the same
+  week's targets is whoever pushes second.
+- **The pull window applies.** Targets more than `PULL_WEEKS_FORWARD` out do not
+  come back until the window reaches them.
+
 ## What the calendar still cannot hold
 
 These stay local (and are what a future database would be *for*):
 
-- `activities` — "My activities", the template.
-- `weekActivities` — per-week targets.
+- `activities` — "My activities", the template. Deliberately not stored per
+  calendar: they belong to the user, not to one calendar.
 - `notes`, `links`, `history`.
 - Settings: `weekStartsOn`, `tempUnit`, `use24HourClock`, `defaultStartMinutes`,
   `googleCalendarId`, `googleSheetId`.

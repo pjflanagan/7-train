@@ -16,6 +16,7 @@ import {
   GoogleIntegrationId,
   isIntegrationConnected,
 } from '@/lib/google';
+import { CalendarPicker } from './CalendarPicker/CalendarPicker';
 import styles from './IntegrationsModal.module.scss';
 
 export interface IntegrationsModalProps {
@@ -115,6 +116,8 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
                   )}
                 </div>
               ))}
+
+              {isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar) && <CalendarPicker />}
 
               {isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar) &&
                 status === 'error' && (

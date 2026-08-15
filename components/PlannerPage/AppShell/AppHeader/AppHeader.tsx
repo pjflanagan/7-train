@@ -21,6 +21,7 @@ export const AppHeader: React.FC = () => {
           <div className={styles.brandSection}>
             <SevenLogo size={28} className={styles.brandLogo} title="7 train" />
             <h1>Train</h1>
+            <SyncIndicator />
           </div>
 
           <div className={styles.headerActions}>
@@ -34,7 +35,6 @@ export const AppHeader: React.FC = () => {
             >
               My weekly activities
             </Button>
-            <SyncIndicator />
             <ProfileMenu />
           </div>
         </div>

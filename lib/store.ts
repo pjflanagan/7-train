@@ -4,7 +4,7 @@ import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent, HelpfulLink }
 import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS, DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
-import { weekActivityKey, activitiesForWeek } from './progress';
+import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';
 import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 import {
   byStartTime,
@@ -68,6 +68,12 @@ type PlannerStore = PlannerState & {
    * settings stay put: the calendar owns events only.
    */
   replaceEvents: (events: ScheduledEvent[]) => void;
+  /**
+   * Swap every week's targets for what Google Calendar holds. Same contract as
+   * `replaceEvents`: the caller has already decided which weeks the calendar
+   * spoke for and which it was not asked about.
+   */
+  replaceWeekActivities: (weekActivities: WeekActivities) => void;
 
   setNote: (day: DayName, weekStart: string, note: string) => void;
   /**
@@ -383,6 +389,7 @@ export const usePlannerStore = create<PlannerStore>()(
         )
       })),
       replaceEvents: (events) => set({ events }),
+      replaceWeekActivities: (weekActivities) => set({ weekActivities }),
 
       setNote: (day, weekStart, note) => set((state) => {
         const key = noteKey(weekStart, day);

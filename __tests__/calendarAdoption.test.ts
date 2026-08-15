@@ -5,6 +5,7 @@ import { useCalendarSync } from '@/hooks/useCalendarSync';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { buildActivitySnapshot } from '@/lib/activitySnapshot';
 import { getWeekStartKey, addWeeks } from '@/lib/dates';
+import { weekActivityKey } from '@/lib/progress';
 import { Activity, ScheduledEvent } from '@/lib/types';
 
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.app.created';
@@ -41,7 +42,12 @@ const event = (id: string, week: string): ScheduledEvent => ({
 
 /** Records what hits /api/calendar, answering as an empty calendar would. */
 function stubCalendarApi() {
-  const posts: Array<{ create: unknown[]; update: unknown[]; remove: unknown[] }> = [];
+  const posts: Array<{
+    create: unknown[];
+    update: unknown[];
+    remove: unknown[];
+    targets: unknown[];
+  }> = [];
 
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     if (init?.method === 'POST') {
@@ -51,10 +57,17 @@ function stubCalendarApi() {
       for (const draft of [...body.create, ...body.update]) {
         eventIds[draft.eventId] = `google-${draft.eventId}`;
       }
-      return { ok: true, json: async () => ({ calendarId: 'cal-1', eventIds }) };
+      const targetEventIds: Record<string, string> = {};
+      for (const draft of body.targets ?? []) {
+        targetEventIds[draft.weekStart] = `google-targets-${draft.weekStart}`;
+      }
+      return {
+        ok: true,
+        json: async () => ({ calendarId: 'cal-1', eventIds, targetEventIds }),
+      };
     }
     // The pull: an empty Workouts calendar.
-    return { ok: true, json: async () => ({ calendarId: 'cal-1', events: [] }) };
+    return { ok: true, json: async () => ({ calendarId: 'cal-1', events: [], targets: [] }) };
   });
 
   vi.stubGlobal('fetch', fetchMock);
@@ -110,6 +123,23 @@ describe('handing the plan over to Google', () => {
     await waitFor(() =>
       expect(usePlannerStore.getState().events.map(e => e.id)).toEqual(['ancient'])
     );
+  });
+
+  it('uploads what each week aims at, as its own record', async () => {
+    usePlannerStore.setState({
+      events: [event('recent', weekStart)],
+      weekActivities: { [weekActivityKey(weekStart, activity.id)]: activity },
+    });
+    const { posts } = stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    await waitFor(() => expect(posts.length).toBeGreaterThan(0));
+
+    const targets = posts[0].targets as Array<{ weekStart: string; activities: Activity[] }>;
+    expect(targets).toHaveLength(1);
+    expect(targets[0].weekStart).toBe(weekStart);
+    expect(targets[0].activities[0].target).toBe(20);
   });
 
   it('does not upload the whole plan again on a later sync', async () => {

@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   createEvent,
+  createTargetsEvent,
   eventPropsFromEvent,
   EventDraft,
   GoogleEvent,
+  isTargetsEvent,
+  targetsFromEvent,
+  TargetsDraft,
 } from '@/lib/googleCalendar';
-import { ActivitySnapshot } from '@/lib/types';
+import { Activity, ActivitySnapshot } from '@/lib/types';
 
 const snapshot: ActivitySnapshot = {
   name: 'Swimming',
@@ -105,5 +109,99 @@ describe('what an event carries in Google', () => {
   it('ignores an event that is not one of ours', () => {
     expect(eventPropsFromEvent(eventWith({ somethingElse: 'x' }))).toBeNull();
     expect(eventPropsFromEvent({ id: 'g' })).toBeNull();
+  });
+});
+
+describe('a week of targets in Google', () => {
+  const activities: Activity[] = [
+    {
+      id: 'run',
+      name: 'Running',
+      icon: 'run',
+      metric: 'distance',
+      unit: 'miles',
+      target: 20,
+      color: '#f00',
+      workoutTypes: ['Tempo'],
+    },
+    {
+      id: 'lift',
+      name: 'Lifting',
+      icon: 'gym',
+      metric: 'instance',
+      unit: 'sessions',
+      target: 3,
+      color: '#0f0',
+    },
+  ];
+
+  const targetsDraft: TargetsDraft = {
+    weekStart: '2026-08-17',
+    endDate: '2026-08-18',
+    activities,
+  };
+
+  /** The all-day body `createTargetsEvent` sends, without touching the network. */
+  async function writtenTargets(withDraft: TargetsDraft) {
+    let body: string | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        body = init.body as string;
+        return { ok: true, status: 200, json: async () => ({ id: 'google-targets' }) };
+      })
+    );
+    await createTargetsEvent('token', 'cal-1', withDraft);
+    return JSON.parse(body!);
+  }
+
+  it('round-trips a week and its activities', async () => {
+    const written = await writtenTargets(targetsDraft);
+    const read = targetsFromEvent({ id: 'g', ...written });
+
+    expect(read?.weekStart).toBe('2026-08-17');
+    expect(read?.activities).toEqual(activities);
+  });
+
+  it('writes one all-day day, marked free rather than busy', async () => {
+    const written = await writtenTargets(targetsDraft);
+
+    expect(written.start).toEqual({ date: '2026-08-17' });
+    expect(written.end).toEqual({ date: '2026-08-18' });
+    expect(written.transparency).toBe('transparent');
+  });
+
+  it('splits a week too big for one property across several', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      ...activities[0],
+      id: `activity-${i}`,
+      name: `An activity with a fairly long name ${i}`,
+      workoutTypes: ['One', 'Two', 'Three'],
+    }));
+    const written = await writtenTargets({ ...targetsDraft, activities: many });
+    const props = written.extendedProperties.private;
+
+    expect(Number(props.workoutTargetsCount)).toBeGreaterThan(1);
+    for (const [, value] of Object.entries(props)) {
+      expect((value as string).length).toBeLessThanOrEqual(1024);
+    }
+    expect(targetsFromEvent({ id: 'g', ...written })?.activities).toEqual(many);
+  });
+
+  it('reads nothing rather than half a week when a chunk is missing', async () => {
+    const written = await writtenTargets(targetsDraft);
+    const props = { ...written.extendedProperties.private };
+    props.workoutTargetsCount = '2'; // claims a chunk that was never written
+
+    expect(targetsFromEvent({ id: 'g', extendedProperties: { private: props } })).toBeNull();
+  });
+
+  it('is not mistaken for a workout, and a workout is not mistaken for it', async () => {
+    const written = await writtenTargets(targetsDraft);
+    expect(isTargetsEvent({ id: 'g', ...written })).toBe(true);
+    expect(eventPropsFromEvent({ id: 'g', ...written })).toBeNull();
+
+    const workout = await writtenProps(draft);
+    expect(isTargetsEvent(eventWith(workout))).toBe(false);
   });
 });

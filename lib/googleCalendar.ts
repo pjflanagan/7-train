@@ -10,7 +10,8 @@
  * pulled back in can reattach itself to whatever activities this device holds.
  */
 
-import { ActivitySnapshot, ActivitySnapshotSchema } from './types';
+import { z } from 'zod';
+import { Activity, ActivitySchema, ActivitySnapshot, ActivitySnapshotSchema } from './types';
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 
@@ -37,6 +38,15 @@ const PROP_ACTIVITY_FROZEN = 'workoutActivityFrozen';
  * it next.
  */
 const PROP_WEEK_START = 'workoutWeekStart';
+/**
+ * What kind of record an event is. Absent on workouts, which is what everything
+ * written before this existed looks like, so absence means "a workout".
+ */
+const PROP_RECORD = 'workoutRecord';
+const RECORD_TARGETS = 'targets';
+/** `workoutTargets0`, `workoutTargets1`, … holding one JSON string between them. */
+const PROP_TARGETS_PREFIX = 'workoutTargets';
+const PROP_TARGETS_COUNT = 'workoutTargetsCount';
 
 /**
  * Google caps a private property value at 1024 bytes. A snapshot is normally a
@@ -45,6 +55,50 @@ const PROP_WEEK_START = 'workoutWeekStart';
  * costs an event nothing it needs to render.
  */
 const MAX_PROPERTY_BYTES = 1024;
+
+/**
+ * Room to spare inside the 1024-character cap, which truncates silently rather
+ * than failing — a chunk that quietly loses its tail would corrupt the JSON it
+ * is part of, and the loss would only show up as missing targets much later.
+ */
+const CHUNK_CHARS = 900;
+
+/**
+ * Google allows 300 properties and 32kB per event. A week's targets are a few
+ * hundred bytes; anything approaching this is a bug, not a big week.
+ */
+const MAX_CHUNKS = 30;
+
+/** Splits a JSON string across numbered properties, or null if it will not fit. */
+function toChunks(json: string): Record<string, string> | null {
+  const chunks: string[] = [];
+  for (let i = 0; i < json.length; i += CHUNK_CHARS) {
+    chunks.push(json.slice(i, i + CHUNK_CHARS));
+  }
+  if (chunks.length > MAX_CHUNKS) return null;
+
+  const props: Record<string, string> = { [PROP_TARGETS_COUNT]: String(chunks.length) };
+  chunks.forEach((chunk, index) => {
+    props[`${PROP_TARGETS_PREFIX}${index}`] = chunk;
+  });
+  return props;
+}
+
+/** Reassembles what `toChunks` wrote, or undefined if any part is missing. */
+function fromChunks(props: Record<string, string>): string | undefined {
+  const count = Number(props[PROP_TARGETS_COUNT]);
+  if (!Number.isInteger(count) || count < 1) return undefined;
+
+  let json = '';
+  for (let index = 0; index < count; index += 1) {
+    const chunk = props[`${PROP_TARGETS_PREFIX}${index}`];
+    // A missing chunk means the event was edited or truncated. Half a JSON
+    // string is worse than none, so the whole record is treated as unreadable.
+    if (chunk === undefined) return undefined;
+    json += chunk;
+  }
+  return json;
+}
 
 function serializeSnapshot(snapshot: ActivitySnapshot | undefined): string {
   if (!snapshot) return '';
@@ -104,6 +158,30 @@ async function callGoogle<T>(
 interface CalendarResource {
   id: string;
   summary?: string;
+}
+
+/**
+ * One calendar, or null when it is not there — or not one this app can reach,
+ * which under `calendar.app.created` is any calendar it did not make itself.
+ *
+ * The way back to a calendar whose id we have lost: the user reads the id off
+ * Google Calendar and hands it to us, because we are not allowed to search.
+ */
+export async function getCalendar(
+  accessToken: string,
+  calendarId: string
+): Promise<CalendarResource | null> {
+  try {
+    return await callGoogle<CalendarResource>(
+      accessToken,
+      `/calendars/${encodeURIComponent(calendarId)}`
+    );
+  } catch (error) {
+    if (error instanceof GoogleApiError && error.status >= 400 && error.status < 500) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -201,6 +279,103 @@ function eventBody(draft: EventDraft) {
       },
     },
   };
+}
+
+/** What a route needs to write one week's targets out to Google. */
+export interface TargetsDraft {
+  /** `YYYY-MM-DD` of the week these targets belong to. */
+  weekStart: string;
+  /** The day after `weekStart`, so the all-day event covers exactly one day. */
+  endDate: string;
+  /** The week's own copies of the activities it is aiming at. */
+  activities: Activity[];
+}
+
+/**
+ * A week's targets, as an all-day event on the day the week starts.
+ *
+ * Targets are week-shaped, so they are stored on a week-shaped thing. It is
+ * marked free rather than busy: it is a note about the week, not time spent.
+ */
+function targetsEventBody(draft: TargetsDraft) {
+  const chunks = toChunks(JSON.stringify(draft.activities));
+  if (!chunks) return null;
+
+  return {
+    summary: 'Weekly targets',
+    description: 'What this week aims at in 7 Train. Edited in the app.',
+    start: { date: draft.weekStart },
+    end: { date: draft.endDate },
+    transparency: 'transparent',
+    extendedProperties: {
+      private: {
+        [PROP_RECORD]: RECORD_TARGETS,
+        [PROP_WEEK_START]: draft.weekStart,
+        ...chunks,
+      },
+    },
+  };
+}
+
+export async function createTargetsEvent(
+  accessToken: string,
+  calendarId: string,
+  draft: TargetsDraft
+): Promise<GoogleEvent | null> {
+  const body = targetsEventBody(draft);
+  if (!body) return null;
+  return callGoogle<GoogleEvent>(
+    accessToken,
+    `/calendars/${encodeURIComponent(calendarId)}/events`,
+    { method: 'POST', body: JSON.stringify(body) }
+  );
+}
+
+export async function updateTargetsEvent(
+  accessToken: string,
+  calendarId: string,
+  googleEventId: string,
+  draft: TargetsDraft
+): Promise<GoogleEvent | null> {
+  const body = targetsEventBody(draft);
+  if (!body) return null;
+  return callGoogle<GoogleEvent>(
+    accessToken,
+    `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(googleEventId)}`,
+    { method: 'PUT', body: JSON.stringify(body) }
+  );
+}
+
+/**
+ * The targets a Google event carries, or null when it is not a targets record.
+ *
+ * Anything unreadable — a chunk gone, JSON that no longer parses, an activity
+ * that fails its schema — comes back null. A week then simply has no targets
+ * stored, which is a state the app already handles.
+ */
+export function targetsFromEvent(event: GoogleEvent): {
+  weekStart: string;
+  activities: Activity[];
+} | null {
+  const props = event.extendedProperties?.private;
+  if (props?.[PROP_RECORD] !== RECORD_TARGETS) return null;
+
+  const weekStart = props[PROP_WEEK_START];
+  const json = fromChunks(props);
+  if (!weekStart || !json) return null;
+
+  try {
+    const parsed = z.array(ActivitySchema).safeParse(JSON.parse(json));
+    if (!parsed.success) return null;
+    return { weekStart, activities: parsed.data };
+  } catch {
+    return null;
+  }
+}
+
+/** True when a Google event is one of our records rather than a workout. */
+export function isTargetsEvent(event: GoogleEvent): boolean {
+  return event.extendedProperties?.private?.[PROP_RECORD] === RECORD_TARGETS;
 }
 
 export async function createEvent(
@@ -308,6 +483,13 @@ export function eventPropsFromEvent(event: GoogleEvent): {
  * browser knows the user's zone, so it is the browser that decides which local
  * day a 7am workout falls on.
  */
+/** One week's targets as pulled back from the calendar. */
+export interface PulledTargets {
+  googleEventId: string;
+  weekStart: string;
+  activities: Activity[];
+}
+
 export interface PulledEvent {
   /** Google's id for the event. */
   googleEventId: string;

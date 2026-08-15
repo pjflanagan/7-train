@@ -2,17 +2,23 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
-import { ActivitySnapshotSchema } from '@/lib/types';
+import { ActivitySchema, ActivitySnapshotSchema } from '@/lib/types';
 import {
   createEvent,
+  createTargetsEvent,
   deleteEvent,
   ensureWorkoutsCalendar,
   EventDraft,
   GoogleApiError,
   eventPropsFromEvent,
+  isTargetsEvent,
   listEvents,
   PulledEvent,
+  PulledTargets,
+  targetsFromEvent,
+  TargetsDraft,
   updateEvent,
+  updateTargetsEvent,
 } from '@/lib/googleCalendar';
 
 /**
@@ -44,6 +50,14 @@ const DraftSchema = z.object({
   weekStart: z.string(),
 });
 
+const TargetsSchema = z.object({
+  weekStart: z.string(),
+  endDate: z.string(),
+  activities: z.array(ActivitySchema),
+  /** Present when this week's targets already have an event to overwrite. */
+  googleEventId: z.string().optional(),
+});
+
 const PushSchema = z.object({
   calendarId: z.string().nullable().optional(),
   /** Events with nothing in Google yet. */
@@ -52,6 +66,10 @@ const PushSchema = z.object({
   update: z.array(DraftSchema.extend({ googleEventId: z.string() })).default([]),
   /** Google event ids whose event is gone locally. */
   remove: z.array(z.string()).default([]),
+  /** Weeks whose targets need writing, created or overwritten as they say. */
+  targets: z.array(TargetsSchema).default([]),
+  /** Google event ids of targets records for weeks that aim at nothing now. */
+  removeTargets: z.array(z.string()).default([]),
 });
 
 function errorResponse(error: unknown) {
@@ -83,7 +101,17 @@ export async function GET(request: Request) {
     const raw = await listEvents(accessToken, calendarId, timeMin, timeMax);
 
     const events: PulledEvent[] = [];
+    const targets: PulledTargets[] = [];
+
     for (const event of raw) {
+      // A week's targets are an all-day record, not a workout, so they are read
+      // first and never fall through into the schedule.
+      if (isTargetsEvent(event)) {
+        const record = targetsFromEvent(event);
+        if (record) targets.push({ ...record, googleEventId: event.id });
+        continue;
+      }
+
       const props = eventPropsFromEvent(event);
       // Anything not written by us — or an all-day event someone hand-made —
       // is left alone rather than dragged into the planner.
@@ -97,7 +125,7 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({ calendarId, events });
+    return NextResponse.json({ calendarId, events, targets });
   } catch (error) {
     return errorResponse(error);
   }
@@ -113,13 +141,20 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Malformed sync request' }, { status: 400 });
   }
-  const { calendarId: knownCalendarId, create, update, remove } = parsed.data;
+  const {
+    calendarId: knownCalendarId,
+    create,
+    update,
+    remove,
+    targets,
+    removeTargets,
+  } = parsed.data;
 
   // Deletions alone, against a calendar we have lost the id of, would make a
   // fresh calendar purely to delete events that were never in it. Nothing to
   // write means nothing to create.
-  if (!knownCalendarId && create.length === 0 && update.length === 0) {
-    return NextResponse.json({ calendarId: null, eventIds: {} });
+  if (!knownCalendarId && create.length === 0 && update.length === 0 && targets.length === 0) {
+    return NextResponse.json({ calendarId: null, eventIds: {}, targetEventIds: {} });
   }
 
   try {
@@ -153,7 +188,38 @@ export async function POST(request: Request) {
       await deleteEvent(accessToken, calendarId, googleEventId);
     }
 
-    return NextResponse.json({ calendarId, eventIds });
+    // Week start -> the event holding that week's targets.
+    const targetEventIds: Record<string, string> = {};
+
+    for (const { googleEventId, ...draft } of targets) {
+      let written = null;
+      if (googleEventId) {
+        try {
+          written = await updateTargetsEvent(
+            accessToken,
+            calendarId,
+            googleEventId,
+            draft as TargetsDraft
+          );
+        } catch (error) {
+          // Deleted in Google — inside the app, or by someone tidying their
+          // calendar. The week still aims at something, so it is written again.
+          if (!(error instanceof GoogleApiError) || (error.status !== 404 && error.status !== 410)) {
+            throw error;
+          }
+        }
+      }
+      written ??= await createTargetsEvent(accessToken, calendarId, draft as TargetsDraft);
+      // `null` means the week's targets would not fit in one event, which no
+      // real week does. Skip it rather than failing the whole sync.
+      if (written) targetEventIds[draft.weekStart] = written.id;
+    }
+
+    for (const googleEventId of removeTargets) {
+      await deleteEvent(accessToken, calendarId, googleEventId);
+    }
+
+    return NextResponse.json({ calendarId, eventIds, targetEventIds });
   } catch (error) {
     return errorResponse(error);
   }

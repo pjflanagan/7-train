@@ -16,10 +16,40 @@ existed: "an event for an activity this device does not have is silently
 skipped". Read that document first; this one is only about the *other* half —
 the settings that a calendar event has nowhere to put.
 
+### The sharpest case for it: the calendar id
+
+`googleCalendarId` lives in `localStorage` and is **the only way back to the
+user's `Workouts` calendar**. There is no lookup to fall back on: searching
+calendars means `calendarList.list`, which does not accept
+`calendar.app.created` (it returns 403 "insufficient authentication scopes"),
+and the scopes that do accept it read *every* calendar the user owns — which is
+precisely what the narrow-scope design refuses to ask for. See
+`ensureWorkoutsCalendar` in `lib/googleCalendar.ts`.
+
+So every way of losing that one string creates a second `Workouts` calendar,
+permanently, with the events split across both:
+
+- clearing site data,
+- a different browser or device,
+- a private window,
+- any bug that nulls it (one shipped, and made three calendars before it was
+  caught — `clearAll` used to reset it).
+
+`CalendarPicker` in the integrations modal is the manual way back: the user
+reads the id off Google Calendar and pastes it in, verified through
+`/api/calendar/verify` so a typo cannot make yet another calendar. That is a
+repair tool, not a fix. **The fix is storing the id against the user's Google
+`sub` rather than against a browser** — one row, `users.googleCalendarId`, which
+makes a second device resume the same calendar instead of forking one.
+
+This is the smallest possible version of this document and the one with the
+clearest payoff. If the rest of the design is too big to start, start here.
+
 What still pushes toward a database:
 
 - a second device, which needs the same activities, targets and settings (events
-  already travel via the calendar),
+  already travel via the calendar) — and, above all, needs to find the *same*
+  calendar rather than making its own,
 - Strava (`_todo/integration-strava.md`) and Garmin
   (`_todo/integration-garmin.md`), which are _readers_ that write back into the
   same events the calendar is also writing,
