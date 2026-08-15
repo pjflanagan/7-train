@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { usePlannerDnd } from '@/hooks/usePlannerDnd';
@@ -12,12 +12,29 @@ export function PlannerDndProvider({ children }: { children: React.ReactNode }) 
 
   // Auto-scroll stays off — the week feed pages more weeks in as it scrolls,
   // so a drag that scrolls the feed loads content the drag never asked for.
-  // The feed is otherwise left alone: dnd-kit re-measures droppables on scroll.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  // The feed is held still for the length of a drag: a workout is dropped into
+  // whichever day is under the pointer, and a feed sliding under it moves the
+  // week being aimed at. Listeners rather than `overflow: hidden` on the
+  // document — they come off with the effect the moment the drag ends, however
+  // it ends, so a drag can't leave the app stuck unscrollable.
+  useEffect(() => {
+    if (!activeId) return;
+
+    const block = (event: Event) => event.preventDefault();
+    window.addEventListener('wheel', block, { passive: false });
+    window.addEventListener('touchmove', block, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', block);
+      window.removeEventListener('touchmove', block);
+    };
+  }, [activeId]);
 
   // A scheduled card only carries its event id, so the workout type has to be
   // looked up to draw the same preview as a strip drag.

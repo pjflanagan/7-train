@@ -1,0 +1,75 @@
+@use '@/styles/mixins' as *;
+
+.page {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-8);
+  color: var(--text-main);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  color: var(--text-muted);
+  font-size: var(--font-md);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  @include focus-ring();
+
+  &:hover {
+    color: var(--text-main);
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.updated {
+  margin: var(--space-2) 0 var(--space-6);
+  color: var(--text-dim);
+  font-size: var(--font-sm);
+}
+
+.prose {
+  font-size: var(--font-md);
+  line-height: 1.65;
+  color: var(--text-muted);
+
+  h2 {
+    margin: var(--space-6) 0 var(--space-2);
+    color: var(--text-main);
+    font-size: var(--font-lg);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 var(--space-4);
+  }
+
+  ul {
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-5);
+  }
+
+  li {
+    margin-bottom: var(--space-2);
+  }
+
+  strong {
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--accent-primary-text);
+    text-decoration: underline;
+    border-radius: var(--radius-xs);
+    @include focus-ring();
+  }
+}

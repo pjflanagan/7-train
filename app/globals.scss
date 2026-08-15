@@ -113,9 +113,6 @@ body {
   user-select: text;
 }
 
-// While a drag is in flight the planner must not scroll under the pointer —
-// the drop targets would move out from under it. Set by PlannerDndProvider.
-// Nothing freezes the page during a drag. dnd-kit re-measures its droppables
-// on scroll, so the feed moving under the pointer is handled; a root-level
-// `overflow: hidden` is not, because any drag that ends without the class
-// coming back off leaves the app permanently unscrollable.
+// Holding the page still during a drag is PlannerDndProvider's job, in JS:
+// listeners it puts on for the length of the drag and takes off again, rather
+// than anything latched on here.
