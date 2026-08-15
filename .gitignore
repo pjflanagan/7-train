@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# generated at dev/build time from the latest commit, see scripts/generate-version.mjs
+/public/version.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*
