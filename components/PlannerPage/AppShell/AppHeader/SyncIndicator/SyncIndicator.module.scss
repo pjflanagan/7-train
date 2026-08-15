@@ -1,39 +1,109 @@
 @use '@/styles/mixins' as *;
 
-.indicator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  // Square like the icon buttons beside it, so the header row keeps one rhythm.
-  width: var(--control-md);
-  height: var(--control-md);
-  padding: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
-  font-size: var(--icon-md);
-  line-height: 0;
+/**
+ * The angle the countdown has swept to. Registered so it has a type the browser
+ * can interpolate — a plain custom property would jump from 0 to 360 rather
+ * than travelling round.
+ */
+@property --sync-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
 }
 
-// Only the failed state is a button, so only it reacts to the pointer.
+// The frame. Holds the border layer and the face on top of it, and is itself
+// only as big as the face — the border layer is what sticks out.
+.pill {
+  position: relative;
+  display: inline-flex;
+  isolation: isolate;
+}
+
+// Everything visible except the border: sits above the layer below, and its own
+// background is what hides all of that layer bar the outermost pixel.
+.face {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--control-sm);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  // Recessed rather than raised: the header sits on `--bg-secondary`, so going
+  // darker sinks the pill into it instead of competing with the buttons.
+  background-color: var(--bg-primary);
+  // Dim on a recessed pill: it is a status, and reading it should be a choice
+  // rather than something the header insists on.
+  color: var(--text-dim);
+  font-size: var(--font-xs);
+  white-space: nowrap;
+}
+
+/**
+ * The border, as a layer one pixel bigger than the face in every direction.
+ *
+ * A conic gradient rather than a clip path: a clip cannot sweep an angle, so
+ * going round a pill that way means keyframing each corner by hand. The
+ * gradient turns instead, and the shape comes free from the layer being the
+ * same pill.
+ */
+.border {
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  border-radius: var(--radius-pill);
+  background-color: var(--border-color);
+}
+
+// Idle states have a plain border all the way round.
+.countdown {
+  background-color: transparent;
+  background-image: conic-gradient(
+    from -90deg,
+    var(--accent-primary) var(--sync-angle),
+    var(--border-color) 0
+  );
+  animation: sweep linear forwards;
+}
+
 .error {
-  color: var(--accent-warning);
   cursor: pointer;
   @include focus-ring();
 
-  &:hover {
-    background-color: var(--bg-tertiary);
+  .face {
+    color: var(--accent-warning);
+    background-color: var(--accent-warning-soft);
+  }
+
+  .border {
+    background-color: var(--accent-warning);
   }
 }
 
+.text {
+  line-height: 1;
+}
+
+.icon {
+  font-size: var(--font-md);
+  flex: 0 0 auto;
+}
+
 .spinning {
-  // Sync icons read clockwise; the arrows chase each other the wrong way round
-  // when spun the other direction.
   animation: spin 1.2s linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation-duration: 3.6s;
+  }
+}
+
+@keyframes sweep {
+  from {
+    --sync-angle: 0deg;
+  }
+  to {
+    --sync-angle: 360deg;
   }
 }
 

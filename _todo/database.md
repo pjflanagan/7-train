@@ -192,9 +192,11 @@ outbox intact rather than losing the edit.
 
 ### Flush policy
 
-- **Debounce 1200ms** on the trailing edge (matching today's
-  `PUSH_DEBOUNCE_MS`), with a **5s max wait** so a long continuous drag still
-  checkpoints instead of holding everything until the user stops.
+- **Debounce 5000ms** on the trailing edge (matching today's
+  `SYNC_DEBOUNCE_MS`), chosen to keep API traffic down. A long continuous drag
+  therefore holds everything until the user stops; a **max wait** that
+  checkpoints mid-edit is still worth adding, and matters more at 5s than it did
+  at 1.2s.
 - **Flush immediately** on `visibilitychange` → hidden, and on `pagehide`, so
   closing the tab does not strand a write.
 - **One in-flight batch at a time.** Changes arriving during a flush queue for

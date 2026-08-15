@@ -26,6 +26,7 @@ export interface IntegrationsModalProps {
 
 const SYNC_LABEL: Record<string, string> = {
   off: '',
+  pending: 'Not saved yet',
   pulling: 'Reading your calendar…',
   syncing: 'Sending changes…',
   synced: 'Up to date',

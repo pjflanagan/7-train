@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
-import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
+import { SYNC_DEBOUNCE_MS, useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { PulledEvent, PulledTargets } from '@/lib/googleCalendar';
 import { ScheduledEvent, Activity } from '@/lib/types';
@@ -37,9 +37,6 @@ import { clampDuration, durationMinutesOf, startMinutesOf } from '@/lib/schedule
 /** How much of the calendar a pull covers, in weeks either side of this one. */
 const PULL_WEEKS_BACK = 8;
 const PULL_WEEKS_FORWARD = 12;
-
-/** Long enough to swallow a burst of edits, short enough to feel immediate. */
-const PUSH_DEBOUNCE_MS = 1200;
 
 /** One week's targets, on their way to Google. */
 interface TargetsPayload {
@@ -206,7 +203,8 @@ function eventFromGoogle(
  */
 async function pushLocalEvents(
   synced: Map<string, SyncedEvent>,
-  syncedTargets: Map<string, SyncedTargets>
+  syncedTargets: Map<string, SyncedTargets>,
+  onWrite?: () => void
 ): Promise<void> {
   const store = usePlannerStore.getState();
   const weekStartsOn = (store.weekStartsOn ?? 1) as WeekStartsOn;
@@ -272,6 +270,10 @@ async function pushLocalEvents(
   ) {
     return;
   }
+
+  // Only now is there definitely something to send, which is what the header
+  // announces — a push that turns out to have no work should not flash.
+  onWrite?.();
 
   const response = await fetch('/api/calendar', {
     method: 'POST',
@@ -346,6 +348,7 @@ export function useCalendarSync(): void {
   const setStatus = useCalendarSyncStore((state) => state.setStatus);
   const pullNonce = useCalendarSyncStore((state) => state.resyncNonce);
   const baselineNonce = useCalendarSyncStore((state) => state.baselineNonce);
+  const markPending = useCalendarSyncStore((state) => state.markPending);
 
   /** Event id -> what Google already holds. Empty until the first pull lands. */
   const syncedRef = useRef(new Map<string, SyncedEvent>());
@@ -522,9 +525,10 @@ export function useCalendarSync(): void {
       if (!isReadyRef.current || isPushing) return;
 
       isPushing = true;
-      setStatus('syncing');
       try {
-        await pushLocalEvents(syncedRef.current, syncedTargetsRef.current);
+        await pushLocalEvents(syncedRef.current, syncedTargetsRef.current, () =>
+          setStatus('syncing')
+        );
         setStatus('synced');
       } catch (error) {
         console.error('Calendar push failed', error);
@@ -544,17 +548,20 @@ export function useCalendarSync(): void {
       ) {
         return;
       }
+      // The wait restarts with every edit, so the countdown shown in the header
+      // restarts with it.
+      markPending();
       clearTimeout(timer);
-      timer = setTimeout(push, PUSH_DEBOUNCE_MS);
+      timer = setTimeout(push, SYNC_DEBOUNCE_MS);
     });
 
     // A pull can leave events behind that were never written, so try once on
     // connect too.
-    timer = setTimeout(push, PUSH_DEBOUNCE_MS);
+    timer = setTimeout(push, SYNC_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(timer);
       unsubscribe();
     };
-  }, [isConnected, pullNonce, setStatus]);
+  }, [isConnected, pullNonce, setStatus, markPending]);
 }
