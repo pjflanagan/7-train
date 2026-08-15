@@ -35,10 +35,15 @@ permanently, with the events split across both:
 - any bug that nulls it (one shipped, and made three calendars before it was
   caught — `clearAll` used to reset it).
 
-`CalendarPicker` in the integrations modal is the manual way back: the user
-reads the id off Google Calendar and pastes it in, verified through
-`/api/calendar/verify` so a typo cannot make yet another calendar. That is a
-repair tool, not a fix. **The fix is storing the id against the user's Google
+Two repairs exist, and neither is a fix:
+
+- `CalendarSetupModal` asks on a browser that has no calendar id — adopt an
+  existing calendar by pasting its id, or make a new one. Sync does nothing
+  until it is answered, and creating a calendar now happens only here
+  (`POST /api/calendar/create`), never as a side effect of syncing.
+- `CalendarPicker` in the integrations modal offers the same choice later.
+
+Both are the user doing by hand what a `users` row would do by itself. **The fix is storing the id against the user's Google
 `sub` rather than against a browser** — one row, `users.googleCalendarId`, which
 makes a second device resume the same calendar instead of forking one.
 

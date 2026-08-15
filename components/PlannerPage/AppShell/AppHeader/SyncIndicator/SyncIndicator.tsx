@@ -7,40 +7,32 @@ import { SYNC_DEBOUNCE_MS, useCalendarSyncStatus } from '@/hooks/useCalendarSync
 import styles from './SyncIndicator.module.scss';
 
 /**
- * What calendar sync is doing, in the header.
+ * What calendar sync is doing, in the header, and the way to ask it to look
+ * again.
  *
  * The three states are one story told in order: an edit is held for a moment,
  * then sent, then confirmed. The border travelling round the pill is the
  * holding period running out, so the wait reads as deliberate rather than as
  * the app having missed the change.
  *
- * Nothing is shown when the calendar is not connected — there is no saving to
- * report on.
+ * Pressing it re-reads the calendar. Nothing polls Google — a workout moved in
+ * Google Calendar shows up here when someone asks for it, which is what this
+ * is for.
  */
 export const SyncIndicator: React.FC = () => {
   const { status, pendingSince, resync } = useCalendarSyncStatus();
 
   if (status === 'off') return null;
 
-  if (status === 'error') {
-    return (
-      <button
-        type="button"
-        className={clsx(styles.pill, styles.error)}
-        onClick={resync}
-        title="Could not save — try again"
-      >
-        <span className={styles.border} aria-hidden="true" />
-        <span className={styles.face}>
-          <span className={styles.text}>Could not save</span>
-          <MdSyncProblem className={styles.icon} aria-hidden="true" />
-        </span>
-      </button>
-    );
-  }
+  const isBusy = status === 'pulling' || status === 'syncing';
 
   const content =
-    status === 'pending' ? (
+    status === 'error' ? (
+      <>
+        <span className={styles.text}>Could not save</span>
+        <MdSyncProblem className={styles.icon} aria-hidden="true" />
+      </>
+    ) : status === 'pending' ? (
       <>
         <span className={styles.text}>Unsaved changes</span>
         <MdSave className={styles.icon} aria-hidden="true" />
@@ -60,10 +52,16 @@ export const SyncIndicator: React.FC = () => {
     );
 
   return (
-    <span
-      className={styles.pill}
-      role="status"
-      aria-live="polite"
+    <button
+      type="button"
+      className={clsx(styles.pill, status === 'error' && styles.error)}
+      onClick={resync}
+      disabled={isBusy}
+      title={
+        status === 'error'
+          ? 'Could not save — press to try again'
+          : 'Press to check your calendar for changes'
+      }
     >
       {status === 'pending' ? (
         // Keyed on the moment the wait started, so every fresh edit replays the
@@ -78,6 +76,6 @@ export const SyncIndicator: React.FC = () => {
         <span className={styles.border} aria-hidden="true" />
       )}
       <span className={styles.face}>{content}</span>
-    </span>
+    </button>
   );
 };

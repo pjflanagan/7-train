@@ -342,8 +342,15 @@ export function useCalendarSync(): void {
   // Before that `getState()` answers with the seeded defaults, and adopting
   // those would upload a sample week and mark the real plan as handed over.
   const isHydrated = usePlannerHydrated();
+  // Which calendar to write to is the user's decision, asked for by
+  // `CalendarSetupModal`. Until it is answered there is nowhere to sync to —
+  // syncing anyway is what used to conjure a calendar per browser.
+  const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const isConnected =
-    isHydrated && isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
+    isHydrated &&
+    isSignedIn &&
+    Boolean(calendarId) &&
+    isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
 
   const setStatus = useCalendarSyncStore((state) => state.setStatus);
   const pullNonce = useCalendarSyncStore((state) => state.resyncNonce);
@@ -356,6 +363,8 @@ export function useCalendarSync(): void {
   const syncedTargetsRef = useRef(new Map<string, SyncedTargets>());
   /** Pushing before the pull has landed would fight it, so it waits. */
   const isReadyRef = useRef(false);
+  /** Edits made since the last successful write, so a pull cannot outrun them. */
+  const hasUnpushedRef = useRef(false);
 
   // Wiping the plan locally is not the same as deleting every workout: forget
   // what Google holds so the next push asks for no deletions at all.
@@ -393,6 +402,14 @@ export function useCalendarSync(): void {
         await pushLocalEvents(syncedRef.current, syncedTargetsRef.current);
         if (cancelled) return;
         usePlannerStore.getState().setGoogleAdopted();
+        hasUnpushedRef.current = false;
+      } else if (hasUnpushedRef.current) {
+        // Asking to refresh with edits still waiting would let Google's copy
+        // overwrite them. They go up first, and then we read back.
+        setStatus('syncing');
+        await pushLocalEvents(syncedRef.current, syncedTargetsRef.current);
+        if (cancelled) return;
+        hasUnpushedRef.current = false;
       }
 
       if (cancelled) return;
@@ -409,6 +426,7 @@ export function useCalendarSync(): void {
         to: to.toISOString(),
       });
       if (state.googleCalendarId) params.set('calendarId', state.googleCalendarId);
+
 
       const response = await fetch(`/api/calendar?${params}`);
       if (!response.ok) throw new Error((await response.json())?.error ?? 'Pull failed');
@@ -529,6 +547,7 @@ export function useCalendarSync(): void {
         await pushLocalEvents(syncedRef.current, syncedTargetsRef.current, () =>
           setStatus('syncing')
         );
+        hasUnpushedRef.current = false;
         setStatus('synced');
       } catch (error) {
         console.error('Calendar push failed', error);
@@ -550,6 +569,7 @@ export function useCalendarSync(): void {
       }
       // The wait restarts with every edit, so the countdown shown in the header
       // restarts with it.
+      hasUnpushedRef.current = true;
       markPending();
       clearTimeout(timer);
       timer = setTimeout(push, SYNC_DEBOUNCE_MS);

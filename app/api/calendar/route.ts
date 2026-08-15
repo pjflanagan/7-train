@@ -7,7 +7,7 @@ import {
   createEvent,
   createTargetsEvent,
   deleteEvent,
-  ensureWorkoutsCalendar,
+  getCalendar,
   EventDraft,
   GoogleApiError,
   eventPropsFromEvent,
@@ -26,10 +26,17 @@ import {
  *
  * `GET` pulls a window of events so the app can adopt whatever Google holds —
  * including a workout someone dragged to another day inside Google Calendar.
- * `POST` pushes a batch of local changes back. Both take the calendar id the
- * client remembers and hand back the one actually used, which is how a first
- * sync learns the id of the calendar we just created.
+ * `POST` pushes a batch of local changes back.
+ *
+ * Both **require** a calendar id, and neither will make one. Creating a
+ * calendar is a decision the user makes once, through
+ * `POST /api/calendar/create`; a sync that quietly created one whenever the id
+ * was missing is how a new browser ended up with its own duplicate calendar
+ * full of seeded sample data.
  */
+
+/** The id names no calendar we can reach, so the app must ask the user again. */
+const NO_CALENDAR = { error: 'That calendar is not there any more', code: 'no-calendar' };
 
 const CALENDAR_SCOPES = GOOGLE_INTEGRATIONS.calendar.scopes;
 
@@ -89,15 +96,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const timeMin = searchParams.get('from');
   const timeMax = searchParams.get('to');
+  const calendarId = searchParams.get('calendarId');
   if (!timeMin || !timeMax) {
     return NextResponse.json({ error: 'from and to are required' }, { status: 400 });
   }
+  if (!calendarId) {
+    return NextResponse.json({ error: 'calendarId is required' }, { status: 400 });
+  }
 
   try {
-    const calendarId = await ensureWorkoutsCalendar(
-      accessToken,
-      searchParams.get('calendarId')
-    );
+    if (!(await getCalendar(accessToken, calendarId))) {
+      return NextResponse.json(NO_CALENDAR, { status: 404 });
+    }
     const raw = await listEvents(accessToken, calendarId, timeMin, timeMax);
 
     const events: PulledEvent[] = [];
@@ -150,15 +160,15 @@ export async function POST(request: Request) {
     removeTargets,
   } = parsed.data;
 
-  // Deletions alone, against a calendar we have lost the id of, would make a
-  // fresh calendar purely to delete events that were never in it. Nothing to
-  // write means nothing to create.
-  if (!knownCalendarId && create.length === 0 && update.length === 0 && targets.length === 0) {
-    return NextResponse.json({ calendarId: null, eventIds: {}, targetEventIds: {} });
+  if (!knownCalendarId) {
+    return NextResponse.json({ error: 'calendarId is required' }, { status: 400 });
   }
 
   try {
-    const calendarId = await ensureWorkoutsCalendar(accessToken, knownCalendarId);
+    const calendarId = knownCalendarId;
+    if (!(await getCalendar(accessToken, calendarId))) {
+      return NextResponse.json(NO_CALENDAR, { status: 404 });
+    }
 
     // Our event id -> Google's, so the client can staple the two together.
     const eventIds: Record<string, string> = {};

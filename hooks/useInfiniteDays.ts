@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { addDays } from '@/lib/dates';
 
 /** Days kept above today before the user asks for more. */
@@ -39,6 +39,20 @@ export function useInfiniteDays({ todayKey }: { todayKey: string }) {
     []
   );
 
+  const [isTodayVisible, setIsTodayVisible] = useState(true);
+  /** Which way to scroll to reach today, so the jump control can point there. */
+  const [todayDirection, setTodayDirection] = useState<'up' | 'down'>('up');
+
+  const scrollToToday = useCallback(
+    (behavior: ScrollBehavior = 'smooth') => {
+      const target = todayRef.current;
+      const scroller = getScroller();
+      if (!target || !scroller) return;
+      scroller.scrollTo({ top: target.offsetTop - scroller.offsetTop, behavior });
+    },
+    [getScroller]
+  );
+
   // Land the user on today, with the past sitting just above it.
   useLayoutEffect(() => {
     if (didInitialScroll.current) return;
@@ -49,6 +63,75 @@ export function useInfiniteDays({ todayKey }: { todayKey: string }) {
     didInitialScroll.current = true;
     scroller.scrollTop = target.offsetTop - scroller.offsetTop;
   }, [getScroller]);
+
+  /**
+   * Land on today again once the cards above it have settled.
+   *
+   * The first pass runs before a day above today knows how tall it is — a
+   * weather line arrives, a card grows — and every pixel a card above gains
+   * pushes today further down the page. Re-asserting the position after the
+   * layout settles is what makes "opens on today" true rather than
+   * approximately true.
+   */
+  useEffect(() => {
+    const scroller = getScroller();
+    const target = todayRef.current;
+    if (!scroller || !target) return;
+
+    let settled = false;
+    const observer = new ResizeObserver(() => {
+      if (settled) return;
+      scroller.scrollTop = target.offsetTop - scroller.offsetTop;
+    });
+    observer.observe(scroller);
+    for (const child of Array.from(scroller.children)) observer.observe(child);
+
+    // Only until the user could plausibly have scrolled themselves; after that,
+    // yanking the page back to today would be the app fighting them.
+    const stop = setTimeout(() => {
+      settled = true;
+      observer.disconnect();
+    }, 1000);
+
+    const release = () => {
+      settled = true;
+    };
+    // Any deliberate act — a scroll, a tap, "show more past days" — hands the
+    // position back to the user.
+    scroller.addEventListener('wheel', release, { passive: true });
+    scroller.addEventListener('pointerdown', release, { passive: true });
+    scroller.addEventListener('keydown', release);
+
+    return () => {
+      clearTimeout(stop);
+      observer.disconnect();
+      scroller.removeEventListener('wheel', release);
+      scroller.removeEventListener('pointerdown', release);
+      scroller.removeEventListener('keydown', release);
+    };
+    // Deliberately mount-only: this is about the first paint settling down.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Whether today is on screen, for the jump control.
+  useEffect(() => {
+    const target = todayRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTodayVisible(entry.isIntersecting);
+        if (!entry.isIntersecting && entry.rootBounds) {
+          setTodayDirection(
+            entry.boundingClientRect.top < entry.rootBounds.top ? 'up' : 'down'
+          );
+        }
+      },
+      { root: getScroller() ?? null }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [getScroller, days]);
 
   useLayoutEffect(() => {
     if (!pendingPrepend.current) return;
@@ -74,5 +157,14 @@ export function useInfiniteDays({ todayKey }: { todayKey: string }) {
   /** Reveal another page of upcoming days. */
   const loadLater = useCallback(() => setAfter((n) => n + DAY_PAGE_SIZE), []);
 
-  return { days, scrollRef, todayRef, loadEarlier, loadLater };
+  return {
+    days,
+    scrollRef,
+    todayRef,
+    loadEarlier,
+    loadLater,
+    isTodayVisible,
+    todayDirection,
+    scrollToToday,
+  };
 }

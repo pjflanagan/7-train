@@ -76,7 +76,9 @@ function stubCalendarApi() {
 
 beforeEach(() => {
   usePlannerStore.getState().clearAll();
-  usePlannerStore.setState({ googleAdoptedAt: null, googleCalendarId: null });
+  // A calendar has been chosen; picking one is `CalendarSetupModal`'s job and
+  // sync does nothing at all until it has been.
+  usePlannerStore.setState({ googleAdoptedAt: null, googleCalendarId: 'cal-1' });
   useCalendarSyncStore.setState({ status: 'off', resyncNonce: 0, baselineNonce: 0 });
 });
 
@@ -140,6 +142,21 @@ describe('handing the plan over to Google', () => {
     expect(targets).toHaveLength(1);
     expect(targets[0].weekStart).toBe(weekStart);
     expect(targets[0].activities[0].target).toBe(20);
+  });
+
+  it('does nothing at all until a calendar has been chosen', async () => {
+    usePlannerStore.setState({
+      events: [event('recent', weekStart)],
+      googleCalendarId: null,
+    });
+    const { fetchMock } = stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    // Long enough that a pull would have gone out if one were going to.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(usePlannerStore.getState().googleAdoptedAt).toBeNull();
   });
 
   it('does not upload the whole plan again on a later sync', async () => {

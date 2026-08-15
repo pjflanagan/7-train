@@ -14,9 +14,21 @@
 // The frame. Holds the border layer and the face on top of it, and is itself
 // only as big as the face — the border layer is what sticks out.
 .pill {
+  @include focus-ring();
+
   position: relative;
   display: inline-flex;
   isolation: isolate;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+// Mid-sync there is nothing useful a press could do.
+.pill:disabled {
+  cursor: default;
 }
 
 // Everything visible except the border: sits above the layer below, and its own
@@ -68,9 +80,6 @@
 }
 
 .error {
-  cursor: pointer;
-  @include focus-ring();
-
   .face {
     color: var(--accent-warning);
     background-color: var(--accent-warning-soft);
