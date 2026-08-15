@@ -48,13 +48,33 @@ export const CalendarSetupModal: React.FC = () => {
     >
       <div className={styles.container}>
         <p className={styles.note}>
-          This browser does not know which calendar to use yet. If you have already used
-          7 Train elsewhere, point it at the calendar you are already using — otherwise
-          make a new one.
+          Signing in puts your plan in Google Calendar, so it follows you between
+          devices. Just say which calendar — a new one, unless you have used 7 Train
+          somewhere else already.
         </p>
+
+        {/* A fresh sign in wants a new calendar, so that is the primary path.
+            Making one whenever the id was missing is what produced a second
+            `Workouts` calendar per browser, so it is still a press, not a
+            default — see this file's own note. */}
+        <div className={styles.option}>
+          <h3 className={styles.optionTitle}>Start a new calendar</h3>
+          <p className={styles.help}>
+            Makes a &quot;Workouts&quot; calendar in Google and puts what is on this
+            browser into it.
+          </p>
+          <Button variant="primary" onClick={createNew} disabled={isWorking}>
+            {isWorking ? 'Working…' : 'Make a new calendar'}
+          </Button>
+        </div>
 
         <div className={styles.option}>
           <h3 className={styles.optionTitle}>Use a calendar I already have</h3>
+          <p className={styles.help}>
+            In Google Calendar, open that calendar&apos;s settings and copy the calendar ID
+            under &quot;Integrate calendar&quot;. What is in the calendar becomes your plan
+            on this browser.
+          </p>
           <TextInput
             value={value}
             onChange={(event) => {
@@ -65,24 +85,8 @@ export const CalendarSetupModal: React.FC = () => {
             aria-label="Calendar ID"
             error={error ?? undefined}
           />
-          <p className={styles.help}>
-            In Google Calendar, open that calendar&apos;s settings and copy the calendar ID
-            under &quot;Integrate calendar&quot;. What is in the calendar becomes your plan
-            on this browser.
-          </p>
-          <Button variant="primary" onClick={() => adoptExisting(value)} disabled={isWorking}>
+          <Button variant="secondary" onClick={() => adoptExisting(value)} disabled={isWorking}>
             {isWorking ? 'Checking…' : 'Use this calendar'}
-          </Button>
-        </div>
-
-        <div className={styles.option}>
-          <h3 className={styles.optionTitle}>Start a new calendar</h3>
-          <p className={styles.help}>
-            Makes a &quot;Workouts&quot; calendar in Google and puts what is on this
-            browser into it.
-          </p>
-          <Button variant="secondary" onClick={createNew} disabled={isWorking}>
-            {isWorking ? 'Working…' : 'Make a new calendar'}
           </Button>
         </div>
       </div>

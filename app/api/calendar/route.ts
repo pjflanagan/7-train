@@ -55,6 +55,8 @@ const DraftSchema = z.object({
   activitySnapshot: ActivitySnapshotSchema.optional(),
   activityFrozen: z.boolean().optional(),
   weekStart: z.string(),
+  /** Set once a Strava recording has been matched to this workout. */
+  stravaActivityId: z.number().nullable().optional(),
 });
 
 const TargetsSchema = z.object({

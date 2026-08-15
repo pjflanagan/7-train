@@ -89,6 +89,10 @@ function eventSignature(event: ScheduledEvent, activity: Activity | undefined): 
     // real change to push, not just a local relabel.
     JSON.stringify(event.activitySnapshot ?? null),
     event.activityFrozen ? '1' : '',
+    // Matching a Strava recording to a workout is a change to push: it is what
+    // puts the link on the calendar entry, and what tells another device the
+    // workout is already accounted for.
+    event.stravaActivityId ?? '',
   ].join('|');
 }
 
@@ -116,6 +120,7 @@ interface EventDraftPayload {
   activitySnapshot?: ScheduledEvent['activitySnapshot'];
   activityFrozen?: boolean;
   weekStart: string;
+  stravaActivityId?: number | null;
 }
 
 function draftFor(
@@ -144,6 +149,7 @@ function draftFor(
     activitySnapshot: event.activitySnapshot ?? buildActivitySnapshot(activity),
     activityFrozen: event.activityFrozen,
     weekStart: event.weekStart,
+    stravaActivityId: event.stravaActivityId ?? null,
   };
 }
 
@@ -188,6 +194,7 @@ function eventFromGoogle(
     updatedAt: event.updated,
     activitySnapshot: event.activitySnapshot,
     activityFrozen: event.activityFrozen,
+    stravaActivityId: event.stravaActivityId ?? null,
   };
 }
 

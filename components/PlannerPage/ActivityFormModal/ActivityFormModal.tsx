@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ActivitySchema, Activity } from '@/lib/types';
@@ -14,9 +14,11 @@ import { ColorPicker } from '@/components/elements/ColorPicker/ColorPicker';
 import { IconPicker } from '@/components/elements/IconPicker/IconPicker';
 import { TagInput } from '@/components/elements/TagInput/TagInput';
 import { MdDelete, MdAdd } from 'react-icons/md';
+import { StravaSportPicker } from './StravaSportPicker/StravaSportPicker';
 import styles from './ActivityFormModal.module.scss';
 import { usePlannerStore } from '@/lib/store';
 import { formatPaceMinutes, parsePaceMinutes } from '@/lib/schedule';
+import { DEFAULT_SPORTS_BY_ICON } from '@/lib/stravaSports';
 
 export interface ActivityFormModalProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ export interface ActivityFormModalProps {
 const TABS: TabConfig[] = [
   { id: 'basic', label: 'Basic' },
   { id: 'types', label: 'Workout types' },
+  { id: 'strava', label: 'Strava' },
   { id: 'links', label: 'Links' },
   { id: 'appearance', label: 'Appearance' }
 ];
@@ -66,6 +69,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
       paceDistance: null,
       typicalDurationMinutes: null,
       workoutTypes: [],
+      stravaSportTypes: [...(DEFAULT_SPORTS_BY_ICON.run ?? [])],
       links: []
     }
   });
@@ -76,6 +80,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   });
 
   const metric = useWatch({ control, name: 'metric' });
+  const icon = useWatch({ control, name: 'icon' });
   const unit = useWatch({ control, name: 'unit' });
   const isOptional = useWatch({ control, name: 'optional' });
 
@@ -85,6 +90,23 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   // split; both halves are saved.
   const [paceMinutesInput, setPaceMinutesInput] = useState('');
   const [paceDistanceInput, setPaceDistanceInput] = useState<number | ''>(1);
+
+  /**
+   * Once the sports have been chosen by hand they are the user's, and changing
+   * the icon must not quietly rewrite them. Until then the icon is the only
+   * signal we have, so switching it re-seeds the suggestion.
+   */
+  const [hasChosenSports, setHasChosenSports] = useState(false);
+  /** The icon as it was last seen, so opening the modal does not read as a change. */
+  const lastIconRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!icon) return;
+    const previous = lastIconRef.current;
+    lastIconRef.current = icon;
+    if (previous === null || previous === icon || hasChosenSports) return;
+    setValue('stravaSportTypes', [...(DEFAULT_SPORTS_BY_ICON[icon] ?? [])]);
+  }, [icon, hasChosenSports, setValue]);
 
   useEffect(() => {
     if (metric === 'instance') {
@@ -143,11 +165,16 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
           paceDistance: null,
           typicalDurationMinutes: null,
           workoutTypes: [],
+          stravaSportTypes: [...(DEFAULT_SPORTS_BY_ICON.run ?? [])],
           links: []
         });
         setPaceMinutesInput('');
         setPaceDistanceInput(1);
       }
+      // A fresh open is not an icon change, and the saved sports are whatever
+      // the activity already holds.
+      lastIconRef.current = null;
+      setHasChosenSports(Boolean(activity?.stravaSportTypes?.length));
       setTimeout(() => {
         setActiveTab('basic');
       }, 0);
@@ -291,6 +318,30 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                     tags={field.value || []}
                     onChange={field.onChange}
                     placeholder="e.g. Long Run, Recovery"
+                  />
+                )}
+              />
+            </div>
+          )}
+
+          {activeTab === 'strava' && (
+            <div className={styles.section}>
+              <p className={styles.hint}>
+                Which Strava recordings count as this activity. A recording lands on
+                whatever you planned that day of an activity that accepts its sport, so
+                two activities can share one — a long run and an easy run are both
+                &quot;Run&quot; to Strava, and the day tells them apart.
+              </p>
+              <Controller
+                control={control}
+                name="stravaSportTypes"
+                render={({ field }) => (
+                  <StravaSportPicker
+                    value={field.value ?? []}
+                    onChange={(value) => {
+                      setHasChosenSports(true);
+                      field.onChange(value);
+                    }}
                   />
                 )}
               />

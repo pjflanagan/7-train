@@ -43,8 +43,6 @@ export const GOOGLE_INTEGRATIONS: Record<GoogleIntegrationId, GoogleIntegration>
   },
 };
 
-export const GOOGLE_INTEGRATION_LIST = Object.values(GOOGLE_INTEGRATIONS);
-
 /** Tokens as we keep them on the session JWT. */
 export interface GoogleTokens {
   accessToken?: string;

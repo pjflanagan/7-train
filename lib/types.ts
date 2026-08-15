@@ -35,6 +35,20 @@ export const ActivitySchema = z.object({
    */
   typicalDurationMinutes: z.number().int().positive().nullable().optional(),
   workoutTypes: z.array(z.string()).optional(),
+  /**
+   * Strava `sport_type` values this activity answers to, e.g. `['Run',
+   * 'TrailRun']`. What Strava sync matches on.
+   *
+   * Deliberately its own field rather than read off `icon`: the icon is a
+   * drawing choice, and two activities that share one ("Long run", "Easy run")
+   * are still different activities. Absent means never asked — the icon's
+   * defaults stand in; empty means asked and answered "nothing".
+   *
+   * Left as strings rather than an enum so a sport Strava adds tomorrow
+   * round-trips through a calendar written by a newer device rather than
+   * failing to parse.
+   */
+  stravaSportTypes: z.array(z.string()).optional(),
   links: z.array(HelpfulLinkSchema).optional()
 });
 export type Activity = z.infer<typeof ActivitySchema>;
@@ -82,6 +96,16 @@ export const ScheduledEventSchema = z.object({
   durationMinutes: z.number().int().min(15).max(1440).optional(),
   /** The Google Calendar event this event is mirrored to, once it has one. */
   googleEventId: z.string().nullable().optional(),
+  /**
+   * The Strava recording this event was done as, once one has been matched to
+   * it. Its presence is what makes the event finished: Strava sync neither
+   * re-reads nor re-times an event that already has one, so a number corrected
+   * by hand afterwards stays corrected.
+   *
+   * The link out to Strava is derived from it — see `stravaActivityUrl` — so
+   * there is one id here rather than an id and a URL that could disagree.
+   */
+  stravaActivityId: z.number().nullable().optional(),
   /**
    * ISO timestamp of the last edit to the workout itself — when it happens,
    * how long it runs, what it is. Absent on events last touched before this was

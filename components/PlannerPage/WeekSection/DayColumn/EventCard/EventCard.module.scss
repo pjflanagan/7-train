@@ -140,3 +140,9 @@
   font-size: var(--font-2xs);
   color: var(--text-muted);
 }
+
+// The time sits at the left of the band; the Strava mark takes the far right,
+// so a done workout is readable across a column of cards at a glance.
+.strava {
+  margin-left: auto;
+}

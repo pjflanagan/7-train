@@ -2,6 +2,7 @@ import { PlannerState, ActivitySchema, ScheduledEventSchema, HelpfulLinkSchema, 
 import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './constants';
 import { getWeekStartKey, addWeeks } from './dates';
 import { ACTIVITY_ICONS, IconKey } from './icons';
+import { DEFAULT_SPORTS_BY_ICON } from './stravaSports';
 
 function mapLegacyIcon(iconStr: string): IconKey {
   const mapping = Object.entries(ACTIVITY_ICONS).find(([, val]) => val.legacy === iconStr);
@@ -440,6 +441,45 @@ function migrateV8toV9(state: Record<string, unknown>): Record<string, unknown> 
   return { ...state, events };
 }
 
+/**
+ * Which Strava sports an activity answers to, made explicit.
+ *
+ * Matching used to read the icon and guess, which meant two activities sharing
+ * an icon were told apart by their order in the list, and a kayak logged
+ * against a rowing target. The activity now says what it accepts, seeded here
+ * from the icon it already draws with so nobody has to re-answer for a plan
+ * they already had.
+ *
+ * An icon with no honest Strava equivalent seeds nothing, and the activity
+ * shows as not synced rather than matching the wrong recordings quietly.
+ */
+function migrateV9toV10(state: Record<string, unknown>): Record<string, unknown> {
+  const seed = (raw: unknown): unknown => {
+    const activity = raw as Record<string, unknown>;
+    // Only ever fills a gap. Anything already answered is the user's.
+    if (!activity || activity.stravaSportTypes !== undefined) return activity;
+    const sports = DEFAULT_SPORTS_BY_ICON[activity.icon as IconKey];
+    return { ...activity, stravaSportTypes: sports ? [...sports] : [] };
+  };
+
+  const activities = Array.isArray(state.activities)
+    ? state.activities.map(seed)
+    : state.activities;
+
+  // Every week holds its own copies, and they are what sync actually matches
+  // against, so they are seeded too rather than left behind the template.
+  const weekActivities =
+    state.weekActivities && typeof state.weekActivities === 'object'
+      ? Object.fromEntries(
+          Object.entries(state.weekActivities as Record<string, unknown>).map(
+            ([key, activity]) => [key, seed(activity)]
+          )
+        )
+      : state.weekActivities;
+
+  return { ...state, activities, weekActivities };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -452,5 +492,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 7) state = migrateV6toV7(state);
   if (version < 8) state = migrateV7toV8(state);
   if (version < 9) state = migrateV8toV9(state);
+  if (version < 10) state = migrateV9toV10(state);
   return state;
 }
