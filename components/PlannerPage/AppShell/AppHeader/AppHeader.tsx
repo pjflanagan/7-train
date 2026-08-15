@@ -8,6 +8,7 @@ import { MdBookmark } from 'react-icons/md';
 import { MyActivitiesModal } from './MyActivitiesModal/MyActivitiesModal';
 import { LinksModal } from './LinksModal/LinksModal';
 import { ProfileMenu } from './ProfileMenu/ProfileMenu';
+import { SyncIndicator } from './SyncIndicator/SyncIndicator';
 
 export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);
@@ -33,6 +34,7 @@ export const AppHeader: React.FC = () => {
             >
               My weekly activities
             </Button>
+            <SyncIndicator />
             <ProfileMenu />
           </div>
         </div>

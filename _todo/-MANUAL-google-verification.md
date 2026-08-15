@@ -8,6 +8,8 @@ different for each.
 
 ## First — you probably do not need verification
 
+TODO: you are right, I will do this for now
+
 If you are the only one using this, stay in **Testing** and add yourself as a
 test user.
 

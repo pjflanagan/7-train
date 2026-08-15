@@ -17,7 +17,8 @@ export type Backup = {
 export function toBackup(state: PlannerState): Backup {
   const {
     activities, events, notes, weekActivities, links, history, lastViewedMonday, tempUnit,
-    use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
+    use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleAdoptedAt,
+    googleSheetId
   } = state;
   return {
     format: BACKUP_FORMAT,
@@ -27,7 +28,8 @@ export function toBackup(state: PlannerState): Backup {
     // existing calendar and spreadsheet back up instead of making new ones.
     state: {
       activities, events, notes, weekActivities, links, history, lastViewedMonday, tempUnit,
-      use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleSheetId
+      use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleAdoptedAt,
+      googleSheetId
     }
   };
 }

@@ -3,12 +3,13 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { usePlannerStore } from '@/lib/store';
+import { useHydrated } from '@/hooks/useHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { PulledEvent } from '@/lib/googleCalendar';
 import { ScheduledEvent, Activity } from '@/lib/types';
-import { resolveEventActivity } from '@/lib/activitySnapshot';
+import { buildActivitySnapshot, resolveEventActivity } from '@/lib/activitySnapshot';
 import { activitiesForWeek } from '@/lib/progress';
 import {
   addWeeks,
@@ -41,7 +42,8 @@ const PUSH_DEBOUNCE_MS = 1200;
 
 /** What we last wrote to Google for an event, so we only write real changes. */
 interface SyncedEvent {
-  eventId: string;
+  /** Google's id for the event we wrote. */
+  googleEventId: string;
   signature: string;
 }
 
@@ -54,6 +56,10 @@ function eventSignature(event: ScheduledEvent, activity: Activity | undefined): 
     event.workoutType ?? '',
     startMinutesOf(event),
     durationMinutesOf(event, activity),
+    // The activity copy is written into the event, so renaming an activity is a
+    // real change to push, not just a local relabel.
+    JSON.stringify(event.activitySnapshot ?? null),
+    event.activityFrozen ? '1' : '',
   ].join('|');
 }
 
@@ -68,6 +74,7 @@ function wallClock(dateKey: string, minutes: number): string {
 }
 
 interface EventDraftPayload {
+  /** Our own event id. Google's, where there is one, rides alongside. */
   eventId: string;
   typeId: string;
   title: string;
@@ -77,6 +84,9 @@ interface EventDraftPayload {
   end: string;
   timeZone: string;
   description?: string;
+  activitySnapshot?: ScheduledEvent['activitySnapshot'];
+  activityFrozen?: boolean;
+  weekStart: string;
 }
 
 function draftFor(
@@ -100,6 +110,11 @@ function draftFor(
     timeZone,
     description:
       activity.metric === 'instance' ? undefined : `${event.value} ${activity.unit}`,
+    // The event's own copy of its activity goes up with it, so a device that
+    // has never seen these activities can still draw what it pulls back.
+    activitySnapshot: event.activitySnapshot ?? buildActivitySnapshot(activity),
+    activityFrozen: event.activityFrozen,
+    weekStart: event.weekStart,
   };
 }
 
@@ -119,20 +134,117 @@ function eventFromGoogle(
       ? clampDuration((end.getTime() - start.getTime()) / 60000)
       : undefined;
 
+  // The week the event was filed under travels with it, so two devices that
+  // disagree about which day a week starts on still agree about which week a
+  // workout belongs to. It is only recomputed when the stored week does not
+  // match this device's setting — the user changed it since.
+  const derivedWeekStart = getWeekStartKey(start, weekStartsOn);
+  const weekStart =
+    event.weekStart && getWeekStartKey(parseDateLocal(event.weekStart), weekStartsOn) === event.weekStart
+      ? event.weekStart
+      : derivedWeekStart;
+
   return {
     id: event.eventId,
     typeId: event.typeId,
     day: dayNameForDate(start),
-    weekStart: getWeekStartKey(start, weekStartsOn),
+    weekStart,
     value: event.value,
     workoutType: event.workoutType,
     startMinutes: start.getHours() * 60 + start.getMinutes(),
     durationMinutes,
-    googleEventId: event.eventId,
+    googleEventId: event.googleEventId,
     // Google's stamp, not the moment we pulled it: the point of recording this
     // is to tell which side of a future merge holds the newer edit.
     updatedAt: event.updated,
+    activitySnapshot: event.activitySnapshot,
+    activityFrozen: event.activityFrozen,
   };
+}
+
+/**
+ * Writes every local change Google does not already have, and returns once
+ * Google has it.
+ *
+ * `synced` is both the input and the output: it says what Google already holds,
+ * and is updated in place with what this push wrote. An empty map therefore
+ * means "assume Google has nothing", which is exactly what the first push after
+ * connecting wants — it uploads the entire plan, every week of it, rather than
+ * only the weeks the pull window covers.
+ */
+async function pushLocalEvents(synced: Map<string, SyncedEvent>): Promise<void> {
+  const store = usePlannerStore.getState();
+  const weekStartsOn = (store.weekStartsOn ?? 1) as WeekStartsOn;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const create: EventDraftPayload[] = [];
+  const update: (EventDraftPayload & { googleEventId: string })[] = [];
+  const seen = new Set<string>();
+
+  for (const event of store.events) {
+    const activity = resolveEventActivity(
+      event,
+      activitiesForWeek(event.weekStart, store.weekActivities)
+    );
+    // Every event carries its own copy of its activity, so this only skips
+    // data old enough to predate that — nothing the app creates now.
+    if (!activity) continue;
+
+    seen.add(event.id);
+    const known = synced.get(event.id);
+    const googleEventId = event.googleEventId ?? known?.googleEventId;
+    const signature = eventSignature(event, activity);
+    if (known && known.signature === signature && googleEventId) continue;
+
+    const draft = draftFor(event, activity, weekStartsOn, timeZone);
+    if (googleEventId) update.push({ ...draft, googleEventId });
+    else create.push(draft);
+  }
+
+  const remove = [...synced.entries()]
+    .filter(([eventId]) => !seen.has(eventId))
+    .map(([, { googleEventId }]) => googleEventId);
+
+  if (create.length === 0 && update.length === 0 && remove.length === 0) return;
+
+  const response = await fetch('/api/calendar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      calendarId: usePlannerStore.getState().googleCalendarId,
+      create,
+      update,
+      remove,
+    }),
+  });
+  if (!response.ok) throw new Error((await response.json())?.error ?? 'Push failed');
+
+  // A push with nothing to write comes back with no calendar, rather than
+  // having made one just to hold the write.
+  const { calendarId, eventIds } = (await response.json()) as {
+    calendarId: string | null;
+    eventIds: Record<string, string>;
+  };
+
+  const after = usePlannerStore.getState();
+  if (calendarId) after.setGoogleCalendarId(calendarId);
+  after.setGoogleEventIds(eventIds);
+
+  // Rebuild the baseline from what we just wrote, not from the store, which may
+  // have moved on while the request was in flight.
+  for (const [eventId] of synced) {
+    if (!seen.has(eventId)) synced.delete(eventId);
+  }
+  for (const draft of [...create, ...update]) {
+    const googleEventId = eventIds[draft.eventId];
+    const event = after.events.find((i) => i.id === draft.eventId);
+    if (!googleEventId || !event) continue;
+    const activity = resolveEventActivity(
+      event,
+      activitiesForWeek(event.weekStart, after.weekActivities)
+    );
+    synced.set(draft.eventId, { googleEventId, signature: eventSignature(event, activity) });
+  }
 }
 
 /**
@@ -141,17 +253,35 @@ function eventFromGoogle(
  */
 export function useCalendarSync(): void {
   const { scopes, isSignedIn } = useGoogleAccount();
-  const isConnected = isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
+  // Nothing may touch Google until the persisted plan is actually in the store.
+  // Before that `getState()` answers with the seeded defaults, and adopting
+  // those would upload a sample week and mark the real plan as handed over.
+  const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
+  const isConnected =
+    isHydrated && isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
 
   const setStatus = useCalendarSyncStore((state) => state.setStatus);
   const pullNonce = useCalendarSyncStore((state) => state.resyncNonce);
+  const baselineNonce = useCalendarSyncStore((state) => state.baselineNonce);
 
   /** Event id -> what Google already holds. Empty until the first pull lands. */
   const syncedRef = useRef(new Map<string, SyncedEvent>());
   /** Pushing before the pull has landed would fight it, so it waits. */
   const isReadyRef = useRef(false);
 
-  // Pull: Google wins on load.
+  // Wiping the plan locally is not the same as deleting every workout: forget
+  // what Google holds so the next push asks for no deletions at all.
+  useEffect(() => {
+    if (baselineNonce === 0) return;
+    syncedRef.current = new Map();
+  }, [baselineNonce]);
+
+  // Hand the plan over, then let Google win.
+  //
+  // The upload has to happen first, and only once. Until the whole plan is in
+  // Google, the local store is the only complete copy — pulling first would let
+  // a window of Google's events overwrite weeks that had never been uploaded.
+  // After adoption the order stops mattering, because Google holds everything.
   useEffect(() => {
     if (!isConnected) {
       isReadyRef.current = false;
@@ -162,103 +292,114 @@ export function useCalendarSync(): void {
 
     let cancelled = false;
     isReadyRef.current = false;
-    setStatus('pulling');
 
-    const state = usePlannerStore.getState();
-    const weekStartsOn = (state.weekStartsOn ?? 1) as WeekStartsOn;
-    const thisWeek = getWeekStartKey(new Date(), weekStartsOn);
-    const from = parseDateLocal(addWeeks(thisWeek, -PULL_WEEKS_BACK));
-    const to = parseDateLocal(addWeeks(thisWeek, PULL_WEEKS_FORWARD + 1));
+    const adoptThenPull = async () => {
+      const before = usePlannerStore.getState();
 
-    const params = new URLSearchParams({
-      from: from.toISOString(),
-      to: to.toISOString(),
-    });
-    if (state.googleCalendarId) params.set('calendarId', state.googleCalendarId);
-
-    fetch(`/api/calendar?${params}`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error((await response.json())?.error ?? 'Pull failed');
-        return response.json() as Promise<{ calendarId: string; events: PulledEvent[] }>;
-      })
-      .then(({ calendarId, events }) => {
+      if (!before.googleAdoptedAt) {
+        setStatus('syncing');
+        // An empty baseline means every local event is written, whatever week
+        // it falls in — the pull window does not apply to this one.
+        await pushLocalEvents(syncedRef.current);
         if (cancelled) return;
+        usePlannerStore.getState().setGoogleAdopted();
+      }
 
-        const store = usePlannerStore.getState();
-        store.setGoogleCalendarId(calendarId);
+      if (cancelled) return;
+      setStatus('pulling');
 
-        // The wire does not carry the activity yet (see
-        // `_todo/google-calendar-as-storage.md`), so a pulled event takes back
-        // the copy its local twin was holding. Failing that it has to be
-        // recognizable in the week it lands in.
-        const knownInWeek = (event: ScheduledEvent) =>
-          activitiesForWeek(event.weekStart, store.weekActivities).some(
-            (activity) => activity.id === event.typeId
-          );
-        const localById = new Map(store.events.map((event) => [event.id, event]));
-        const pulled: ScheduledEvent[] = [];
-        const synced = new Map<string, SyncedEvent>();
+      const state = usePlannerStore.getState();
+      const weekStartsOn = (state.weekStartsOn ?? 1) as WeekStartsOn;
+      const thisWeek = getWeekStartKey(new Date(), weekStartsOn);
+      const from = parseDateLocal(addWeeks(thisWeek, -PULL_WEEKS_BACK));
+      const to = parseDateLocal(addWeeks(thisWeek, PULL_WEEKS_FORWARD + 1));
 
-        for (const pulledEvent of events) {
-          const event = eventFromGoogle(pulledEvent, weekStartsOn);
-          if (!event) continue;
-          const local = localById.get(event.id);
-          // An event for an activity this device has never had, and holds no
-          // copy of, is left in Google untouched; we simply cannot draw it.
-          if (!knownInWeek(event) && !local?.activitySnapshot) continue;
-          const finalEvent = local?.activitySnapshot
-            ? {
-                ...event,
-                activitySnapshot: local.activitySnapshot,
-                activityFrozen: local.activityFrozen
-              }
-            : event;
-          pulled.push(finalEvent);
-          synced.set(finalEvent.id, {
-            eventId: pulledEvent.eventId,
-            signature: eventSignature(
-              finalEvent,
-              resolveEventActivity(finalEvent, activitiesForWeek(finalEvent.weekStart, store.weekActivities))
-            ),
-          });
-        }
-
-        // Only the pulled window is replaced. Weeks outside it were never sent
-        // to Google, so an empty response there means "not asked", not "empty".
-        const fromKey = formatDateLocal(from);
-        const toKey = formatDateLocal(to);
-        const outsideWindow = store.events.filter(
-          (event) => event.weekStart < fromKey || event.weekStart >= toKey
-        );
-
-        // A local event inside the window with no event yet is a plan made
-        // offline; it survives the pull and gets pushed up next.
-        const unsynced = store.events.filter(
-          (event) =>
-            event.weekStart >= fromKey &&
-            event.weekStart < toKey &&
-            !event.googleEventId &&
-            !synced.has(event.id)
-        );
-
-        syncedRef.current = synced;
-        store.replaceEvents([...outsideWindow, ...pulled, ...unsynced]);
-        isReadyRef.current = true;
-        setStatus('synced');
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        console.error('Calendar pull failed', error);
-        setStatus('error');
-        toast.error('Could not read your Workouts calendar');
+      const params = new URLSearchParams({
+        from: from.toISOString(),
+        to: to.toISOString(),
       });
+      if (state.googleCalendarId) params.set('calendarId', state.googleCalendarId);
+
+      const response = await fetch(`/api/calendar?${params}`);
+      if (!response.ok) throw new Error((await response.json())?.error ?? 'Pull failed');
+      const { calendarId, events } = (await response.json()) as {
+        calendarId: string;
+        events: PulledEvent[];
+      };
+      if (cancelled) return;
+
+      const store = usePlannerStore.getState();
+      store.setGoogleCalendarId(calendarId);
+
+      // An event written by this app carries its own copy of its activity, so
+      // it needs nothing local to be drawn. Only events written before that
+      // existed fall back to the copy their local twin is holding.
+      const localById = new Map(store.events.map((event) => [event.id, event]));
+      const pulled: ScheduledEvent[] = [];
+      const synced = new Map<string, SyncedEvent>();
+
+      for (const pulledEvent of events) {
+        const event = eventFromGoogle(pulledEvent, weekStartsOn);
+        if (!event) continue;
+        const local = localById.get(event.id);
+        const finalEvent = event.activitySnapshot
+          ? event
+          : {
+              ...event,
+              activitySnapshot: local?.activitySnapshot,
+              activityFrozen: local?.activityFrozen
+            };
+        pulled.push(finalEvent);
+        synced.set(finalEvent.id, {
+          googleEventId: pulledEvent.googleEventId,
+          signature: eventSignature(
+            finalEvent,
+            resolveEventActivity(finalEvent, activitiesForWeek(finalEvent.weekStart, store.weekActivities))
+          ),
+        });
+      }
+
+      // Only the pulled window is replaced. Weeks outside it are in Google too
+      // — adoption sent them — they were simply not asked for, so the local
+      // copy stays as the cache of them.
+      const fromKey = formatDateLocal(from);
+      const toKey = formatDateLocal(to);
+      const outsideWindow = store.events.filter(
+        (event) => event.weekStart < fromKey || event.weekStart >= toKey
+      );
+
+      // An event created while the pull was in flight has not been written yet.
+      // It is not Google contradicting us, it is us being ahead, so it survives
+      // and the next push sends it.
+      const unwritten = store.events.filter(
+        (event) =>
+          event.weekStart >= fromKey &&
+          event.weekStart < toKey &&
+          !event.googleEventId &&
+          !synced.has(event.id)
+      );
+
+      syncedRef.current = synced;
+      store.replaceEvents([...outsideWindow, ...pulled, ...unwritten]);
+      isReadyRef.current = true;
+      setStatus('synced');
+    };
+
+    adoptThenPull().catch((error) => {
+      if (cancelled) return;
+      console.error('Calendar sync failed', error);
+      setStatus('error');
+      toast.error('Could not sync your Workouts calendar');
+    });
 
     return () => {
       cancelled = true;
     };
   }, [isConnected, pullNonce, setStatus]);
 
-  // Push: every local change is mirrored, one debounced batch at a time.
+  // Push: every local change is mirrored, one debounced batch at a time. The
+  // store is written immediately and this follows, so editing never waits on
+  // the network — it is the cache in front of Google doing its job.
   useEffect(() => {
     if (!isConnected) return;
 
@@ -268,82 +409,10 @@ export function useCalendarSync(): void {
     const push = async () => {
       if (!isReadyRef.current || isPushing) return;
 
-      const store = usePlannerStore.getState();
-      const weekStartsOn = (store.weekStartsOn ?? 1) as WeekStartsOn;
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const synced = syncedRef.current;
-
-      const create: EventDraftPayload[] = [];
-      const update: (EventDraftPayload & { eventId: string })[] = [];
-      const seen = new Set<string>();
-
-      for (const event of store.events) {
-        const activity = resolveEventActivity(
-          event,
-          activitiesForWeek(event.weekStart, store.weekActivities)
-        );
-        if (!activity) continue;
-
-        seen.add(event.id);
-        const known = synced.get(event.id);
-        const eventId = event.googleEventId ?? known?.eventId;
-        const signature = eventSignature(event, activity);
-        if (known && known.signature === signature && eventId) continue;
-
-        const draft = draftFor(event, activity, weekStartsOn, timeZone);
-        if (eventId) update.push({ ...draft, eventId });
-        else create.push(draft);
-      }
-
-      const remove = [...synced.entries()]
-        .filter(([eventId]) => !seen.has(eventId))
-        .map(([, { eventId }]) => eventId);
-
-      if (create.length === 0 && update.length === 0 && remove.length === 0) {
-        setStatus('synced');
-        return;
-      }
-
       isPushing = true;
       setStatus('syncing');
       try {
-        const response = await fetch('/api/calendar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            calendarId: usePlannerStore.getState().googleCalendarId,
-            create,
-            update,
-            remove,
-          }),
-        });
-        if (!response.ok) throw new Error((await response.json())?.error ?? 'Push failed');
-
-        const { calendarId, eventIds } = (await response.json()) as {
-          calendarId: string;
-          eventIds: Record<string, string>;
-        };
-
-        const after = usePlannerStore.getState();
-        after.setGoogleCalendarId(calendarId);
-        after.setGoogleEventIds(eventIds);
-
-        // Rebuild the baseline from what we just wrote, not from the store,
-        // which may have moved on while the request was in flight.
-        for (const [eventId] of synced) {
-          if (!seen.has(eventId)) synced.delete(eventId);
-        }
-        for (const draft of [...create, ...update]) {
-          const eventId = eventIds[draft.eventId];
-          const event = after.events.find((i) => i.id === draft.eventId);
-          if (!eventId || !event) continue;
-          const activity = resolveEventActivity(
-            event,
-            activitiesForWeek(event.weekStart, after.weekActivities)
-          );
-          synced.set(draft.eventId, { eventId, signature: eventSignature(event, activity) });
-        }
-
+        await pushLocalEvents(syncedRef.current);
         setStatus('synced');
       } catch (error) {
         console.error('Calendar push failed', error);
@@ -360,7 +429,8 @@ export function useCalendarSync(): void {
       timer = setTimeout(push, PUSH_DEBOUNCE_MS);
     });
 
-    // A pull can leave local-only events behind, so try once on connect too.
+    // A pull can leave events behind that were never written, so try once on
+    // connect too.
     timer = setTimeout(push, PUSH_DEBOUNCE_MS);
 
     return () => {

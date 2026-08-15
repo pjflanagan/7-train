@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
+import { ActivitySnapshotSchema } from '@/lib/types';
 import {
   createEvent,
   deleteEvent,
   ensureWorkoutsCalendar,
   EventDraft,
   GoogleApiError,
-  itemPropsFromEvent,
+  eventPropsFromEvent,
   listEvents,
   PulledEvent,
   updateEvent,
@@ -27,7 +28,8 @@ import {
 const CALENDAR_SCOPES = GOOGLE_INTEGRATIONS.calendar.scopes;
 
 const DraftSchema = z.object({
-  itemId: z.string(),
+  /** Our own `ScheduledEvent` id. Google's id, where there is one, is separate. */
+  eventId: z.string(),
   typeId: z.string(),
   title: z.string(),
   subType: z.string().nullable().optional(),
@@ -36,15 +38,19 @@ const DraftSchema = z.object({
   end: z.string(),
   timeZone: z.string(),
   description: z.string().optional(),
+  /** Written into the event so a reader needs nothing local to draw it. */
+  activitySnapshot: ActivitySnapshotSchema.optional(),
+  activityFrozen: z.boolean().optional(),
+  weekStart: z.string(),
 });
 
 const PushSchema = z.object({
   calendarId: z.string().nullable().optional(),
-  /** Items to create — no event exists for these yet. */
+  /** Events with nothing in Google yet. */
   create: z.array(DraftSchema).default([]),
-  /** Items whose event already exists, keyed by the event id to overwrite. */
-  update: z.array(DraftSchema.extend({ eventId: z.string() })).default([]),
-  /** Events for items that are gone locally. */
+  /** Events that already have a Google event, named by `googleEventId`. */
+  update: z.array(DraftSchema.extend({ googleEventId: z.string() })).default([]),
+  /** Google event ids whose event is gone locally. */
   remove: z.array(z.string()).default([]),
 });
 
@@ -78,13 +84,13 @@ export async function GET(request: Request) {
 
     const events: PulledEvent[] = [];
     for (const event of raw) {
-      const props = itemPropsFromEvent(event);
+      const props = eventPropsFromEvent(event);
       // Anything not written by us — or an all-day event someone hand-made —
       // is left alone rather than dragged into the planner.
       if (!props || !event.start?.dateTime || !event.end?.dateTime) continue;
       events.push({
         ...props,
-        eventId: event.id,
+        googleEventId: event.id,
         start: event.start.dateTime,
         end: event.end.dateTime,
         updated: event.updated,
@@ -109,35 +115,42 @@ export async function POST(request: Request) {
   }
   const { calendarId: knownCalendarId, create, update, remove } = parsed.data;
 
+  // Deletions alone, against a calendar we have lost the id of, would make a
+  // fresh calendar purely to delete events that were never in it. Nothing to
+  // write means nothing to create.
+  if (!knownCalendarId && create.length === 0 && update.length === 0) {
+    return NextResponse.json({ calendarId: null, eventIds: {} });
+  }
+
   try {
     const calendarId = await ensureWorkoutsCalendar(accessToken, knownCalendarId);
 
-    // Item id -> event id, so the client can staple the new events to its items.
+    // Our event id -> Google's, so the client can staple the two together.
     const eventIds: Record<string, string> = {};
 
     for (const draft of create) {
       const event = await createEvent(accessToken, calendarId, draft as EventDraft);
-      eventIds[draft.itemId] = event.id;
+      eventIds[draft.eventId] = event.id;
     }
 
-    for (const { eventId, ...draft } of update) {
+    for (const { googleEventId, ...draft } of update) {
       try {
-        await updateEvent(accessToken, calendarId, eventId, draft as EventDraft);
-        eventIds[draft.itemId] = eventId;
+        await updateEvent(accessToken, calendarId, googleEventId, draft as EventDraft);
+        eventIds[draft.eventId] = googleEventId;
       } catch (error) {
-        // The event was deleted in Google while we still had its id; the item
+        // The Google event was deleted while we still had its id; the workout
         // is still on the plan, so put it back rather than losing it.
         if (error instanceof GoogleApiError && (error.status === 404 || error.status === 410)) {
           const recreated = await createEvent(accessToken, calendarId, draft as EventDraft);
-          eventIds[draft.itemId] = recreated.id;
+          eventIds[draft.eventId] = recreated.id;
         } else {
           throw error;
         }
       }
     }
 
-    for (const eventId of remove) {
-      await deleteEvent(accessToken, calendarId, eventId);
+    for (const googleEventId of remove) {
+      await deleteEvent(accessToken, calendarId, googleEventId);
     }
 
     return NextResponse.json({ calendarId, eventIds });

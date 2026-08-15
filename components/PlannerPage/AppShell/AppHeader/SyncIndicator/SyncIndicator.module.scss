@@ -1,0 +1,44 @@
+@use '@/styles/mixins' as *;
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  // Square like the icon buttons beside it, so the header row keeps one rhythm.
+  width: var(--control-md);
+  height: var(--control-md);
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: var(--icon-md);
+  line-height: 0;
+}
+
+// Only the failed state is a button, so only it reacts to the pointer.
+.error {
+  color: var(--accent-warning);
+  cursor: pointer;
+  @include focus-ring();
+
+  &:hover {
+    background-color: var(--bg-tertiary);
+  }
+}
+
+.spinning {
+  // Sync icons read clockwise; the arrows chase each other the wrong way round
+  // when spun the other direction.
+  animation: spin 1.2s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 3.6s;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

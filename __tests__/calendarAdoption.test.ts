@@ -1,0 +1,127 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { usePlannerStore } from '@/lib/store';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
+import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
+import { buildActivitySnapshot } from '@/lib/activitySnapshot';
+import { getWeekStartKey, addWeeks } from '@/lib/dates';
+import { Activity, ScheduledEvent } from '@/lib/types';
+
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.app.created';
+
+vi.mock('@/hooks/useAuth', () => ({
+  useGoogleAccount: () => ({ scopes: [CALENDAR_SCOPE], isSignedIn: true }),
+}));
+
+vi.mock('sonner', () => ({ toast: { error: vi.fn() } }));
+
+const weekStart = getWeekStartKey(new Date(), 1);
+/** Far outside PULL_WEEKS_BACK (8), so no pull will ever return it. */
+const ancientWeek = addWeeks(weekStart, -40);
+
+const activity: Activity = {
+  id: 'run',
+  name: 'Running',
+  icon: 'run',
+  metric: 'distance',
+  unit: 'miles',
+  target: 20,
+  color: '#f00',
+};
+
+const event = (id: string, week: string): ScheduledEvent => ({
+  id,
+  typeId: activity.id,
+  day: 'monday',
+  weekStart: week,
+  value: 5,
+  startMinutes: 7 * 60,
+  activitySnapshot: buildActivitySnapshot(activity),
+});
+
+/** Records what hits /api/calendar, answering as an empty calendar would. */
+function stubCalendarApi() {
+  const posts: Array<{ create: unknown[]; update: unknown[]; remove: unknown[] }> = [];
+
+  const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+    if (init?.method === 'POST') {
+      const body = JSON.parse(init.body as string);
+      posts.push(body);
+      const eventIds: Record<string, string> = {};
+      for (const draft of [...body.create, ...body.update]) {
+        eventIds[draft.eventId] = `google-${draft.eventId}`;
+      }
+      return { ok: true, json: async () => ({ calendarId: 'cal-1', eventIds }) };
+    }
+    // The pull: an empty Workouts calendar.
+    return { ok: true, json: async () => ({ calendarId: 'cal-1', events: [] }) };
+  });
+
+  vi.stubGlobal('fetch', fetchMock);
+  return { posts, fetchMock };
+}
+
+beforeEach(() => {
+  usePlannerStore.getState().clearAll();
+  usePlannerStore.setState({ googleAdoptedAt: null, googleCalendarId: null });
+  useCalendarSyncStore.setState({ status: 'off', resyncNonce: 0, baselineNonce: 0 });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
+
+describe('handing the plan over to Google', () => {
+  it('uploads every week, not just the ones a pull would cover', async () => {
+    usePlannerStore.setState({
+      events: [event('recent', weekStart), event('ancient', ancientWeek)],
+    });
+    const { posts } = stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    await waitFor(() => expect(posts.length).toBeGreaterThan(0));
+
+    const uploaded = posts[0].create as Array<{ eventId: string }>;
+    expect(uploaded.map(d => d.eventId).sort()).toEqual(['ancient', 'recent']);
+  });
+
+  it('uploads before it pulls, so an un-uploaded week cannot be overwritten', async () => {
+    usePlannerStore.setState({ events: [event('ancient', ancientWeek)] });
+    const { fetchMock } = stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(1));
+
+    const methods = fetchMock.mock.calls.map(([, init]) => (init as RequestInit)?.method ?? 'GET');
+    expect(methods[0]).toBe('POST');
+    expect(methods[1]).toBe('GET');
+  });
+
+  it('keeps the week outside the pull window after adopting', async () => {
+    usePlannerStore.setState({ events: [event('ancient', ancientWeek)] });
+    stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    await waitFor(() => expect(usePlannerStore.getState().googleAdoptedAt).toBeTruthy());
+    await waitFor(() =>
+      expect(usePlannerStore.getState().events.map(e => e.id)).toEqual(['ancient'])
+    );
+  });
+
+  it('does not upload the whole plan again on a later sync', async () => {
+    usePlannerStore.setState({
+      events: [event('recent', weekStart)],
+      googleAdoptedAt: new Date().toISOString(),
+    });
+    const { fetchMock } = stubCalendarApi();
+
+    renderHook(() => useCalendarSync());
+
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(0));
+    expect((fetchMock.mock.calls[0][1] as RequestInit)?.method ?? 'GET').toBe('GET');
+  });
+});

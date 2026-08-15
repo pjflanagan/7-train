@@ -58,6 +58,8 @@ type PlannerStore = PlannerState & {
   setEventDuration: (id: string, durationMinutes: number) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
+  /** Record that the whole plan now lives in Google Calendar. */
+  setGoogleAdopted: () => void;
   setGoogleSheetId: (sheetId: string | null) => void;
   /** Record which Google event now mirrors each event, keyed by event id. */
   setGoogleEventIds: (eventIds: Record<string, string>) => void;
@@ -121,6 +123,7 @@ function buildInitialState(): PlannerState {
     weekStartsOn: 1,
     defaultStartMinutes: DEFAULT_START_MINUTES,
     googleCalendarId: null,
+    googleAdoptedAt: null,
     googleSheetId: null,
   };
 }
@@ -372,6 +375,7 @@ export const usePlannerStore = create<PlannerStore>()(
       })),
 
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
+      setGoogleAdopted: () => set({ googleAdoptedAt: new Date().toISOString() }),
       setGoogleSheetId: (googleSheetId) => set({ googleSheetId }),
       setGoogleEventIds: (eventIds) => set((state) => ({
         events: state.events.map(i =>
@@ -467,9 +471,22 @@ export const usePlannerStore = create<PlannerStore>()(
         defaultStartMinutes: clampStartMinutes(startMinutes)
       }),
       replaceAll: (state) => set(state),
-      resetAll: () => set(buildInitialState()),
-      clearAll: () => set({
+      // Which Google calendar and spreadsheet we own is a connection setting,
+      // not part of the plan — dropping it makes the next sync create a second
+      // `Workouts` calendar rather than reusing the one already there, and with
+      // no way to search for it (see `ensureWorkoutsCalendar`) that duplicate is
+      // permanent. Both wipes keep it.
+      resetAll: () => set((state) => ({
         ...buildInitialState(),
+        googleCalendarId: state.googleCalendarId,
+        googleAdoptedAt: state.googleAdoptedAt,
+        googleSheetId: state.googleSheetId
+      })),
+      clearAll: () => set((state) => ({
+        ...buildInitialState(),
+        googleCalendarId: state.googleCalendarId,
+        googleAdoptedAt: state.googleAdoptedAt,
+        googleSheetId: state.googleSheetId,
         activities: [],
         events: [],
         // The seeded state fills the current week from the template. With no
@@ -477,7 +494,7 @@ export const usePlannerStore = create<PlannerStore>()(
         // blank slate must not keep.
         weekActivities: {},
         links: []
-      })
+      }))
     }),
     {
       name: 'workout-week',

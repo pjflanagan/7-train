@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { usePlannerStore } from '@/lib/store';
+import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { useCsvExport } from '@/hooks/useCsvExport';
 import { useBackup } from '@/hooks/useBackup';
 import { Modal } from '@/components/elements/Modal/Modal';
@@ -41,6 +42,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const resetAll = usePlannerStore((state) => state.resetAll);
   const clearAll = usePlannerStore((state) => state.clearAll);
+  const forgetBaseline = useCalendarSyncStore((state) => state.forgetBaseline);
 
   const tempUnit = usePlannerStore((state) => state.tempUnit ?? 'F');
   const setTempUnit = usePlannerStore((state) => state.setTempUnit);
@@ -80,9 +82,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const handleConfirm = () => {
     switch (confirmAction) {
       case 'reset':
+        // Both wipes are local. Telling sync to forget its baseline first is
+        // what stops the emptied plan from being pushed up as a mass deletion.
+        forgetBaseline();
         resetAll();
         break;
       case 'clear':
+        forgetBaseline();
         clearAll();
         break;
       case 'import': {
@@ -100,7 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       case 'reset':
         return { title: 'Full reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
       case 'clear':
-        return { title: 'Clear all data', message: 'Are you sure you want to erase everything? Every activity, event, note, target, link, and history entry will be gone, with nothing put back in their place. This cannot be undone.', isDestructive: true };
+        return { title: 'Clear all data', message: 'Are you sure you want to erase everything? Every activity, event, note, target, link, and history entry will be gone, with nothing put back in their place. This cannot be undone. Your Workouts calendar in Google is left as it is.', isDestructive: true };
       case 'import':
         return { title: 'Import backup', message: 'Importing replaces everything currently in the app with the contents of the backup file. This cannot be undone.', isDestructive: true };
       default:

@@ -10,16 +10,65 @@
  * pulled back in can reattach itself to whatever activities this device holds.
  */
 
+import { ActivitySnapshot, ActivitySnapshotSchema } from './types';
+
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 
 /** The calendar we create and own. `calendar.app.created` reaches nothing else. */
 export const WORKOUTS_CALENDAR_SUMMARY = 'Workouts';
 
-/** Private extended properties, our own metadata on each event. */
-const PROP_ITEM_ID = 'workoutItemId';
+/**
+ * Private extended properties, our own metadata on each event. The `item` in
+ * the first key is the pre-v3 word for an event; the key itself is written into
+ * every event already in Google, so it stays as it is.
+ */
+const PROP_EVENT_ID = 'workoutItemId';
 const PROP_TYPE_ID = 'workoutTypeId';
 const PROP_SUB_TYPE = 'workoutSubType';
 const PROP_VALUE = 'workoutValue';
+/** The event's own copy of its activity, as JSON. */
+const PROP_ACTIVITY = 'workoutActivity';
+/** Set when that copy has stopped tracking the week's activity. */
+const PROP_ACTIVITY_FROZEN = 'workoutActivityFrozen';
+/**
+ * The week the event belongs to. Only the browser knows the user's zone, and
+ * only the user's settings say which day a week starts on, so the week an event
+ * was filed under travels with it rather than being re-derived by whoever reads
+ * it next.
+ */
+const PROP_WEEK_START = 'workoutWeekStart';
+
+/**
+ * Google caps a private property value at 1024 bytes. A snapshot is normally a
+ * few hundred, but `workoutTypes` is user-typed and unbounded, so it is the
+ * part that gets dropped if the whole thing will not fit. Losing the sub-kinds
+ * costs an event nothing it needs to render.
+ */
+const MAX_PROPERTY_BYTES = 1024;
+
+function serializeSnapshot(snapshot: ActivitySnapshot | undefined): string {
+  if (!snapshot) return '';
+  const full = JSON.stringify(snapshot);
+  if (new TextEncoder().encode(full).length <= MAX_PROPERTY_BYTES) return full;
+
+  const trimmed = JSON.stringify({ ...snapshot, workoutTypes: [] });
+  return new TextEncoder().encode(trimmed).length <= MAX_PROPERTY_BYTES ? trimmed : '';
+}
+
+/**
+ * The snapshot a Google event carries, or undefined when it has none or the
+ * value is unreadable. A malformed property is treated as absent rather than
+ * fatal: the event still exists, and the reader can fall back to the week.
+ */
+function parseSnapshot(raw: string | undefined): ActivitySnapshot | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = ActivitySnapshotSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export class GoogleApiError extends Error {
   constructor(message: string, readonly status: number) {
@@ -52,15 +101,23 @@ async function callGoogle<T>(
   return body as T;
 }
 
-interface CalendarListEntry {
+interface CalendarResource {
   id: string;
   summary?: string;
-  deleted?: boolean;
 }
 
 /**
  * The id of our `Workouts` calendar, creating it the first time. A caller that
  * already knows the id passes it in, and we only check that it still exists.
+ *
+ * There is deliberately no "look for a calendar named Workouts" fallback:
+ * `calendarList.list` is the only way to search, and it does not accept
+ * `calendar.app.created` — reaching it would mean asking for a scope that reads
+ * every calendar the user has. So the remembered id is the only thread back to
+ * an existing calendar, and losing it (a cleared `localStorage`, a new device)
+ * means a second `Workouts` calendar rather than a resumed one. That is the
+ * cost of the narrow scope, and the reason the id belongs in a settings store —
+ * see `_todo/database.md`.
  */
 export async function ensureWorkoutsCalendar(
   accessToken: string,
@@ -68,7 +125,7 @@ export async function ensureWorkoutsCalendar(
 ): Promise<string> {
   if (knownCalendarId) {
     try {
-      const existing = await callGoogle<CalendarListEntry>(
+      const existing = await callGoogle<CalendarResource>(
         accessToken,
         `/calendars/${encodeURIComponent(knownCalendarId)}`
       );
@@ -82,16 +139,7 @@ export async function ensureWorkoutsCalendar(
     }
   }
 
-  const list = await callGoogle<{ items?: CalendarListEntry[] }>(
-    accessToken,
-    '/users/me/calendarList?minAccessRole=owner&showDeleted=false'
-  );
-  const found = list.items?.find(
-    (entry) => !entry.deleted && entry.summary === WORKOUTS_CALENDAR_SUMMARY
-  );
-  if (found) return found.id;
-
-  const created = await callGoogle<CalendarListEntry>(accessToken, '/calendars', {
+  const created = await callGoogle<CalendarResource>(accessToken, '/calendars', {
     method: 'POST',
     body: JSON.stringify({
       summary: WORKOUTS_CALENDAR_SUMMARY,
@@ -113,9 +161,10 @@ export interface GoogleEvent {
   extendedProperties?: { private?: Record<string, string> };
 }
 
-/** Everything a route needs to write one item out as an event. */
+/** Everything a route needs to write one scheduled event out to Google. */
 export interface EventDraft {
-  itemId: string;
+  /** Our own `ScheduledEvent` id, not Google's. */
+  eventId: string;
   typeId: string;
   /** Activity name, so the event reads well inside Google Calendar. */
   title: string;
@@ -126,6 +175,12 @@ export interface EventDraft {
   end: string;
   timeZone: string;
   description?: string;
+  /** The event's own copy of its activity, so a reader needs no local state. */
+  activitySnapshot?: ActivitySnapshot;
+  /** Whether that copy has stopped tracking the week's activity. */
+  activityFrozen?: boolean;
+  /** `YYYY-MM-DD` of the week the event is filed under. */
+  weekStart: string;
 }
 
 function eventBody(draft: EventDraft) {
@@ -136,10 +191,13 @@ function eventBody(draft: EventDraft) {
     end: { dateTime: draft.end, timeZone: draft.timeZone },
     extendedProperties: {
       private: {
-        [PROP_ITEM_ID]: draft.itemId,
+        [PROP_EVENT_ID]: draft.eventId,
         [PROP_TYPE_ID]: draft.typeId,
         [PROP_SUB_TYPE]: draft.subType ?? '',
         [PROP_VALUE]: String(draft.value),
+        [PROP_ACTIVITY]: serializeSnapshot(draft.activitySnapshot),
+        [PROP_ACTIVITY_FROZEN]: draft.activityFrozen ? '1' : '',
+        [PROP_WEEK_START]: draft.weekStart,
       },
     },
   };
@@ -160,12 +218,12 @@ export async function createEvent(
 export async function updateEvent(
   accessToken: string,
   calendarId: string,
-  eventId: string,
+  googleEventId: string,
   draft: EventDraft
 ): Promise<GoogleEvent> {
   return callGoogle<GoogleEvent>(
     accessToken,
-    `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(googleEventId)}`,
     { method: 'PUT', body: JSON.stringify(eventBody(draft)) }
   );
 }
@@ -173,12 +231,12 @@ export async function updateEvent(
 export async function deleteEvent(
   accessToken: string,
   calendarId: string,
-  eventId: string
+  googleEventId: string
 ): Promise<void> {
   try {
     await callGoogle<void>(
       accessToken,
-      `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+      `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(googleEventId)}`,
       { method: 'DELETE' }
     );
   } catch (error) {
@@ -219,21 +277,27 @@ export async function listEvents(
   return events.filter((event) => event.status !== 'cancelled');
 }
 
-/** The item metadata an event carries, or null when it is not one of ours. */
-export function itemPropsFromEvent(event: GoogleEvent): {
-  itemId: string;
+/** The event metadata a Google event carries, or null when it is not ours. */
+export function eventPropsFromEvent(event: GoogleEvent): {
+  eventId: string;
   typeId: string;
   workoutType: string | null;
   value: number;
+  activitySnapshot?: ActivitySnapshot;
+  activityFrozen?: boolean;
+  weekStart?: string;
 } | null {
   const props = event.extendedProperties?.private;
   if (!props?.[PROP_TYPE_ID]) return null;
 
   return {
-    itemId: props[PROP_ITEM_ID] || event.id,
+    eventId: props[PROP_EVENT_ID] || event.id,
     typeId: props[PROP_TYPE_ID],
     workoutType: props[PROP_SUB_TYPE] || null,
     value: Number(props[PROP_VALUE]) || 0,
+    activitySnapshot: parseSnapshot(props[PROP_ACTIVITY]),
+    activityFrozen: props[PROP_ACTIVITY_FROZEN] === '1',
+    weekStart: props[PROP_WEEK_START] || undefined,
   };
 }
 
@@ -245,8 +309,10 @@ export function itemPropsFromEvent(event: GoogleEvent): {
  * day a 7am workout falls on.
  */
 export interface PulledEvent {
+  /** Google's id for the event. */
+  googleEventId: string;
+  /** Our own `ScheduledEvent` id, as we wrote it into the event. */
   eventId: string;
-  itemId: string;
   typeId: string;
   workoutType: string | null;
   value: number;
@@ -254,4 +320,9 @@ export interface PulledEvent {
   end: string;
   /** Google's own last-modified stamp for the event, ISO. */
   updated?: string;
+  /** The event's own copy of its activity, when it was written with one. */
+  activitySnapshot?: ActivitySnapshot;
+  activityFrozen?: boolean;
+  /** The week the event was filed under, when it was written with one. */
+  weekStart?: string;
 }

@@ -151,6 +151,16 @@ export const PlannerStateSchema = z.object({
   weekStartsOn: z.number().int().min(0).max(6).optional().default(1),
   /** The `Workouts` calendar we created in Google, once we have made one. */
   googleCalendarId: z.string().nullable().optional().default(null),
+  /**
+   * When this plan was handed over to Google Calendar, ISO.
+   *
+   * Until it is set, the local store is still the only complete copy: it may
+   * hold weeks that were never uploaded, so a pull must not be allowed to
+   * overwrite it. Once the whole plan has been pushed up — every week, not just
+   * the synced window — Google is the source of truth and the local store is a
+   * cache in front of it.
+   */
+  googleAdoptedAt: z.string().nullable().optional().default(null),
   /** The spreadsheet history is exported to, so repeat exports overwrite it. */
   googleSheetId: z.string().nullable().optional().default(null)
 });
