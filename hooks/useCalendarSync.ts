@@ -437,8 +437,9 @@ export function useCalendarSync(): void {
 
       const response = await fetch(`/api/calendar?${params}`);
       if (!response.ok) throw new Error((await response.json())?.error ?? 'Pull failed');
-      const { calendarId, events, targets } = (await response.json()) as {
+      const { calendarId, calendarName, events, targets } = (await response.json()) as {
         calendarId: string;
+        calendarName: string | null;
         events: PulledEvent[];
         targets: PulledTargets[];
       };
@@ -446,6 +447,9 @@ export function useCalendarSync(): void {
 
       const store = usePlannerStore.getState();
       store.setGoogleCalendarId(calendarId);
+      // Google owns the name, so a rename over there lands here rather than us
+      // holding on to whatever it was called when it was made.
+      store.setGoogleCalendarName(calendarName);
 
       // An event written by this app carries its own copy of its activity, so
       // it needs nothing local to be drawn. Only events written before that

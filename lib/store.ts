@@ -87,6 +87,8 @@ type PlannerStore = PlannerState & {
   }) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
+  /** What Google currently calls that calendar. Refreshed by every pull. */
+  setGoogleCalendarName: (calendarName: string | null) => void;
   /** Record that the whole plan now lives in Google Calendar. */
   setGoogleAdopted: () => void;
   setGoogleSheetId: (sheetId: string | null) => void;
@@ -158,6 +160,7 @@ function buildInitialState(): PlannerState {
     weekStartsOn: 1,
     defaultStartMinutes: DEFAULT_START_MINUTES,
     googleCalendarId: null,
+    googleCalendarName: null,
     googleAdoptedAt: null,
     googleSheetId: null,
   };
@@ -453,6 +456,7 @@ export const usePlannerStore = create<PlannerStore>()(
       })),
 
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
+      setGoogleCalendarName: (googleCalendarName) => set({ googleCalendarName }),
       setGoogleAdopted: () => set({ googleAdoptedAt: new Date().toISOString() }),
       setGoogleSheetId: (googleSheetId) => set({ googleSheetId }),
       setGoogleEventIds: (eventIds) => set((state) => ({

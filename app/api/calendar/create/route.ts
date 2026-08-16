@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
-import { ensureWorkoutsCalendar, GoogleApiError } from '@/lib/googleCalendar';
+import {
+  ensureWorkoutsCalendar,
+  GoogleApiError,
+  WORKOUTS_CALENDAR_SUMMARY,
+} from '@/lib/googleCalendar';
 
 /**
  * Makes the `Workouts` calendar, once.
@@ -20,7 +24,7 @@ export async function POST(request: Request) {
 
   try {
     const calendarId = await ensureWorkoutsCalendar(accessToken, null);
-    return NextResponse.json({ calendarId });
+    return NextResponse.json({ calendarId, calendarName: WORKOUTS_CALENDAR_SUMMARY });
   } catch (error) {
     if (error instanceof GoogleApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

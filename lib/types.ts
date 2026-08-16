@@ -176,6 +176,15 @@ export const PlannerStateSchema = z.object({
   /** The `Workouts` calendar we created in Google, once we have made one. */
   googleCalendarId: z.string().nullable().optional().default(null),
   /**
+   * What that calendar is called in Google, as of the last pull.
+   *
+   * A cache of Google's own state, not a setting — it is re-read on every pull
+   * and is never pushed anywhere, so renaming the calendar in Google Calendar
+   * is simply reflected here. Persisted only so the integrations modal has
+   * something to say before the first pull of a session lands.
+   */
+  googleCalendarName: z.string().nullable().optional().default(null),
+  /**
    * When this plan was handed over to Google Calendar, ISO.
    *
    * Until it is set, the local store is still the only complete copy: it may

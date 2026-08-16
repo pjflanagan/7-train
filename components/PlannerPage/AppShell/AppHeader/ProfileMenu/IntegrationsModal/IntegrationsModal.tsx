@@ -45,6 +45,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
   const { status } = useCalendarSyncStatus();
   const { exportToSheets, isExporting } = useSheetsExport();
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
+  const calendarName = usePlannerStore((state) => state.googleCalendarName);
   const strava = useStravaConnection();
   const { status: stravaStatus, resync: resyncStrava } = useStravaSyncStatus();
 
@@ -90,12 +91,16 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
                   {/* Which calendar is not a choice any more — the account has
                       one, and it is made without asking. It is still named
                       here, because someone looking for it in Google Calendar
-                      needs to know what they are looking for. */}
+                      needs to know what they are looking for. The name comes
+                      from Google on every pull, so renaming it there renames
+                      it here. */}
                   <div className={styles.row}>
                     <div className={styles.rowText}>
-                      <span className={styles.label}>Calendar</span>
-                      <span className={clsx(styles.muted, styles.email)}>
-                        {calendarId ?? 'Setting one up…'}
+                      <span className={styles.label}>
+                        {calendarName ?? (calendarId ? 'Your workouts calendar' : 'Setting one up…')}
+                      </span>
+                      <span className={styles.muted}>
+                        {calendarId ? 'Your plan is saved in this Google calendar. Changes to time and duration made on Google calendar will be reflected on 7Train' : 'Making a calendar in Google...'}
                       </span>
                     </div>
                   </div>
@@ -166,17 +171,21 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
               </div>
               {strava.isConnected ? (
                 <div className={styles.action}>
-                  <span className={styles.muted}>{STRAVA_LABEL[stravaStatus]}</span>
-                  <Button
-                    variant="secondary"
-                    onClick={resyncStrava}
-                    disabled={stravaStatus === 'reading'}
-                  >
-                    Sync now
-                  </Button>
-                  <Button variant="secondary" onClick={() => strava.disconnect()}>
-                    Disconnect
-                  </Button>
+                  {STRAVA_LABEL[stravaStatus] && (
+                    <span className={styles.status}>{STRAVA_LABEL[stravaStatus]}</span>
+                  )}
+                  <div className={styles.actionButtons}>
+                    <Button
+                      variant="secondary"
+                      onClick={resyncStrava}
+                      disabled={stravaStatus === 'reading'}
+                    >
+                      Sync now
+                    </Button>
+                    <Button variant="secondary" onClick={() => strava.disconnect()}>
+                      Disconnect
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <Button variant="secondary" onClick={connectStrava} disabled={strava.isLoading}>
@@ -193,6 +202,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
 
             <div className={styles.row}>
               <div className={styles.rowText}>
+                {/* TODO: the label should be the sheet name and it should link to the sheet */}
                 <span className={styles.label}>{GOOGLE_INTEGRATIONS.sheets.label}</span>
                 <span className={styles.muted}>
                   {GOOGLE_INTEGRATIONS.sheets.description}

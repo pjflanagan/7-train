@@ -66,7 +66,11 @@ export function useEnsureCalendar(): void {
       // is — leaving `googleAdoptedAt` unset is what makes sync upload all of
       // it. Storing the id is itself a settings change, so `useUserSync` picks
       // it up and the next device inherits it rather than making a second one.
-      usePlannerStore.getState().setGoogleCalendarId(body.calendarId);
+      const store = usePlannerStore.getState();
+      store.setGoogleCalendarId(body.calendarId);
+      // The pull refreshes this, but it is a few seconds away and the modal
+      // should not be showing a blank calendar in the meantime.
+      store.setGoogleCalendarName(body.calendarName ?? null);
       useCalendarSyncStore.getState().resync();
     };
 

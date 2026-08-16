@@ -1,8 +1,13 @@
 import { PlannerState, PlannerStateSchema } from './types';
 import { migrateStore } from './migrate';
 
-/** Bumped alongside the zustand `persist` version in `@/lib/store`. */
-export const BACKUP_VERSION = 9;
+/**
+ * Bumped alongside the zustand `persist` version in `@/lib/store`. It is the
+ * version stamped on an export and the one `parseBackup` migrates *from*, so
+ * letting it drift behind the store means fresh exports get re-migrated on the
+ * way back in.
+ */
+export const BACKUP_VERSION = 10;
 
 const BACKUP_FORMAT = 'workout-week-backup';
 
@@ -10,7 +15,13 @@ export type Backup = {
   format: typeof BACKUP_FORMAT;
   version: number;
   exportedAt: string;
-  state: PlannerState;
+  /**
+   * `googleCalendarName` is deliberately not in here. It is a cache of what
+   * Google calls the calendar, refreshed by every pull, so backing it up would
+   * only preserve a name that may since have changed. A restore leaves it null
+   * and the first pull fills it in.
+   */
+  state: Omit<PlannerState, 'googleCalendarName'>;
 };
 
 /** Strip the store's action functions, keeping only the persisted data. */

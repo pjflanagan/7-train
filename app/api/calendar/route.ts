@@ -107,7 +107,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    if (!(await getCalendar(accessToken, calendarId))) {
+    // The existence check already hands back the calendar itself, so its name
+    // is free — no second round trip to tell the user what their calendar is
+    // called, and a rename in Google Calendar reaches us on the next pull.
+    const calendar = await getCalendar(accessToken, calendarId);
+    if (!calendar) {
       return NextResponse.json(NO_CALENDAR, { status: 404 });
     }
     const raw = await listEvents(accessToken, calendarId, timeMin, timeMax);
@@ -137,7 +141,12 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({ calendarId, events, targets });
+    return NextResponse.json({
+      calendarId,
+      calendarName: calendar.summary ?? null,
+      events,
+      targets,
+    });
   } catch (error) {
     return errorResponse(error);
   }
