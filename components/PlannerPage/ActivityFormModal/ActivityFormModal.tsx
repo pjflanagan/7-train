@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ActivitySchema, Activity } from '@/lib/types';
@@ -15,6 +15,7 @@ import { IconPicker } from '@/components/elements/IconPicker/IconPicker';
 import { TagInput } from '@/components/elements/TagInput/TagInput';
 import { MdDelete, MdAdd } from 'react-icons/md';
 import { StravaSportPicker } from './StravaSportPicker/StravaSportPicker';
+import { useStravaConnection } from '@/hooks/useStrava';
 import styles from './ActivityFormModal.module.scss';
 import { usePlannerStore } from '@/lib/store';
 import { formatPaceMinutes, parsePaceMinutes } from '@/lib/schedule';
@@ -34,13 +35,19 @@ export interface ActivityFormModalProps {
   weekStart?: string;
 }
 
-const TABS: TabConfig[] = [
+/**
+ * The Strava tab is conditional on a live connection and spliced in below.
+ * Everything else is always there, in the order someone fills a new activity in.
+ */
+const BASE_TABS: TabConfig[] = [
   { id: 'basic', label: 'Basic' },
   { id: 'types', label: 'Workout types' },
-  { id: 'strava', label: 'Strava' },
   { id: 'links', label: 'Links' },
   { id: 'appearance', label: 'Appearance' }
 ];
+
+/** Where the Strava tab goes when it is shown: after the workout types. */
+const STRAVA_TAB_INDEX = 2;
 
 /** Falls back to the violet preset so a new workout starts on the theme colour. */
 const DEFAULT_ACTIVITY_COLOR = '#8E4EC6';
@@ -49,7 +56,24 @@ const DEFAULT_ACTIVITY_COLOR = '#8E4EC6';
 const FORM_ID = 'activity-form';
 
 export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, activity, weekStart }) => {
-  const [activeTab, setActiveTab] = useState('basic');
+  const [selectedTab, setSelectedTab] = useState('basic');
+  // Which Strava sports an activity answers to is only worth asking about once
+  // there are Strava recordings to match. Unconnected, the tab is a question
+  // about a service the user has not got, and the icon defaults underneath it
+  // are still written either way — so nothing is lost by not asking.
+  const { isConnected: isStravaConnected } = useStravaConnection();
+
+  const tabs = useMemo(() => {
+    if (!isStravaConnected) return BASE_TABS;
+    const list = [...BASE_TABS];
+    list.splice(STRAVA_TAB_INDEX, 0, { id: 'strava', label: 'Strava' });
+    return list;
+  }, [isStravaConnected]);
+
+  // Disconnecting Strava elsewhere takes this tab away underneath whoever is
+  // standing on it. Derived during render rather than corrected in an effect,
+  // so there is never a frame showing a tab strip with nothing under it.
+  const activeTab = tabs.some((tab) => tab.id === selectedTab) ? selectedTab : 'basic';
   const addActivity = usePlannerStore((s) => s.addActivity);
   const updateActivity = usePlannerStore((s) => s.updateActivity);
   const addWeekActivity = usePlannerStore((s) => s.addWeekActivity);
@@ -177,7 +201,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
       lastIconRef.current = null;
       setHasChosenSports(Boolean(activity?.stravaSportTypes?.length));
       setTimeout(() => {
-        setActiveTab('basic');
+        setSelectedTab('basic');
       }, 0);
     }
   }, [isOpen, activity, reset]);
@@ -209,7 +233,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
       }
     >
       <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={setSelectedTab} />
         
         <div className={styles.tabContent}>
           {activeTab === 'basic' && (

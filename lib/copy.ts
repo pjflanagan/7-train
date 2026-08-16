@@ -92,7 +92,7 @@ export const COPY = {
     syncNow: 'Sync now',
     notConnected: 'Bring in your recorded workouts',
     blurb:
-      'What you actually did, read after your calendar. A recording lands on the workout you planned for it and replaces the number with the real one; anything you did without planning is added to the day it happened.',
+      'Connect Strava to automatically update your calendar with your workout recordings.',
     label: {
       off: '',
       waiting: 'Waiting for your calendar…',
@@ -138,6 +138,12 @@ export const COPY = {
     title: 'Integrations',
     signInTitle: 'Sign in',
     checking: 'Checking your sign in…',
+    tab: {
+      google: 'Google',
+      strava: 'Strava',
+    },
+    /** Shown on the Strava tab when there is no connection yet. */
+    stravaNotConnected: 'Not connected',
     signInBlurb:
       'Sign in to keep your plan in Google Calendar, so it follows you between devices. Your plan stays on this device either way.',
     reauth: 'Google access expired. Sign in again to restore it.',

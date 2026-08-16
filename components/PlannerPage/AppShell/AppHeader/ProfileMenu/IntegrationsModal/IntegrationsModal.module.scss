@@ -1,10 +1,12 @@
 @use '@/styles/mixins' as *;
 @use '@/styles/breakpoints' as bp;
 
-.container {
+// One tab's contents. The tab strip sits directly above, outside this.
+.panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
+  padding-top: var(--space-4);
 }
 
 .identity {
@@ -32,10 +34,10 @@
   color: var(--text-muted);
   margin: 0;
   // `break-word`, deliberately not `anywhere`: `anywhere` lets the browser
-  // report a min-content width of one character, and a flex sibling with
-  // buttons in it will then happily squeeze this to 1ch and set the text
-  // vertically, one letter per line. This still breaks a token too long to
-  // fit, without volunteering to be crushed.
+  // report a min-content width of one character, and any flex sibling will then
+  // happily squeeze this to 1ch and set the text vertically, one letter per
+  // line. This still breaks a token too long to fit, without volunteering to be
+  // crushed.
   overflow-wrap: break-word;
 }
 
@@ -62,89 +64,57 @@
   }
 }
 
-.section {
+// One integration: what it is, what it is set to, and what you can do with it.
+//
+// A bordered block rather than a row with the controls pushed to the right.
+// Side by side, a long status ("Waiting for your calendar…" is three times "Up
+// to date") competed with the label for one line's width and starved it until
+// the name set itself vertically. Stacked, every line gets the full width and
+// nothing has to be truncated to fit.
+.card {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  min-width: 0;
 }
 
-.sectionTitle {
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.cardTitle {
   font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
+  flex: 0 0 auto;
 }
 
-.note {
-  font-size: var(--font-sm);
-  color: var(--text-dim);
-  margin: 0;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: var(--control-lg);
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--border-color);
-
-  // A phone has no room for a description and its controls on one line, so the
-  // controls drop underneath and get the full width to sit in.
-  @include bp.respond-to(mobile) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-2);
-    padding: var(--space-3) 0;
-  }
-}
-
-.rowText {
-  display: flex;
-  flex-direction: column;
-  // Claims the space the controls do not, and never gives up more than half
-  // the row to them — the label is the thing the row is actually about.
-  flex: 1 1 50%;
-  min-width: 0;
-}
-
-.label {
+// The thing the card is actually about: the calendar's name, the athlete's name.
+.cardValue {
   font-size: var(--font-md);
   color: var(--text-main);
-  // A calendar someone named "Marathon block — spring 2027" should not push the
-  // buttons off the edge.
-  @include truncate();
+  margin: 0;
+  overflow-wrap: break-word;
 }
 
-// The controls for a row: a status line, and the buttons under it.
-//
-// Stacked rather than in a line with the buttons. Side by side, the status was
-// competing with them for one row's width — a long one ("Waiting for your
-// calendar…" is three times "Up to date") starved the label beside it until the
-// name set itself vertically, and truncating it instead only produced
-// "Waitin…". Its own line costs a few pixels of height and always reads.
-.action {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-  flex: 0 1 auto;
-  min-width: 0;
-
-  @include bp.respond-to(mobile) {
-    align-items: stretch;
-  }
-}
-
-.actionButtons {
+.cardActions {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin-top: var(--space-1);
 
-  // Two buttons sharing the row evenly, rather than huddled at one end.
+  // Buttons share the width evenly rather than huddling at one end.
   @include bp.respond-to(mobile) {
     > button {
       flex: 1 1 0;
@@ -153,10 +123,21 @@
   }
 }
 
+// Deliberately allowed to wrap rather than `nowrap` or truncate. The statuses
+// differ wildly in length — "Waiting for your calendar…" is three times "Up to
+// date" — and on a narrow phone the long one needs a second line. Truncating
+// gives "Waitin…", which says nothing at all.
 .status {
   font-size: var(--font-sm);
   color: var(--text-muted);
-  @include truncate();
+  text-align: right;
+  min-width: 0;
+}
+
+.note {
+  font-size: var(--font-sm);
+  color: var(--text-dim);
+  margin: 0;
 }
 
 .signIn {
