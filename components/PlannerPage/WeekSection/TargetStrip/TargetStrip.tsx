@@ -9,6 +9,7 @@ import { TargetChip } from './TargetChip/TargetChip';
 import { AddTargetCard } from './AddTargetCard/AddTargetCard';
 import { CopyActivitiesCard } from './CopyActivitiesCard/CopyActivitiesCard';
 import styles from './TargetStrip.module.scss';
+import { COPY } from '@/lib/copy';
 
 export function TargetStrip({ weekStart }: { weekStart: string }) {
   const activities = useWeekActivities(weekStart);
@@ -27,7 +28,7 @@ export function TargetStrip({ weekStart }: { weekStart: string }) {
         <button
           type="button"
           className={`${styles.arrow} ${styles.left}`}
-          aria-label="Scroll targets left"
+          aria-label={COPY.targets.scrollLeft}
           onClick={() => scrollBy(-1)}
         >
           <MdChevronLeft size={20} />
@@ -55,7 +56,7 @@ export function TargetStrip({ weekStart }: { weekStart: string }) {
         <button
           type="button"
           className={`${styles.arrow} ${styles.right}`}
-          aria-label="Scroll targets right"
+          aria-label={COPY.targets.scrollRight}
           onClick={() => scrollBy(1)}
         >
           <MdChevronRight size={20} />

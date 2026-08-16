@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { MdClose } from 'react-icons/md';
 import { IconButton } from '@/components/elements/IconButton/IconButton';
 import styles from './Modal.module.scss';
+import { COPY } from '@/lib/copy';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -119,7 +120,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className={styles.header}>
           {title && <h2 className={styles.title}>{title}</h2>}
           <div className={styles.closeWrapper}>
-            <IconButton onClick={onClose} aria-label="Close modal">
+            <IconButton onClick={onClose} aria-label={COPY.modal.close}>
               <MdClose />
             </IconButton>
           </div>

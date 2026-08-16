@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { badRequest } from '@/lib/apiError';
 import { z } from 'zod';
 import { isDatabaseConfigured } from '@/lib/db/client';
 import { getOrCreateUser, readUserState, writeActivities, writeSettings } from '@/lib/db/users';
@@ -58,7 +59,7 @@ export async function PUT(request: Request) {
 
   const parsed = PushSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Malformed settings' }, { status: 400 });
+    return badRequest('Malformed settings');
   }
 
   try {

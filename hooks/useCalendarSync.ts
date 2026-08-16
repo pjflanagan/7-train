@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
@@ -360,6 +361,7 @@ export function useCalendarSync(): void {
     isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
 
   const setStatus = useCalendarSyncStore((state) => state.setStatus);
+  const setHasPulled = useCalendarSyncStore((state) => state.setHasPulled);
   const pullNonce = useCalendarSyncStore((state) => state.resyncNonce);
   const baselineNonce = useCalendarSyncStore((state) => state.baselineNonce);
   const markPending = useCalendarSyncStore((state) => state.markPending);
@@ -393,6 +395,10 @@ export function useCalendarSync(): void {
       syncedRef.current.clear();
       syncedTargetsRef.current.clear();
       setStatus('off');
+      // No pull has happened on this connection. If one becomes possible later
+      // — the calendar is created, or a sign in lands — Strava waits for it
+      // rather than reading against the schedule from before.
+      setHasPulled(false);
       return;
     }
 
@@ -527,19 +533,24 @@ export function useCalendarSync(): void {
       store.replaceWeekActivities(weekActivities);
       isReadyRef.current = true;
       setStatus('synced');
+      setHasPulled(true);
     };
 
     adoptThenPull().catch((error) => {
       if (cancelled) return;
       console.error('Calendar sync failed', error);
       setStatus('error');
-      toast.error('Could not sync your Workouts calendar');
+      // Settled, even though it failed — the same bargain `useUserSync` makes.
+      // Google is not going to answer on this page load, and holding Strava
+      // back for ever would turn one broken integration into two.
+      setHasPulled(true);
+      toast.error(COPY.calendar.syncFailed);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [isConnected, pullNonce, setStatus]);
+  }, [isConnected, pullNonce, setStatus, setHasPulled]);
 
   // Push: every local change is mirrored, one debounced batch at a time. The
   // store is written immediately and this follows, so editing never waits on
@@ -563,7 +574,7 @@ export function useCalendarSync(): void {
       } catch (error) {
         console.error('Calendar push failed', error);
         setStatus('error');
-        toast.error('Could not update your Workouts calendar');
+        toast.error(COPY.calendar.updateFailed);
       } finally {
         isPushing = false;
       }

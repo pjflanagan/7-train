@@ -8,6 +8,7 @@ import { useWeekActivities } from '@/hooks/usePlannerSelectors';
 import { getIconByKey } from '@/lib/icons';
 import { defaultEventValue } from '@/lib/progress';
 import styles from './AddEventZone.module.scss';
+import { COPY } from '@/lib/copy';
 
 /** Roughly how wide the picker is, so it can be kept inside the viewport. */
 const PANEL_WIDTH = 220;
@@ -86,7 +87,7 @@ export function AddEventZone({ day, weekStart }: AddEventZoneProps) {
             className={styles.panel}
             style={{ top: anchor.top, left: anchor.left, width: PANEL_WIDTH }}
             role="menu"
-            aria-label="Add an event"
+            aria-label={COPY.events.add}
             ref={panelRef}
           >
             {activities.map((activity) => (

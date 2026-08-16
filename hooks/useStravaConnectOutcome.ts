@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useStravaConnectionStore } from '@/hooks/useStrava';
+import { COPY } from '@/lib/copy';
 
 /**
  * How the trip through Strava's consent screen went.
@@ -12,16 +13,6 @@ import { useStravaConnectionStore } from '@/hooks/useStrava';
  * connection so the modal is right, and takes the parameter back out of the
  * URL — refreshing should not toast a connection that happened minutes ago.
  */
-
-const MESSAGES: Record<string, { message: string; isError: boolean }> = {
-  connected: { message: 'Strava connected', isError: false },
-  denied: { message: 'Strava was not connected', isError: true },
-  scope: {
-    message: 'Strava needs permission to read your activities',
-    isError: true,
-  },
-  failed: { message: 'Could not connect Strava', isError: true },
-};
 
 export function useStravaConnectOutcome(): void {
   const refresh = useStravaConnectionStore((state) => state.refresh);
@@ -36,7 +27,7 @@ export function useStravaConnectOutcome(): void {
     if (!outcome) return;
     hasReportedRef.current = true;
 
-    const result = MESSAGES[outcome];
+    const result = COPY.strava.outcome[outcome as keyof typeof COPY.strava.outcome];
     if (result) {
       if (result.isError) toast.error(result.message);
       else toast.success(result.message);

@@ -11,6 +11,7 @@ import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinks
 import styles from './ActivityRow.module.scss';
 import clsx from 'clsx';
 import { getIconByKey } from '@/lib/icons';
+import { COPY } from '@/lib/copy';
 
 export interface ActivityRowProps {
   activity: Activity;
@@ -61,14 +62,14 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({ activity }) => {
 
         <div className={styles.actions}>
           {activity.links && activity.links.length > 0 && (
-            <IconButton onClick={() => setIsLinksOpen(true)} title="Links">
+            <IconButton onClick={() => setIsLinksOpen(true)} title={COPY.targets.links}>
               <MdLink />
             </IconButton>
           )}
-          <IconButton onClick={() => setIsEditOpen(true)} title="Edit">
+          <IconButton onClick={() => setIsEditOpen(true)} title={COPY.activities.edit}>
             <MdEdit />
           </IconButton>
-          <IconButton onClick={() => setIsDeleteOpen(true)} variant="danger" title="Delete">
+          <IconButton onClick={() => setIsDeleteOpen(true)} variant="danger" title={COPY.activities.delete}>
             <MdDelete />
           </IconButton>
         </div>
@@ -88,10 +89,10 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({ activity }) => {
 
       <ConfirmDialog
         isOpen={isDeleteOpen}
-        title="Delete activity"
+        title={COPY.activities.deleteActivity}
         message={`Are you sure you want to delete ${activity.name}? This will also remove all related calendar events.`}
         isDestructive
-        confirmLabel="Delete"
+        confirmLabel={COPY.activities.delete}
         onConfirm={() => {
           deleteActivity(activity.id);
           setIsDeleteOpen(false);

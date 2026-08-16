@@ -6,6 +6,7 @@ import { Button } from '@/components/elements/Button/Button';
 import { Checkbox } from '@/components/elements/Checkbox/Checkbox';
 import { SegmentedControl } from '@/components/elements/SegmentedControl/SegmentedControl';
 import styles from './CopyWeekModal.module.scss';
+import { COPY } from '@/lib/copy';
 
 export type CopySource = 'current' | 'previous' | 'default';
 
@@ -21,9 +22,9 @@ interface CopyWeekModalProps {
 }
 
 const sourceLabels: Record<CopySource, string> = {
-  current: 'Current week',
-  previous: 'Previous week',
-  default: 'My weekly activities',
+  current: COPY.week.source.current,
+  previous: COPY.week.source.previous,
+  default: COPY.week.source.default,
 };
 
 /** Picks a source week and which parts of it — schedule, activities, or both — to pull in. */
@@ -69,7 +70,7 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Fill week"
+      title={COPY.week.fill}
       maxWidth="420px"
       footer={
         <>
@@ -96,18 +97,18 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
         <fieldset className={styles.group}>
           <legend className={styles.legend}>Copy what</legend>
           <Checkbox
-            label="Activities and targets"
+            label={COPY.week.copyActivities}
             checked={activities}
             onChange={(e) => setActivities(e.target.checked)}
           />
           <Checkbox
-            label="Schedule"
+            label={COPY.week.copySchedule}
             checked={schedule && !isDefault}
             disabled={isDefault}
             onChange={(e) => setSchedule(e.target.checked)}
           />
           <Checkbox
-            label="Notes"
+            label={COPY.week.copyNotes}
             checked={notes && !isDefault}
             disabled={isDefault}
             onChange={(e) => setNotes(e.target.checked)}

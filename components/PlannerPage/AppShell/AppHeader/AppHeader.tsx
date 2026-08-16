@@ -9,6 +9,7 @@ import { MyActivitiesModal } from './MyActivitiesModal/MyActivitiesModal';
 import { LinksModal } from './LinksModal/LinksModal';
 import { ProfileMenu } from './ProfileMenu/ProfileMenu';
 import { SyncIndicator } from './SyncIndicator/SyncIndicator';
+import { COPY } from '@/lib/copy';
 
 export const AppHeader: React.FC = () => {
   const [isMyWeekOpen, setIsMyWeekOpen] = useState(false);
@@ -19,13 +20,13 @@ export const AppHeader: React.FC = () => {
       <header className={styles.header}>
         <div className={styles.headerBar}>
           <div className={styles.brandSection}>
-            <SevenLogo size={28} className={styles.brandLogo} title="7 train" />
+            <SevenLogo size={28} className={styles.brandLogo} title={COPY.nav.logoTitle} />
             <h1>Train</h1>
           </div>
 
           <div className={styles.headerActions}>
             <SyncIndicator />
-            <IconButton aria-label="Links" onClick={() => setIsLinksOpen(true)}>
+            <IconButton aria-label={COPY.nav.links} onClick={() => setIsLinksOpen(true)}>
               <MdBookmark />
             </IconButton>
             <Button
@@ -33,7 +34,7 @@ export const AppHeader: React.FC = () => {
               className={styles.myWorkouts}
               onClick={() => setIsMyWeekOpen(true)}
             >
-              My weekly activities
+              {COPY.nav.myActivities}
             </Button>
             <ProfileMenu />
           </div>

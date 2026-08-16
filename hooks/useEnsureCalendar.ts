@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
@@ -45,13 +46,23 @@ export function useEnsureCalendar(): void {
    */
   const hasAttemptedRef = useRef(false);
 
+  const setHasResolvedCalendar = useCalendarSyncStore((state) => state.setHasResolvedCalendar);
+
   useEffect(() => {
     if (!isConnected) {
       hasAttemptedRef.current = false;
+      // Not hydrated yet is "we do not know"; anything else here means the
+      // account is not getting a calendar, which is an answer.
+      setHasResolvedCalendar(isHydrated);
       return;
     }
     // The settings pull may be about to hand us one. Anything else is a guess.
-    if (!isUserSettled || calendarId || hasAttemptedRef.current) return;
+    if (!isUserSettled) return;
+    if (calendarId) {
+      setHasResolvedCalendar(true);
+      return;
+    }
+    if (hasAttemptedRef.current) return;
 
     hasAttemptedRef.current = true;
     let cancelled = false;
@@ -74,14 +85,21 @@ export function useEnsureCalendar(): void {
       useCalendarSyncStore.getState().resync();
     };
 
-    create().catch((error) => {
-      if (cancelled) return;
-      console.error('Creating the Workouts calendar failed', error);
-      toast.error('Could not set up your Workouts calendar');
-    });
+    create()
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Creating the Workouts calendar failed', error);
+        toast.error(COPY.calendar.createFailed);
+      })
+      .finally(() => {
+        // Resolved either way. A failed create still answers the question for
+        // this page load — there is no calendar — and anything waiting on the
+        // answer (Strava, above all) would otherwise wait for ever.
+        if (!cancelled) setHasResolvedCalendar(true);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [isConnected, isUserSettled, calendarId]);
+  }, [isConnected, isHydrated, isUserSettled, calendarId, setHasResolvedCalendar]);
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { entriesFromSchedule, historyRows } from '@/lib/csv';
 import { WeekStartsOn } from '@/lib/dates';
@@ -50,13 +51,13 @@ export function useSheetsExport() {
       };
       usePlannerStore.getState().setGoogleSheetId(spreadsheetId);
 
-      toast.success('History exported to Google Sheets', {
+      toast.success(COPY.sheets.exported, {
         action: { label: 'Open', onClick: () => window.open(url, '_blank') },
       });
       return url;
     } catch (error) {
       console.error('Sheets export failed', error);
-      toast.error('Could not write to Google Sheets');
+      toast.error(COPY.sheets.failed);
       return null;
     } finally {
       setIsExporting(false);

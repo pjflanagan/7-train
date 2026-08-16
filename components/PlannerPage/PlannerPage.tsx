@@ -4,8 +4,7 @@ import { LuArrowUp, LuArrowDown } from 'react-icons/lu';
 import { AppShell } from './AppShell/AppShell';
 import { Spinner } from '@/components/elements/Spinner/Spinner';
 import { WeekSection } from './WeekSection/WeekSection';
-import { useHydrated } from '@/hooks/useHydrated';
-import { usePlannerStore } from '@/lib/store';
+import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider/PlannerDndProvider';
@@ -20,6 +19,7 @@ import { useStravaConnectOutcome } from '@/hooks/useStravaConnectOutcome';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
+import { COPY } from '@/lib/copy';
 
 function WeekFeed() {
   const weekStartsOn = useWeekStartsOn();
@@ -48,7 +48,7 @@ function WeekFeed() {
       >
         <div className={styles.container}>
           <button type="button" className={styles.loadMore} onClick={loadEarlier}>
-            Show more past weeks
+            {COPY.week.showEarlier}
           </button>
           {weeks.map((weekStart) => (
             <div
@@ -59,7 +59,7 @@ function WeekFeed() {
             </div>
           ))}
           <button type="button" className={styles.loadMore} onClick={loadLater}>
-            Show more upcoming weeks
+            {COPY.week.showLater}
           </button>
         </div>
       </div>
@@ -75,7 +75,7 @@ function WeekFeed() {
           ) : (
             <LuArrowDown size={18} aria-hidden="true" />
           )}
-          Jump to today
+          {COPY.week.jumpToToday}
         </button>
       )}
     </div>
@@ -83,7 +83,7 @@ function WeekFeed() {
 }
 
 export function PlannerPage() {
-  const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
+  const isHydrated = usePlannerHydrated();
   const isMobile = useIsMobile();
   useInitWeather();
   useUserSync();

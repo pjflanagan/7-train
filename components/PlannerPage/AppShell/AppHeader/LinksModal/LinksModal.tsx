@@ -11,6 +11,7 @@ import { IconButton } from '@/components/elements/IconButton/IconButton';
 import { TextInput } from '@/components/elements/TextInput/TextInput';
 import { HelpfulLink } from '@/lib/types';
 import styles from './LinksModal.module.scss';
+import { COPY } from '@/lib/copy';
 
 export interface LinksModalProps {
   isOpen: boolean;
@@ -55,7 +56,7 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Bookmarks" maxWidth="400px">
+      <Modal isOpen={isOpen} onClose={onClose} title={COPY.links.bookmarks} maxWidth="400px">
         <div className={styles.container}>
           <div className={styles.list}>
             {links.length === 0 ? (
@@ -85,12 +86,12 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
             <p className={styles.formTitle}>Add a link</p>
             <div className={styles.inputs}>
               <TextInput 
-                placeholder="Link title" 
+                placeholder={COPY.links.titlePlaceholder} 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
               />
               <TextInput 
-                placeholder="URL" 
+                placeholder={COPY.links.urlPlaceholder} 
                 value={url} 
                 onChange={(e) => setUrl(e.target.value)} 
                 onKeyDown={(e) => {
@@ -112,9 +113,9 @@ export const LinksModal: React.FC<LinksModalProps> = ({ isOpen, onClose }) => {
 
       <ConfirmDialog
         isOpen={!!linkToDelete}
-        title="Delete link"
+        title={COPY.links.delete}
         message={`Are you sure you want to delete "${linkToDelete?.title}"?`}
-        confirmLabel="Delete"
+        confirmLabel={COPY.activities.delete}
         isDestructive={true}
         onConfirm={handleConfirmDelete}
         onCancel={() => setLinkToDelete(null)}

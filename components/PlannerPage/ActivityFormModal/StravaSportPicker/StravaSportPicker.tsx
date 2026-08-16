@@ -1,10 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
-import {
-  STRAVA_SPORTS,
-  STRAVA_SPORT_GROUPS,
-  StravaSportGroup,
-} from '@/lib/stravaSports';
+import { STRAVA_SPORTS, STRAVA_SPORT_GROUPS } from '@/lib/stravaSports';
+import { COPY } from '@/lib/copy';
 import styles from './StravaSportPicker.module.scss';
 
 export interface StravaSportPickerProps {
@@ -12,17 +9,6 @@ export interface StravaSportPickerProps {
   value: string[];
   onChange: (value: string[]) => void;
 }
-
-/** Group heading copy. The group ids are internal, these are what is read. */
-const GROUP_LABELS: Record<StravaSportGroup, string> = {
-  Run: 'On foot',
-  Ride: 'On wheels',
-  Water: 'On water',
-  Winter: 'On snow and ice',
-  Gym: 'Indoors',
-  Racquet: 'Racquet sports',
-  Other: 'Everything else',
-};
 
 /**
  * Which Strava sports an activity answers to.
@@ -48,7 +34,7 @@ export function StravaSportPicker({ value, onChange }: StravaSportPickerProps) {
     <div className={styles.picker}>
       {STRAVA_SPORT_GROUPS.map((group) => (
         <fieldset className={styles.group} key={group}>
-          <legend className={styles.groupTitle}>{GROUP_LABELS[group]}</legend>
+          <legend className={styles.groupTitle}>{COPY.strava.sportGroup[group]}</legend>
           <div className={styles.sports}>
             {STRAVA_SPORTS.filter((sport) => sport.group === group).map((sport) => (
               <label

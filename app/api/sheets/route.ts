@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
+import { apiError, badRequest, notConnected } from '@/lib/apiError';
 import { z } from 'zod';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import {
   ensureHistorySpreadsheet,
-  GoogleSheetsError,
   writeHistoryRows,
 } from '@/lib/googleSheets';
 
@@ -23,12 +23,12 @@ const ExportSchema = z.object({
 export async function POST(request: Request) {
   const accessToken = await getGoogleAccessToken(request, GOOGLE_INTEGRATIONS.sheets.scopes);
   if (!accessToken) {
-    return NextResponse.json({ error: 'Sheets is not connected' }, { status: 403 });
+    return notConnected('Sheets');
   }
 
   const parsed = ExportSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Malformed export request' }, { status: 400 });
+    return badRequest('Malformed export request');
   }
 
   try {
@@ -46,10 +46,6 @@ export async function POST(request: Request) {
         `https://docs.google.com/spreadsheets/d/${sheet.spreadsheetId}/edit`,
     });
   } catch (error) {
-    if (error instanceof GoogleSheetsError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    console.error('Sheets export failed', error);
-    return NextResponse.json({ error: 'Sheets export failed' }, { status: 500 });
+    return apiError(error, 'Sheets export failed', 'Sheets export failed');
   }
 }

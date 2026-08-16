@@ -1,5 +1,5 @@
 import { PlannerState, ActivitySchema, ScheduledEventSchema, HelpfulLinkSchema, HistoryEntrySchema, Activity, ScheduledEvent } from './types';
-import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './constants';
+import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './seed';
 import { getWeekStartKey, addWeeks } from './dates';
 import { ACTIVITY_ICONS, IconKey } from './icons';
 import { DEFAULT_SPORTS_BY_ICON } from './stravaSports';

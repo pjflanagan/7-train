@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { apiError, badRequest, notConnected } from '@/lib/apiError';
 import {
-  StravaApiError,
   StravaAuthError,
   getStravaTokens,
   listStravaActivities,
@@ -19,13 +19,13 @@ export async function GET(request: Request) {
   const from = searchParams.get('from');
   const to = searchParams.get('to');
   if (!from || !to) {
-    return NextResponse.json({ error: 'from and to are required' }, { status: 400 });
+    return badRequest('from and to are required');
   }
 
   const after = new Date(from);
   const before = new Date(to);
   if (Number.isNaN(after.getTime()) || Number.isNaN(before.getTime())) {
-    return NextResponse.json({ error: 'from and to must be dates' }, { status: 400 });
+    return badRequest('from and to must be dates');
   }
 
   let session;
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   }
 
   if (!session) {
-    return NextResponse.json({ error: 'Strava is not connected' }, { status: 403 });
+    return notConnected('Strava');
   }
 
   try {
@@ -57,13 +57,11 @@ export async function GET(request: Request) {
     }
     return response;
   } catch (error) {
-    if (error instanceof StravaApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
+    // `StravaAuthError` carries no status of its own — it means the grant is
+    // gone, which is a 401 whatever else went wrong.
     if (error instanceof StravaAuthError) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
-    console.error('Strava read failed', error);
-    return NextResponse.json({ error: 'Could not read Strava' }, { status: 500 });
+    return apiError(error, 'Strava read failed', 'Could not read Strava');
   }
 }

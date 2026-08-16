@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { FaStrava } from 'react-icons/fa6';
 import { stravaActivityUrl } from '@/lib/strava';
 import styles from './StravaLink.module.scss';
+import { COPY } from '@/lib/copy';
 
 export interface StravaLinkProps {
   stravaActivityId: number;
@@ -24,8 +25,8 @@ export function StravaLink({ stravaActivityId, className }: StravaLinkProps) {
       href={stravaActivityUrl(stravaActivityId)}
       target="_blank"
       rel="noreferrer noopener"
-      title="View on Strava"
-      aria-label="View on Strava"
+      title={COPY.events.viewOnStrava}
+      aria-label={COPY.events.viewOnStrava}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >

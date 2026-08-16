@@ -4,6 +4,7 @@ import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { Textarea } from '@/components/elements/Textarea/Textarea';
 import styles from './DayNotes.module.scss';
+import { COPY } from '@/lib/copy';
 
 export function DayNotes({ day, weekStart }: { day: typeof DAYS[number]; weekStart: string }) {
   const note = useNote(day, weekStart);
@@ -42,7 +43,7 @@ export function DayNotes({ day, weekStart }: { day: typeof DAYS[number]; weekSta
       ref={textareaRef}
       value={localNote}
       onChange={(e) => setLocalNote(e.target.value)}
-      placeholder="Notes..."
+      placeholder={COPY.week.notesPlaceholder}
       className={styles.notes}
       rows={1}
     />

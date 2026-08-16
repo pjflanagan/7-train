@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
+import { apiError, notConnected } from '@/lib/apiError';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
 import {
   ensureWorkoutsCalendar,
-  GoogleApiError,
   WORKOUTS_CALENDAR_SUMMARY,
 } from '@/lib/googleCalendar';
 
@@ -19,17 +19,13 @@ import {
 export async function POST(request: Request) {
   const accessToken = await getGoogleAccessToken(request, GOOGLE_INTEGRATIONS.calendar.scopes);
   if (!accessToken) {
-    return NextResponse.json({ error: 'Calendar is not connected' }, { status: 403 });
+    return notConnected('Calendar');
   }
 
   try {
     const calendarId = await ensureWorkoutsCalendar(accessToken, null);
     return NextResponse.json({ calendarId, calendarName: WORKOUTS_CALENDAR_SUMMARY });
   } catch (error) {
-    if (error instanceof GoogleApiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    console.error('Calendar creation failed', error);
-    return NextResponse.json({ error: 'Could not create a calendar' }, { status: 500 });
+    return apiError(error, 'Calendar creation failed', 'Could not create a calendar');
   }
 }

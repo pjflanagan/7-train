@@ -17,6 +17,7 @@ import { ActivityLinksPickerModal } from '@/components/PlannerPage/ActivityLinks
 import { ActivityFormModal } from '@/components/PlannerPage/ActivityFormModal/ActivityFormModal';
 import { SubTagChip } from './SubTagChip/SubTagChip';
 import styles from './TargetChip.module.scss';
+import { COPY } from '@/lib/copy';
 
 export function TargetChip({ activity, weekStart }: { activity: Activity; weekStart: string }) {
   const { progressMap } = useWeekProgress(weekStart);
@@ -77,7 +78,7 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
             size="sm"
             className={styles.linkButton}
             aria-label={`${activity.name} links`}
-            title="Links"
+            title={COPY.targets.links}
             // The header is the drag handle, so the button has to keep its own
             // pointer events from starting a drag.
             onPointerDown={(e) => e.stopPropagation()}
@@ -137,9 +138,9 @@ export function TargetChip({ activity, weekStart }: { activity: Activity; weekSt
       />
       <ConfirmDialog
         isOpen={isConfirmingRemove}
-        title="Remove target"
+        title={COPY.targets.remove}
         message={`Remove ${activity.name} from this week? Anything already scheduled stays on the calendar.`}
-        confirmLabel="Remove"
+        confirmLabel={COPY.targets.removeConfirm}
         isDestructive
         onConfirm={() => {
           removeWeekActivity(weekStart, activity.id);

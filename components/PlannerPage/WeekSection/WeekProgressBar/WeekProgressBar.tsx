@@ -3,6 +3,7 @@
 import React from 'react';
 import { useWeekProgress } from '@/hooks/useWeekProgress';
 import styles from './WeekProgressBar.module.scss';
+import { COPY } from '@/lib/copy';
 
 export function WeekProgressBar({ weekStart }: { weekStart: string }) {
   const { overall } = useWeekProgress(weekStart);
@@ -18,7 +19,7 @@ export function WeekProgressBar({ weekStart }: { weekStart: string }) {
       aria-valuenow={Math.round(percent)}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label="Week progress"
+      aria-label={COPY.week.progress}
     >
       <div className={styles.track}>
         <div className={styles.fill} style={{ width: `${percent}%` }} />

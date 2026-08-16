@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiError, badRequest, notConnected } from '@/lib/apiError';
 import { z } from 'zod';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
@@ -82,17 +83,13 @@ const PushSchema = z.object({
 });
 
 function errorResponse(error: unknown) {
-  if (error instanceof GoogleApiError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
-  }
-  console.error('Calendar sync failed', error);
-  return NextResponse.json({ error: 'Calendar sync failed' }, { status: 500 });
+  return apiError(error, 'Calendar sync failed', 'Calendar sync failed');
 }
 
 export async function GET(request: Request) {
   const accessToken = await getGoogleAccessToken(request, CALENDAR_SCOPES);
   if (!accessToken) {
-    return NextResponse.json({ error: 'Calendar is not connected' }, { status: 403 });
+    return notConnected('Calendar');
   }
 
   const { searchParams } = new URL(request.url);
@@ -100,10 +97,10 @@ export async function GET(request: Request) {
   const timeMax = searchParams.get('to');
   const calendarId = searchParams.get('calendarId');
   if (!timeMin || !timeMax) {
-    return NextResponse.json({ error: 'from and to are required' }, { status: 400 });
+    return badRequest('from and to are required');
   }
   if (!calendarId) {
-    return NextResponse.json({ error: 'calendarId is required' }, { status: 400 });
+    return badRequest('calendarId is required');
   }
 
   try {
@@ -155,12 +152,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const accessToken = await getGoogleAccessToken(request, CALENDAR_SCOPES);
   if (!accessToken) {
-    return NextResponse.json({ error: 'Calendar is not connected' }, { status: 403 });
+    return notConnected('Calendar');
   }
 
   const parsed = PushSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Malformed sync request' }, { status: 400 });
+    return badRequest('Malformed sync request');
   }
   const {
     calendarId: knownCalendarId,
@@ -172,7 +169,7 @@ export async function POST(request: Request) {
   } = parsed.data;
 
   if (!knownCalendarId) {
-    return NextResponse.json({ error: 'calendarId is required' }, { status: 400 });
+    return badRequest('calendarId is required');
   }
 
   try {

@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/hooks/useAuth';
 import { isGoogleAuthConfigured } from '@/lib/auth';
+import { isStravaConfigured } from '@/lib/stravaServer';
+import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/site';
 import './globals.scss';
 
 const inter = Inter({
@@ -12,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: '7 Train',
-  description: 'Plan your weekly targets',
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
 };
 
 export const viewport: Viewport = {
@@ -30,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body>
-        <AuthProvider isGoogleAuthConfigured={isGoogleAuthConfigured}>
+        <AuthProvider integrations={{ isGoogleAuthConfigured, isStravaConfigured }}>
           {children}
           <Toaster theme="dark" />
         </AuthProvider>

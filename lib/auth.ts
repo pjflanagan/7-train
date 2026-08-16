@@ -22,6 +22,17 @@ declare module 'next-auth/jwt' {
   interface JWT {
     /** Kept server side only — the access token is never sent to the browser. */
     google?: GoogleTokens;
+    /**
+     * Google's `sub`, taken from the account rather than from `token.sub`.
+     *
+     * This is the key every row in the database hangs off, and it must be
+     * Google's own id for the account. `token.sub` is **not** that: with the
+     * JWT strategy and no adapter, Auth.js mints a fresh UUID for it on every
+     * sign in. Keying on it made a new `users` row per login — five rows for
+     * one person before this was caught — and, worse, meant a returning user
+     * was handed an empty settings row that knew nothing of their calendar.
+     */
+    googleSub?: string;
     error?: AuthError;
   }
 }
@@ -57,6 +68,10 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, account }) {
       // Fresh sign in, or a re-consent that added integration scopes.
       if (account) {
+        // `providerAccountId` is Google's `sub`, and the only stable identifier
+        // here — it outlives an email change, and unlike `token.sub` it is the
+        // same on every sign in.
+        if (account.providerAccountId) token.googleSub = account.providerAccountId;
         token.google = {
           accessToken: account.access_token,
           // Google omits the refresh token when it has already issued one.

@@ -3,9 +3,10 @@
 import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
-import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
+import { useCalendarSettled } from '@/hooks/useCalendarSyncStatus';
 import { useStravaSyncStore } from '@/hooks/useStravaStatus';
 import { buildActivitySnapshot } from '@/lib/activitySnapshot';
 import { activitiesForWeek } from '@/lib/progress';
@@ -23,8 +24,6 @@ import { stravaSportLabel } from '@/lib/stravaSports';
  */
 
 interface StravaConnection {
-  /** The server has Strava credentials. False means the integration is hidden. */
-  isConfigured: boolean;
   /** This browser holds a Strava connection. */
   isConnected: boolean;
   athleteName: string | null;
@@ -42,7 +41,6 @@ interface StravaConnectionState extends Omit<StravaConnection, 'refresh' | 'disc
 }
 
 export const useStravaConnectionStore = create<StravaConnectionState>((set, get) => ({
-  isConfigured: false,
   isConnected: false,
   athleteName: null,
   isLoading: true,
@@ -54,12 +52,12 @@ export const useStravaConnectionStore = create<StravaConnectionState>((set, get)
     try {
       const response = await fetch('/api/strava/status');
       if (!response.ok) throw new Error('Status read failed');
-      const { isConfigured, isConnected, athleteName } = await response.json();
-      set({ isConfigured, isConnected, athleteName, isLoading: false });
+      const { isConnected, athleteName } = await response.json();
+      set({ isConnected, athleteName, isLoading: false });
     } catch {
-      // A status we cannot read is a status we cannot act on. Treat it as not
-      // configured rather than offering a connect button that will 500.
-      set({ isConfigured: false, isConnected: false, isLoading: false });
+      // A status we cannot read is a status we cannot act on. Whether Strava is
+      // configured at all comes from the server render, not from here.
+      set({ isConnected: false, isLoading: false });
     } finally {
       set({ isReading: false });
     }
@@ -74,7 +72,6 @@ export const useStravaConnectionStore = create<StravaConnectionState>((set, get)
 
 /** The Strava connection, read once per page and shared by everyone who asks. */
 export function useStravaConnection(): StravaConnection {
-  const isConfigured = useStravaConnectionStore((state) => state.isConfigured);
   const isConnected = useStravaConnectionStore((state) => state.isConnected);
   const athleteName = useStravaConnectionStore((state) => state.athleteName);
   const isLoading = useStravaConnectionStore((state) => state.isLoading);
@@ -87,7 +84,7 @@ export function useStravaConnection(): StravaConnection {
     if (useStravaConnectionStore.getState().isLoading) void refresh();
   }, [refresh]);
 
-  return { isConfigured, isConnected, athleteName, isLoading, refresh, disconnect };
+  return { isConnected, athleteName, isLoading, refresh, disconnect };
 }
 
 /**
@@ -111,9 +108,8 @@ export function useStravaSync(): void {
   const isHydrated = usePlannerHydrated();
   const { isConnected } = useStravaConnection();
   // Google Calendar owns the schedule while it is connected, so its pull has to
-  // land first. `off` is the answer for anyone not syncing a calendar at all.
-  const calendarStatus = useCalendarSyncStore((state) => state.status);
-  const isCalendarSettled = calendarStatus === 'off' || calendarStatus === 'synced';
+  // land first — see `useCalendarSettled` for why this is not a status check.
+  const isCalendarSettled = useCalendarSettled();
 
   const setStatus = useStravaSyncStore((state) => state.setStatus);
   const setApplied = useStravaSyncStore((state) => state.setApplied);
@@ -121,16 +117,23 @@ export function useStravaSync(): void {
   const disconnect = useStravaConnectionStore((state) => state.disconnect);
 
   /**
-   * The calendar settles, wobbles and settles again on every edit, and each
-   * `synced` would otherwise be another read against a 100-per-15-minutes
-   * budget. So a given nonce reads Strava once.
+   * One read per page load, and one more for each time the user asks.
+   *
+   * Strava allows 100 reads per fifteen minutes across the whole app — not per
+   * user — so a read that fires on a state change rather than on an intent is
+   * how the budget gets spent on nothing. The nonce starts at 0 and only the
+   * "sync now" button moves it, so a load reads once however many times the
+   * calendar settles, the plan is edited, or this re-renders.
    */
   const readNonceRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isHydrated || !isConnected) {
       setStatus('off');
-      readNonceRef.current = null;
+      // Deliberately not clearing `readNonceRef`. Connecting Strava is a full
+      // page navigation through its consent screen, so a real reconnect brings
+      // a fresh ref with it; the only thing clearing it here could do is let a
+      // flicker in the connection state buy a second read.
       return;
     }
     if (!isCalendarSettled) {
@@ -193,10 +196,10 @@ export function useStravaSync(): void {
       // it to an activity and the user cannot guess that from silence.
       const sports = [...new Set(unmatchedSports)].map(stravaSportLabel);
       if (sports.length > 0) {
-        toast.message(
-          `No activity for ${new Intl.ListFormat(undefined, { type: 'disjunction' }).format(sports)}`,
-          { description: 'Add the sport to an activity under "My activities" to bring these in.' }
-        );
+        const list = new Intl.ListFormat(undefined, { type: 'disjunction' }).format(sports);
+        toast.message(COPY.strava.noActivityFor(list), {
+          description: COPY.strava.noActivityHint,
+        });
       }
     };
 
@@ -204,7 +207,7 @@ export function useStravaSync(): void {
       if (cancelled) return;
       console.error('Strava sync failed', error);
       setStatus('error');
-      toast.error('Could not read your Strava activities');
+      toast.error(COPY.strava.readFailed);
     });
 
     return () => {

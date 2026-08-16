@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent, HelpfulLink } from './types';
-import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS, DAYS } from './constants';
+import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './seed';
+import { DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';

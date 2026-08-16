@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MdAdd } from 'react-icons/md';
 import { ActivityFormModal } from '@/components/PlannerPage/ActivityFormModal/ActivityFormModal';
 import styles from './AddTargetCard.module.scss';
+import { COPY } from '@/lib/copy';
 
 interface AddTargetCardProps {
   weekStart: string;
@@ -20,7 +21,7 @@ interface AddTargetCardProps {
  */
 export function AddTargetCard({ weekStart, showLabel = false }: AddTargetCardProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const label = showLabel ? 'Add new target' : 'Add target';
+  const label = showLabel ? COPY.targets.addLong : COPY.targets.add;
 
   return (
     <>

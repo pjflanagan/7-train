@@ -12,6 +12,7 @@ import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard
 import { StravaLink } from '@/components/PlannerPage/StravaLink/StravaLink';
 import { TimeChip } from './TimeChip/TimeChip';
 import styles from './EventCard.module.scss';
+import { COPY } from '@/lib/copy';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
   const activity = useEventActivity(event);
@@ -73,7 +74,7 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   );
 
   return (
-    <RemovableCard label="Remove event" onRemove={() => removeEvent(event.id)}>
+    <RemovableCard label={COPY.events.remove} onRemove={() => removeEvent(event.id)}>
     <div
       className={styles.card}
       style={style}

@@ -5,6 +5,7 @@ import { LuCalendarArrowDown } from 'react-icons/lu';
 import { usePlannerStore } from '@/lib/store';
 import { addWeeks } from '@/lib/dates';
 import styles from './CopyActivitiesCard.module.scss';
+import { COPY } from '@/lib/copy';
 
 interface CopyActivitiesCardProps {
   weekStart: string;
@@ -24,7 +25,7 @@ export function CopyActivitiesCard({ weekStart, from }: CopyActivitiesCardProps)
   const copyWeek = usePlannerStore((state) => state.copyWeek);
 
   const isDefault = from === 'default';
-  const label = isDefault ? 'Add my weekly targets' : "Add last week's targets";
+  const label = isDefault ? COPY.targets.addFromDefault : COPY.targets.addFromPrevious;
   // A calendar pulled downward: this one slot is specifically about the week
   // before, where the plain copy icon would only say "copy something".
   const Icon = isDefault ? MdPlaylistAdd : LuCalendarArrowDown;

@@ -10,6 +10,7 @@ import { CopyWeekModal, type CopySource } from './CopyWeekModal/CopyWeekModal';
 import { useIsWeekEmpty, useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { addWeeks, getWeekStartKey } from '@/lib/dates';
 import styles from './WeekActions.module.scss';
+import { COPY } from '@/lib/copy';
 
 /** Pulls another week's schedule or activities into this one, or empties it. All overwrite. */
 export function WeekActions({ weekStart }: { weekStart: string }) {
@@ -55,8 +56,8 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
         {sources.length > 0 && (
           <IconButton
             size="sm"
-            aria-label="Fill week"
-            title="Fill week"
+            aria-label={COPY.week.fill}
+            title={COPY.week.fill}
             onClick={() => setIsCopyOpen(true)}
           >
             <FaFillDrip />
@@ -66,8 +67,8 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
           <IconButton
             variant="danger"
             size="sm"
-            aria-label="Clear week"
-            title="Clear week"
+            aria-label={COPY.week.clear}
+            title={COPY.week.clear}
             onClick={() => setIsClearOpen(true)}
           >
             <LuCalendarX />
@@ -84,9 +85,9 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
 
       <ConfirmDialog
         isOpen={isClearOpen}
-        title="Clear week"
-        message="This will remove all events and notes from this week. Are you sure?"
-        confirmLabel="Confirm"
+        title={COPY.week.clear}
+        message={COPY.week.clearMessage}
+        confirmLabel={COPY.week.confirm}
         isDestructive
         onConfirm={() => {
           clearWeek(weekStart);

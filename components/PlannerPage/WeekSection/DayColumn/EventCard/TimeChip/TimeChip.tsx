@@ -14,6 +14,7 @@ import {
   startMinutesOf,
 } from '@/lib/schedule';
 import styles from './TimeChip.module.scss';
+import { COPY } from '@/lib/copy';
 
 export interface TimeChipProps {
   event: ScheduledEvent;
@@ -84,8 +85,8 @@ export function TimeChip({ event, activity, showDuration = true }: TimeChipProps
           value={duration}
           onCommit={(val) => setEventDuration(event.id, clampDuration(val))}
           className={styles.chip}
-          title={isExact ? undefined : 'Estimated'}
-          aria-label="Length, in minutes"
+          title={isExact ? undefined : COPY.events.estimated}
+          aria-label={COPY.events.lengthLabel}
         />
         <span className={styles.durationUnit}>mins</span>
       </div>

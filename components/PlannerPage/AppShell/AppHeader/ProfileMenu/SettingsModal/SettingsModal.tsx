@@ -15,6 +15,7 @@ import { useDefaultStartMinutes, useUse24HourClock, useWeekStartsOn } from '@/ho
 import { WEEK_START_OPTIONS, WeekStartsOn } from '@/lib/dates';
 import { startTimeOptions } from '@/lib/schedule';
 import styles from './SettingsModal.module.scss';
+import { COPY } from '@/lib/copy';
 
 export interface SettingsModalProps {
   isOpen: boolean;
@@ -101,31 +102,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     setConfirmAction(null);
   };
 
-  const getConfirmDetails = () => {
-    switch (confirmAction) {
-      case 'reset':
-        return { title: 'Full reset', message: 'Are you sure you want to completely reset the app? This will erase all activities, events, history, and links.', isDestructive: true };
-      case 'clear':
-        return { title: 'Clear all data', message: 'Are you sure you want to erase everything? Every activity, event, note, target, link, and history entry will be gone, with nothing put back in their place. This cannot be undone. Your Workouts calendar in Google is left as it is.', isDestructive: true };
-      case 'import':
-        return { title: 'Import backup', message: 'Importing replaces everything currently in the app with the contents of the backup file. This cannot be undone.', isDestructive: true };
-      default:
-        return { title: '', message: '', isDestructive: false };
-    }
-  };
-
-  const confirmDetails = getConfirmDetails();
+  // Every one of these erases something that cannot be got back, so they are
+  // all destructive; only the wording differs.
+  const confirmDetails = confirmAction
+    ? { ...COPY.settings.confirm[confirmAction], isDestructive: true }
+    : { title: '', message: '', isDestructive: false };
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Settings" maxWidth="500px">
+      <Modal isOpen={isOpen} onClose={onClose} title={COPY.settings.title} maxWidth="500px">
         <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         <div className={styles.container}>
 
           {activeTab === 'general' && (
             <div className={styles.section}>
               <div className={styles.row}>
-                <span className={styles.text}>Week starts on</span>
+                <span className={styles.text}>{COPY.settings.weekStartsOn}</span>
                 <Select
                   className={styles.control}
                   value={String(weekStartsOn)}
@@ -230,7 +222,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         isOpen={!!confirmAction}
         title={confirmDetails.title}
         message={confirmDetails.message}
-        confirmLabel="Confirm"
+        confirmLabel={COPY.week.confirm}
         isDestructive={confirmDetails.isDestructive}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmAction(null)}

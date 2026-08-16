@@ -10,11 +10,13 @@ import {
   connectGoogleIntegration,
   signInWithGoogle,
   useGoogleAccount,
+  useIsStravaConfigured,
 } from '@/hooks/useAuth';
 import { useCalendarSyncStatus } from '@/hooks/useCalendarSyncStatus';
 import { useSheetsExport } from '@/hooks/useSheetsExport';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { usePlannerStore } from '@/lib/store';
+import { COPY } from '@/lib/copy';
 import { connectStrava, useStravaConnection } from '@/hooks/useStrava';
 import { useStravaSyncStatus } from '@/hooks/useStravaStatus';
 import styles from './IntegrationsModal.module.scss';
@@ -23,14 +25,6 @@ export interface IntegrationsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const STRAVA_LABEL: Record<string, string> = {
-  off: '',
-  waiting: 'Waiting for your calendar…',
-  reading: 'Reading Strava…',
-  synced: 'Up to date',
-  error: 'Could not read Strava',
-};
 
 /**
  * The account and what it is wired up to, most load-bearing first: which
@@ -47,21 +41,24 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const calendarName = usePlannerStore((state) => state.googleCalendarName);
   const strava = useStravaConnection();
+  const isStravaConfigured = useIsStravaConfigured();
   const { status: stravaStatus, resync: resyncStrava } = useStravaSyncStatus();
 
-  const isCalendarConnected = isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
+  // Calendar has no equivalent: it comes with signing in, so a signed in
+  // account always has the scope. An account old enough to predate that is
+  // handled by `needsReauth` above, which asks for the whole set again.
   const isSheetsConnected = isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.sheets);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isSignedIn || strava.isConfigured ? 'Integrations' : 'Sign in'}
+      title={isSignedIn || isStravaConfigured ? COPY.integrations.title : COPY.integrations.signInTitle}
       maxWidth="440px"
     >
       <div className={styles.container}>
         {isLoading ? (
-          <p className={styles.muted}>Checking your sign in…</p>
+          <p className={styles.muted}>{COPY.integrations.checking}</p>
         ) : isSignedIn ? (
           <>
             <div className={styles.identity}>
@@ -74,105 +71,69 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
 
             {needsReauth && (
               <div className={styles.warning}>
-                <span className={styles.muted}>
-                  Google access expired. Sign in again to restore it.
-                </span>
+                <span className={styles.muted}>{COPY.integrations.reauth}</span>
                 <Button variant="secondary" onClick={() => signInWithGoogle(scopes)}>
-                  Reconnect
+                  {COPY.integrations.reconnect}
                 </Button>
               </div>
             )}
 
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Google Calendar</h3>
+              <h3 className={styles.sectionTitle}>{COPY.calendar.sectionTitle}</h3>
 
-              {isCalendarConnected ? (
-                <>
-                  {/* Which calendar is not a choice any more — the account has
-                      one, and it is made without asking. It is still named
-                      here, because someone looking for it in Google Calendar
-                      needs to know what they are looking for. The name comes
-                      from Google on every pull, so renaming it there renames
-                      it here. */}
-                  <div className={styles.row}>
-                    <div className={styles.rowText}>
-                      <span className={styles.label}>
-                        {calendarName ?? (calendarId ? 'Your workouts calendar' : 'Setting one up…')}
-                      </span>
-                      <span className={styles.muted}>
-                        {calendarId ? 'Your plan is saved in this Google calendar. Changes to time and duration made on Google calendar will be reflected on 7Train' : 'Making a calendar in Google...'}
-                      </span>
-                    </div>
-                  </div>
-                  {status === 'error' && (
-                    <p className={styles.note}>
-                      The last sync did not go through. Your plan is safe on this device —
-                      try again from the header.
-                    </p>
-                  )}
-                </>
-              ) : (
-                // Only reachable for an account that signed in before the
-                // calendar came with it. Everyone new is already connected.
-                <div className={styles.row}>
-                  <div className={styles.rowText}>
-                    <span className={styles.label}>Google Calendar</span>
-                    <span className={styles.muted}>
-                      {GOOGLE_INTEGRATIONS.calendar.description}
-                    </span>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      connectGoogleIntegration(GOOGLE_INTEGRATIONS.calendar, scopes)
-                    }
-                  >
-                    Connect
-                  </Button>
+              {/* Which calendar is not a choice any more — the account has
+                  one, and it is made without asking. It is still named here,
+                  because someone looking for it in Google Calendar needs to
+                  know what they are looking for. The name comes from Google on
+                  every pull, so renaming it there renames it here. */}
+              <div className={styles.row}>
+                <div className={styles.rowText}>
+                  <span className={styles.label}>
+                    {calendarName ?? (calendarId ? COPY.calendar.unnamed : COPY.calendar.creating)}
+                  </span>
+                  <span className={styles.muted}>
+                    {calendarId ? COPY.calendar.description : COPY.calendar.creatingHint}
+                  </span>
                 </div>
+              </div>
+              {status === 'error' && (
+                <p className={styles.note}>{COPY.calendar.pullFailed}</p>
               )}
             </div>
           </>
         ) : (
           <>
-            <p className={styles.muted}>
-              Sign in to keep your plan in Google Calendar, so it follows you between
-              devices. Your plan stays on this device either way.
-            </p>
+            <p className={styles.muted}>{COPY.integrations.signInBlurb}</p>
             <Button
               variant="primary"
               className={styles.signIn}
               onClick={() => signInWithGoogle()}
             >
-              <FcGoogle size={18} /> Sign in with Google
+              <FcGoogle size={18} /> {COPY.account.signIn}
             </Button>
           </>
         )}
 
         {/* Strava is its own grant, not a Google scope, so it sits in its own
             section and works whether or not there is a Google account here. */}
-        {strava.isConfigured && (
+        {isStravaConfigured && (
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Strava</h3>
-            <p className={styles.note}>
-              What you actually did, read after your calendar. A recording lands on the
-              workout you planned for it and replaces the number with the real one;
-              anything you did without planning is added to the day it happened.
-            </p>
+            <h3 className={styles.sectionTitle}>{COPY.strava.sectionTitle}</h3>
+            <p className={styles.note}>{COPY.strava.blurb}</p>
 
             <div className={styles.row}>
               <div className={styles.rowText}>
-                <span className={styles.label}>Strava</span>
+                <span className={styles.label}>{COPY.strava.sectionTitle}</span>
                 <span className={styles.muted}>
                   {strava.isConnected && strava.athleteName
                     ? strava.athleteName
-                    : 'Bring in your recorded workouts'}
+                    : COPY.strava.notConnected}
                 </span>
               </div>
               {strava.isConnected ? (
                 <div className={styles.action}>
-                  {STRAVA_LABEL[stravaStatus] && (
-                    <span className={styles.status}>{STRAVA_LABEL[stravaStatus]}</span>
+                  {COPY.strava.label[stravaStatus] && (
+                    <span className={styles.status}>{COPY.strava.label[stravaStatus]}</span>
                   )}
                   <div className={styles.actionButtons}>
                     <Button
@@ -180,16 +141,16 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
                       onClick={resyncStrava}
                       disabled={stravaStatus === 'reading'}
                     >
-                      Sync now
+                      {COPY.strava.syncNow}
                     </Button>
                     <Button variant="secondary" onClick={() => strava.disconnect()}>
-                      Disconnect
+                      {COPY.strava.disconnect}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <Button variant="secondary" onClick={connectStrava} disabled={strava.isLoading}>
-                  Connect
+                  {COPY.strava.connect}
                 </Button>
               )}
             </div>
@@ -198,7 +159,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
 
         {isSignedIn && !isLoading && (
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Google Sheets</h3>
+            <h3 className={styles.sectionTitle}>{COPY.sheets.sectionTitle}</h3>
 
             <div className={styles.row}>
               <div className={styles.rowText}>
@@ -214,14 +175,14 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
                   onClick={() => exportToSheets()}
                   disabled={isExporting}
                 >
-                  {isExporting ? 'Exporting…' : 'Export now'}
+                  {isExporting ? COPY.sheets.exporting : COPY.sheets.exportNow}
                 </Button>
               ) : (
                 <Button
                   variant="secondary"
                   onClick={() => connectGoogleIntegration(GOOGLE_INTEGRATIONS.sheets, scopes)}
                 >
-                  Connect
+                  {COPY.integrations.connect}
                 </Button>
               )}
             </div>

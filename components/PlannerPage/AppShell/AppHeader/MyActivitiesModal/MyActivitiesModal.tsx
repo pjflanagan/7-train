@@ -7,6 +7,7 @@ import { usePlannerStore } from '@/lib/store';
 import { MdAdd } from 'react-icons/md';
 import styles from './MyActivitiesModal.module.scss';
 import { useActivities } from '@/hooks/usePlannerSelectors';
+import { COPY } from '@/lib/copy';
 
 export interface MyActivitiesModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export const MyActivitiesModal: React.FC<MyActivitiesModalProps> = ({ isOpen, on
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="My weekly activities"
+        title={COPY.activities.modalTitle}
         maxWidth="600px"
         footer={
           <Button variant="primary" onClick={() => setIsAddOpen(true)}>

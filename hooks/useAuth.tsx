@@ -2,19 +2,25 @@
 
 import React, { createContext, useContext } from 'react';
 import { SessionContext, SessionProvider, signIn, useSession } from 'next-auth/react';
-import {
-  GOOGLE_INTEGRATIONS,
-  GoogleIntegration,
-  isIntegrationConnected,
-  scopeRequestFor,
-} from '@/lib/google';
+import { GOOGLE_INTEGRATIONS, GoogleIntegration, scopeRequestFor } from '@/lib/google';
 
 /**
+ * Which integrations this deployment actually has credentials for.
+ *
  * The planner works fully signed out, so a deployment without Google
- * credentials should not advertise a sign in that can only fail. The layout
- * reads the credentials server side and hands the answer down.
+ * credentials should not advertise a sign in that can only fail — and the same
+ * goes for Strava. The layout reads both server side and hands the answer
+ * down, so the UI knows on the first render instead of after a round trip.
  */
-const GoogleAuthConfiguredContext = createContext(false);
+export interface ServerIntegrations {
+  isGoogleAuthConfigured: boolean;
+  isStravaConfigured: boolean;
+}
+
+const ServerIntegrationsContext = createContext<ServerIntegrations>({
+  isGoogleAuthConfigured: false,
+  isStravaConfigured: false,
+});
 
 /** What `useSession` sees when there is no auth backend to ask. */
 const SIGNED_OUT_SESSION = {
@@ -24,27 +30,31 @@ const SIGNED_OUT_SESSION = {
 } as const;
 
 export function AuthProvider({
-  isGoogleAuthConfigured,
+  integrations,
   children,
 }: {
-  isGoogleAuthConfigured: boolean;
+  integrations: ServerIntegrations;
   children: React.ReactNode;
 }) {
   return (
-    <GoogleAuthConfiguredContext.Provider value={isGoogleAuthConfigured}>
-      {isGoogleAuthConfigured ? (
+    <ServerIntegrationsContext.Provider value={integrations}>
+      {integrations.isGoogleAuthConfigured ? (
         <SessionProvider>{children}</SessionProvider>
       ) : (
         // Without credentials `/api/auth/session` can only answer with a 500,
         // so skip the provider and hand the hooks a settled signed-out value.
         <SessionContext.Provider value={SIGNED_OUT_SESSION}>{children}</SessionContext.Provider>
       )}
-    </GoogleAuthConfiguredContext.Provider>
+    </ServerIntegrationsContext.Provider>
   );
 }
 
 export function useIsGoogleAuthConfigured() {
-  return useContext(GoogleAuthConfiguredContext);
+  return useContext(ServerIntegrationsContext).isGoogleAuthConfigured;
+}
+
+export function useIsStravaConfigured() {
+  return useContext(ServerIntegrationsContext).isStravaConfigured;
 }
 
 export interface GoogleAccount {
@@ -74,19 +84,20 @@ export function useGoogleAccount(): GoogleAccount {
   };
 }
 
-export function useIsIntegrationConnected(integration: GoogleIntegration): boolean {
-  const { scopes } = useGoogleAccount();
-  return isIntegrationConnected(scopes, integration);
-}
-
 /**
- * Signing in, with the calendar asked for at the same time.
+ * Signing in — which is the same act as connecting the calendar, and asks for
+ * both on one consent screen.
  *
- * Calendar sync is the reason to have an account here at all — a signed in user
+ * Calendar sync is the reason to have an account here at all: a signed in user
  * whose plan still only lives in this browser has got none of what they signed
- * in for. So the one consent screen covers both, and there is nothing left to
- * answer afterwards — the calendar itself is made without asking, by
- * `useEnsureCalendar`.
+ * in for. There is nothing left to answer afterwards either — the calendar
+ * itself is made without asking, by `useEnsureCalendar`.
+ *
+ * So this is deliberately a thin alias, kept because "sign in" is what the
+ * button says and what the caller means. It is *not* a base-scopes-only sign
+ * in; that path had no callers left once the calendar moved into sign-up, and
+ * reviving it would put someone back in the state where they have an account
+ * and no calendar.
  *
  * Sheets stays incremental: it is an export someone asks for, not the point of
  * the account.

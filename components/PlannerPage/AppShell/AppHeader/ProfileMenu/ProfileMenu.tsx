@@ -10,6 +10,7 @@ import { IntegrationsModal } from './IntegrationsModal/IntegrationsModal';
 import { SettingsModal } from './SettingsModal/SettingsModal';
 import { useGoogleAccount, useIsGoogleAuthConfigured } from '@/hooks/useAuth';
 import styles from './ProfileMenu.module.scss';
+import { COPY } from '@/lib/copy';
 
 type OpenModal = 'integrations' | 'settings' | null;
 
@@ -30,7 +31,7 @@ export const ProfileMenu: React.FC = () => {
       <Menu
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        aria-label="Account"
+        aria-label={COPY.account.menuLabel}
         trigger={
           <button
             type="button"
@@ -50,11 +51,11 @@ export const ProfileMenu: React.FC = () => {
             icon={isSignedIn ? <MdSync /> : <FcGoogle />}
             onClick={() => open('integrations')}
           >
-            {isSignedIn ? 'Integrations' : 'Sign in with Google'}
+            {isSignedIn ? COPY.account.integrations : COPY.account.signIn}
           </MenuItem>
         )}
         <MenuItem icon={<MdSettings />} onClick={() => open('settings')}>
-          Settings
+          {COPY.account.settings}
         </MenuItem>
         <span className={styles.divider} role="separator" />
         <MenuItem
@@ -62,14 +63,14 @@ export const ProfileMenu: React.FC = () => {
           href="/terms"
           onClick={() => setIsOpen(false)}
         >
-          Terms of service
+          {COPY.account.terms}
         </MenuItem>
         <MenuItem
           icon={<MdPrivacyTip />}
           href="/privacy"
           onClick={() => setIsOpen(false)}
         >
-          Privacy policy
+          {COPY.account.privacy}
         </MenuItem>
         {isGoogleAuthConfigured && isSignedIn && (
           <>
@@ -81,7 +82,7 @@ export const ProfileMenu: React.FC = () => {
                 signOut();
               }}
             >
-              Logout
+              {COPY.account.logout}
             </MenuItem>
           </>
         )}

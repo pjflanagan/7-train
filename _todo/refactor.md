@@ -1,5 +1,9 @@
 # Refactor: copy, sync, and onboarding
 
+> **Status:** §1, §3 and §4 are done, along with the Strava gate from §2.
+> §2's remaining work — collapsing the three sync loops into one engine — is
+> **not** done; see the note at the end of that section for why.
+
 A survey after the Strava and database work. Nothing here is a bug report about
 behaviour users see today — the app works. It is about the three places where
 the same decision is now made in several spots, and where the next feature will
@@ -9,7 +13,7 @@ Ordered by payoff. Each section is independent; none of them need each other.
 
 ---
 
-## 1. Copy lives in three places, and the rules only hold in one
+## 1. Copy lives in three places, and the rules only hold in one — **done**
 
 `AGENTS.md` has a rule — sentence case, never title case — and there is nowhere
 to enforce it, because there is no single place copy goes through. Right now a
@@ -79,7 +83,7 @@ Do the seed-data fix and the title-case fixes as part of this, not before it.
 
 ---
 
-## 2. Three hand-rolled sync loops
+## 2. Three hand-rolled sync loops — **not done**
 
 `useCalendarSync` (598 lines), `useUserSync` (250) and `useStravaSync` each
 independently implement: a ready flag, an in-flight guard, a debounce, a
@@ -93,9 +97,12 @@ different enum members, and `useUserSync` inlines a third. All three carry a
 `resyncNonce` counter incremented to ask the loop to run again.
 
 Worse, the ordering between them is expressed as one hook reading another's
-status: `useStravaSync` waits on `calendarStatus === 'off' || 'synced'`,
-`useEnsureCalendar` waits on `useUserSettled()`. That is a dependency graph
-written as three separate conditionals. Adding Garmin
+settledness: `useStravaSync` waits on `useCalendarSettled()`,
+`useEnsureCalendar` waits on `useUserSettled()`, and `useCalendarSettled` in
+turn folds in `useUserSettled` and the session. That is a dependency graph
+written as a chain of separate conditionals, and it has already been wrong once
+— the Strava gate read a transient status enum and was vacuously true on the
+first render. Adding Garmin
 (`_todo/integration-garmin.md`) means a fourth loop that has to know about the
 first three.
 
@@ -113,7 +120,7 @@ first.
 
 ---
 
-## 3. Onboarding and login are simpler than the code remembers
+## 3. Onboarding and login are simpler than the code remembers — **done**
 
 The calendar-choice removal left the shape behind.
 
@@ -149,7 +156,7 @@ context would remove a fetch and a loading state.
 
 ---
 
-## 4. Smaller, mechanical
+## 4. Smaller, mechanical — **done**
 
 - **`SettingsModal.tsx`** (240 lines) mixes tab state, confirm-dialog state,
   file import, and four tabs of markup. The confirm copy in `getConfirmDetails`
@@ -168,13 +175,13 @@ context would remove a fetch and a loading state.
 
 ---
 
-## Suggested order
+## What is left
 
-1. §1 copy — highest ratio of clarity to risk, and it fixes four live
-   inconsistencies on the way.
-2. §3 onboarding — small, isolated, mostly deletion.
-3. §4 mechanical — pick up opportunistically.
-4. §2 sync — largest win, largest risk. Wants tests around `useCalendarSync`
-   before it starts, and is the natural moment to do that anyway.
+Only §2's loop extraction. It is the largest win and the largest risk, and it
+wants characterisation tests around `useCalendarSync`'s adoption, baseline and
+debounce behaviour *before* it starts — the existing tests cover the wire format
+and the adoption order, not the loop's own state machine.
 
-§2 is also the one to do *before* Garmin, not after.
+It is also the one to do **before** Garmin, not after: a fourth hand-rolled loop
+is a fourth place to get the ordering wrong, and the Strava gate has already
+shown how quietly that fails.

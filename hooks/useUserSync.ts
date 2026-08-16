@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
@@ -173,7 +174,7 @@ export function useUserSync(): void {
       setStatus('error');
       // The plan is not at risk — it is in `localStorage` either way — so this
       // says what actually broke rather than alarming anyone about their data.
-      toast.error('Could not load your settings from the server');
+      toast.error(COPY.user.loadFailed);
       // Settled, even though it failed. Anything waiting on the pull — making
       // a calendar above all — would otherwise wait forever.
       setHasPulled(true);

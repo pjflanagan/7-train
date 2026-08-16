@@ -19,6 +19,7 @@ import styles from './ActivityFormModal.module.scss';
 import { usePlannerStore } from '@/lib/store';
 import { formatPaceMinutes, parsePaceMinutes } from '@/lib/schedule';
 import { DEFAULT_SPORTS_BY_ICON } from '@/lib/stravaSports';
+import { COPY } from '@/lib/copy';
 
 export interface ActivityFormModalProps {
   isOpen: boolean;
@@ -217,7 +218,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                 label="Activity name"
                 {...register('name')}
                 error={errors.name?.message}
-                placeholder="e.g. Running, Lifting"
+                placeholder={COPY.activities.namePlaceholder}
               />
               <Controller
                 control={control}
@@ -237,7 +238,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   <option value="instance">Sessions</option>
                 </Select>
                 {metric === 'distance' && (
-                  <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder="e.g. miles" />
+                  <TextInput label="Unit" {...register('unit')} error={errors.unit?.message} placeholder={COPY.activities.unitPlaceholder} />
                 )}
               </div>
               {!isOptional && (
@@ -317,7 +318,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
                   <TagInput
                     tags={field.value || []}
                     onChange={field.onChange}
-                    placeholder="e.g. Long Run, Recovery"
+                    placeholder={COPY.activities.workoutTypePlaceholder}
                   />
                 )}
               />
@@ -354,8 +355,8 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
               <div className={styles.linksList}>
                 {linkFields.map((field, index) => (
                   <div key={field.id} className={styles.linkRow}>
-                    <TextInput placeholder="Link title" {...register(`links.${index}.title` as const)} />
-                    <TextInput placeholder="URL" {...register(`links.${index}.url` as const)} />
+                    <TextInput placeholder={COPY.links.titlePlaceholder} {...register(`links.${index}.title` as const)} />
+                    <TextInput placeholder={COPY.links.urlPlaceholder} {...register(`links.${index}.url` as const)} />
                     <IconButton type="button" variant="danger" onClick={() => removeLink(index)}>
                       <MdDelete />
                     </IconButton>

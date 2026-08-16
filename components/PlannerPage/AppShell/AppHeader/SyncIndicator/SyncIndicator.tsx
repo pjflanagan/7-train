@@ -3,8 +3,23 @@
 import React from 'react';
 import clsx from 'clsx';
 import { MdCheck, MdSave, MdSync, MdSyncProblem } from 'react-icons/md';
-import { SYNC_DEBOUNCE_MS, useCalendarSyncStatus } from '@/hooks/useCalendarSyncStatus';
+import {
+  CalendarSyncStatus,
+  SYNC_DEBOUNCE_MS,
+  useCalendarSyncStatus,
+} from '@/hooks/useCalendarSyncStatus';
+import { COPY } from '@/lib/copy';
 import styles from './SyncIndicator.module.scss';
+
+/** Keyed by the status union, so a new state cannot forget to bring an icon. */
+const ICONS: Record<CalendarSyncStatus, React.ComponentType<{ className?: string }>> = {
+  off: MdSync,
+  pending: MdSave,
+  pulling: MdSync,
+  syncing: MdSync,
+  synced: MdCheck,
+  error: MdSyncProblem,
+};
 
 /**
  * What calendar sync is doing, in the header, and the way to ask it to look
@@ -25,31 +40,19 @@ export const SyncIndicator: React.FC = () => {
   if (status === 'off') return null;
 
   const isBusy = status === 'pulling' || status === 'syncing';
+  // Pulling and pushing are both "talking to Google" as far as the header is
+  // concerned, so they share a label and an icon.
+  const Icon = ICONS[status];
 
-  const content =
-    status === 'error' ? (
-      <>
-        <span className={styles.text}>Could not save</span>
-        <MdSyncProblem className={styles.icon} aria-hidden="true" />
-      </>
-    ) : status === 'pending' ? (
-      <>
-        <span className={styles.text}>Unsaved changes</span>
-        <MdSave className={styles.icon} aria-hidden="true" />
-      </>
-    ) : status === 'synced' ? (
-      <>
-        <span className={styles.text}>Saved</span>
-        <MdCheck className={styles.icon} aria-hidden="true" />
-      </>
-    ) : (
-      // Pulling and pushing are both "talking to Google" as far as the header
-      // is concerned.
-      <>
-        <span className={styles.text}>Syncing…</span>
-        <MdSync className={clsx(styles.icon, styles.spinning)} aria-hidden="true" />
-      </>
-    );
+  const content = (
+    <>
+      <span className={styles.text}>{COPY.sync.label[status]}</span>
+      <Icon
+        className={clsx(styles.icon, isBusy && styles.spinning)}
+        aria-hidden="true"
+      />
+    </>
+  );
 
   return (
     <button
@@ -57,11 +60,7 @@ export const SyncIndicator: React.FC = () => {
       className={clsx(styles.pill, status === 'error' && styles.error)}
       onClick={resync}
       disabled={isBusy}
-      title={
-        status === 'error'
-          ? 'Could not save — press to try again'
-          : 'Press to check your calendar for changes'
-      }
+      title={status === 'error' ? COPY.sync.actionError : COPY.sync.action}
     >
       {status === 'pending' ? (
         // Keyed on the moment the wait started, so every fresh edit replays the
