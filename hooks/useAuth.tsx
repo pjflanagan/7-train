@@ -84,8 +84,9 @@ export function useIsIntegrationConnected(integration: GoogleIntegration): boole
  *
  * Calendar sync is the reason to have an account here at all — a signed in user
  * whose plan still only lives in this browser has got none of what they signed
- * in for. So the one consent screen covers both, and the only thing left to
- * answer afterwards is which calendar (`CalendarSetupModal`).
+ * in for. So the one consent screen covers both, and there is nothing left to
+ * answer afterwards — the calendar itself is made without asking, by
+ * `useEnsureCalendar`.
  *
  * Sheets stays incremental: it is an export someone asks for, not the point of
  * the account.

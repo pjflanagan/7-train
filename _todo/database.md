@@ -47,17 +47,21 @@ permanently, with the events split across both:
 - any bug that nulls it (one shipped, and made three calendars before it was
   caught — `clearAll` used to reset it).
 
-Two repairs exist, and neither is a fix:
+Two repairs existed, and neither was a fix: `CalendarSetupModal` asked on a
+browser with no calendar id — adopt one by pasting its id, or make a new one —
+and `CalendarPicker` offered the same choice later in the integrations modal.
+Both were the user doing by hand what a `users` row does by itself.
 
-- `CalendarSetupModal` asks on a browser that has no calendar id — adopt an
-  existing calendar by pasting its id, or make a new one. Sync does nothing
-  until it is answered, and creating a calendar now happens only here
-  (`POST /api/calendar/create`), never as a side effect of syncing.
-- `CalendarPicker` in the integrations modal offers the same choice later.
+**The fix is storing the id against the user's Google `sub` rather than against
+a browser** — one row, `users.googleCalendarId`, which makes a second device
+resume the same calendar instead of forking one.
 
-Both are the user doing by hand what a `users` row would do by itself. **The fix is storing the id against the user's Google
-`sub` rather than against a browser** — one row, `users.googleCalendarId`, which
-makes a second device resume the same calendar instead of forking one.
+**Both repairs have since been deleted.** With the id on the account, a browser
+holding no calendar id is not one that needs a new calendar, it is one that has
+not read its settings yet — so `useEnsureCalendar` waits for the settings pull
+and then makes one silently if the account genuinely has none. There is no
+question and no picker; which calendar the plan lives in is not a user-facing
+choice any more.
 
 This is the smallest possible version of this document and the one with the
 clearest payoff. If the rest of the design is too big to start, start here.

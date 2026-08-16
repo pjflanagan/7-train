@@ -68,9 +68,9 @@ npm run db:studio     # opens a browser UI onto the tables
 3. In `db:studio`, the `users` table now has a row with your `google_sub` and
    your `google_calendar_id`, and `activities` has a row per activity.
 4. **The real test:** open the app in a private window and sign in with the same
-   account. It should find the same `Workouts` calendar rather than asking
-   "where should your workouts go?" — that question is now gated behind the
-   settings pull, and only appears when the server genuinely has no answer.
+   account. It should land on the same `Workouts` calendar, silently. Nothing
+   asks which calendar to use — a first sign-in makes one, and every sign-in
+   after that is told which one the account already has.
 
 That last step is the entire point of this phase. Before it, every fresh browser
 made a *second* calendar and split the plan across both, permanently.
@@ -115,9 +115,17 @@ two things at once — a half marathon and a tri, each with its own activities a
 its own calendar (`_todo/griley-ideas.md`). Adding the column now costs nothing;
 retrofitting one onto a populated table costs a great deal. Nothing reads it.
 
-**Local-first is intact.** Signed out, offline, or with no `DATABASE_URL`, the
-app is exactly what it was. The database is a replica, never a prerequisite for
-rendering.
+**Local-first is intact for rendering.** Signed out or offline, the plan draws
+from `localStorage` exactly as it always did. The database is a replica, never a
+prerequisite for showing you your week.
+
+**But the database is now load-bearing for the calendar id.** Since the "which
+calendar?" question was removed, `useEnsureCalendar` makes one silently when the
+account has none — and without `DATABASE_URL` there is nowhere to record that it
+did. A second browser would then make a second `Workouts` calendar, which is the
+original bug. So: a deployment that signs users in should have a database. One
+that does not is fine, and one that has neither is fine; the combination to
+avoid is Google sign-in without `DATABASE_URL`.
 
 ## What is next
 

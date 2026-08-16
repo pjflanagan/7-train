@@ -349,9 +349,9 @@ export function useCalendarSync(): void {
   // Before that `getState()` answers with the seeded defaults, and adopting
   // those would upload a sample week and mark the real plan as handed over.
   const isHydrated = usePlannerHydrated();
-  // Which calendar to write to is the user's decision, asked for by
-  // `CalendarSetupModal`. Until it is answered there is nowhere to sync to —
-  // syncing anyway is what used to conjure a calendar per browser.
+  // Until the account has a calendar there is nowhere to sync to. It is not a
+  // decision any more — `useEnsureCalendar` makes one — but it is still a thing
+  // that has to have happened, and it is asynchronous.
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const isConnected =
     isHydrated &&

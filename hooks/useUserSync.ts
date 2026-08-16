@@ -43,9 +43,9 @@ export type UserSyncStatus =
 interface UserSyncState {
   status: UserSyncStatus;
   /**
-   * Whether the first pull has finished. Anything that would otherwise ask the
-   * user a question the server can already answer — "which calendar?" above all
-   * — waits for this rather than jumping in.
+   * Whether the first pull has finished. Anything that would otherwise act on a
+   * setting the server is about to supply — making a `Workouts` calendar above
+   * all — waits for this rather than jumping in.
    */
   hasPulled: boolean;
   setStatus: (status: UserSyncStatus) => void;
@@ -63,8 +63,8 @@ export const useUserSyncStore = create<UserSyncState>((set) => ({
  * True once the server has been asked about this user — or once it is settled
  * that it never will be, signed out or with no database configured.
  *
- * The distinction matters for exactly one thing: `CalendarSetupModal` must not
- * ask "where should your workouts go?" a beat before the answer arrives.
+ * The distinction matters for exactly one thing: `useEnsureCalendar` must not
+ * create a second `Workouts` calendar a beat before being told about the first.
  */
 export function useUserSettled(): boolean {
   const status = useUserSyncStore((state) => state.status);
@@ -174,8 +174,8 @@ export function useUserSync(): void {
       // The plan is not at risk — it is in `localStorage` either way — so this
       // says what actually broke rather than alarming anyone about their data.
       toast.error('Could not load your settings from the server');
-      // Let the app get on with itself rather than waiting forever on a modal
-      // that is gated behind the pull.
+      // Settled, even though it failed. Anything waiting on the pull — making
+      // a calendar above all — would otherwise wait forever.
       setHasPulled(true);
     });
 

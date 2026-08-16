@@ -199,10 +199,13 @@ export async function getCalendar(
  * `calendarList.list` is the only way to search, and it does not accept
  * `calendar.app.created` — reaching it would mean asking for a scope that reads
  * every calendar the user has. So the remembered id is the only thread back to
- * an existing calendar, and losing it (a cleared `localStorage`, a new device)
- * means a second `Workouts` calendar rather than a resumed one. That is the
- * cost of the narrow scope, and the reason the id belongs in a settings store —
- * see `_todo/database.md`.
+ * an existing calendar, and losing it means a second `Workouts` calendar rather
+ * than a resumed one.
+ *
+ * That is why the id is no longer remembered by a browser. It lives on the
+ * user's row (`lib/db/schema.ts`), keyed by their Google `sub`, so a new device
+ * is told which calendar to resume instead of guessing. `useEnsureCalendar`
+ * waits for that answer before calling this.
  */
 export async function ensureWorkoutsCalendar(
   accessToken: string,

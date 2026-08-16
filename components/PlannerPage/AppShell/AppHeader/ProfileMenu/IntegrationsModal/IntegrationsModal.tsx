@@ -14,9 +14,9 @@ import {
 import { useCalendarSyncStatus } from '@/hooks/useCalendarSyncStatus';
 import { useSheetsExport } from '@/hooks/useSheetsExport';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
+import { usePlannerStore } from '@/lib/store';
 import { connectStrava, useStravaConnection } from '@/hooks/useStrava';
 import { useStravaSyncStatus } from '@/hooks/useStravaStatus';
-import { CalendarPicker } from './CalendarPicker/CalendarPicker';
 import styles from './IntegrationsModal.module.scss';
 
 export interface IntegrationsModalProps {
@@ -44,6 +44,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
   const { name, email, image, isSignedIn, isLoading, scopes, needsReauth } = useGoogleAccount();
   const { status } = useCalendarSyncStatus();
   const { exportToSheets, isExporting } = useSheetsExport();
+  const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const strava = useStravaConnection();
   const { status: stravaStatus, resync: resyncStrava } = useStravaSyncStatus();
 
@@ -86,11 +87,22 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ isOpen, on
 
               {isCalendarConnected ? (
                 <>
-                  <CalendarPicker />
+                  {/* Which calendar is not a choice any more — the account has
+                      one, and it is made without asking. It is still named
+                      here, because someone looking for it in Google Calendar
+                      needs to know what they are looking for. */}
+                  <div className={styles.row}>
+                    <div className={styles.rowText}>
+                      <span className={styles.label}>Calendar</span>
+                      <span className={clsx(styles.muted, styles.email)}>
+                        {calendarId ?? 'Setting one up…'}
+                      </span>
+                    </div>
+                  </div>
                   {status === 'error' && (
                     <p className={styles.note}>
                       The last sync did not go through. Your plan is safe on this device —
-                      try again from the header, or point this at the calendar again.
+                      try again from the header.
                     </p>
                   )}
                 </>
