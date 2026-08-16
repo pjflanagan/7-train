@@ -5,6 +5,7 @@ import { usePlannerStore } from '@/lib/store';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { useCalendarChoice } from '@/hooks/useCalendarChoice';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
+import { useUserSettled } from '@/hooks/useUserSync';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
@@ -27,6 +28,7 @@ import styles from './CalendarSetupModal.module.scss';
 export const CalendarSetupModal: React.FC = () => {
   const { scopes, isSignedIn } = useGoogleAccount();
   const isHydrated = usePlannerHydrated();
+  const isUserSettled = useUserSettled();
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const { adoptExisting, createNew, isWorking, error, setError } = useCalendarChoice();
 
@@ -35,7 +37,10 @@ export const CalendarSetupModal: React.FC = () => {
 
   const isConnected =
     isHydrated && isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
-  const needsChoice = isConnected && !calendarId && !isDismissed;
+  // The server may already know which calendar this account uses — that is what
+  // the settings table is for — so asking before the pull lands would put the
+  // question to someone who has already answered it, on another device.
+  const needsChoice = isConnected && isUserSettled && !calendarId && !isDismissed;
 
   if (!needsChoice) return null;
 

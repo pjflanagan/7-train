@@ -16,6 +16,7 @@ import {
 } from './schedule';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { StravaEventUpdate } from './strava';
+import type { UserSettings } from './userSettings';
 
 type DayName = typeof DAYS[number];
 
@@ -70,6 +71,19 @@ type PlannerStore = PlannerState & {
   applyStrava: (result: {
     updates: StravaEventUpdate[];
     creations: Omit<ScheduledEvent, 'id'>[];
+  }) => void;
+
+  /**
+   * Take what the server holds for this user: their settings, and the
+   * activities "My activities" is built from.
+   *
+   * One action, in one write, because everything watching the store — calendar
+   * sync above all — should see a settled user rather than a settings change
+   * followed a frame later by an activity change.
+   */
+  applyRemoteUser: (remote: {
+    settings: UserSettings;
+    activities?: Activity[];
   }) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
@@ -423,6 +437,20 @@ export const usePlannerStore = create<PlannerStore>()(
 
         return { events: [...corrected, ...added] };
       }),
+
+      applyRemoteUser: ({ settings, activities }) => set(() => ({
+        googleCalendarId: settings.googleCalendarId,
+        googleAdoptedAt: settings.googleAdoptedAt,
+        googleSheetId: settings.googleSheetId,
+        weekStartsOn: settings.weekStartsOn as WeekStartsOn,
+        tempUnit: settings.tempUnit,
+        use24HourClock: settings.use24HourClock,
+        defaultStartMinutes: settings.defaultStartMinutes,
+        // Only when the server actually has some. An account that has never
+        // synced must not blank out the activities this browser is holding —
+        // that is the whole reason the pull reports `isNew`.
+        ...(activities && activities.length > 0 ? { activities } : {}),
+      })),
 
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
       setGoogleAdopted: () => set({ googleAdoptedAt: new Date().toISOString() }),
