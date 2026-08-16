@@ -2,7 +2,12 @@
 
 import React, { createContext, useContext } from 'react';
 import { SessionContext, SessionProvider, signIn, useSession } from 'next-auth/react';
-import { GoogleIntegration, isIntegrationConnected, scopeRequestFor } from '@/lib/google';
+import {
+  GOOGLE_INTEGRATIONS,
+  GoogleIntegration,
+  isIntegrationConnected,
+  scopeRequestFor,
+} from '@/lib/google';
 
 /**
  * The planner works fully signed out, so a deployment without Google
@@ -75,9 +80,25 @@ export function useIsIntegrationConnected(integration: GoogleIntegration): boole
 }
 
 /**
+ * Signing in, with the calendar asked for at the same time.
+ *
+ * Calendar sync is the reason to have an account here at all — a signed in user
+ * whose plan still only lives in this browser has got none of what they signed
+ * in for. So the one consent screen covers both, and there is nothing left to
+ * answer afterwards — the calendar itself is made without asking, by
+ * `useEnsureCalendar`.
+ *
+ * Sheets stays incremental: it is an export someone asks for, not the point of
+ * the account.
+ */
+export function signInWithGoogle(grantedScopes: string[] = []) {
+  return connectGoogleIntegration(GOOGLE_INTEGRATIONS.calendar, grantedScopes);
+}
+
+/**
  * Sends the user back through Google's consent screen asking for one more
- * integration's scopes. Incremental by design: nobody is asked for calendar
- * access until they say they want calendar sync.
+ * integration's scopes. Incremental by design: nobody is asked for a scope
+ * until they have said they want what it is for.
  */
 export function connectGoogleIntegration(
   integration: GoogleIntegration,

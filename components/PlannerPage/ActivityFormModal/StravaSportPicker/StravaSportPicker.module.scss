@@ -1,0 +1,79 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.groupTitle {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+// A chip rather than a row of checkboxes: fifty sports in a list is a scroll,
+// and the same fifty as chips is one glance.
+.sport {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill, 999px);
+  background-color: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-smooth);
+
+  &:hover {
+    border-color: var(--border-focus);
+    color: var(--text-main);
+  }
+}
+
+.isOn {
+  border-color: var(--accent-primary);
+  background-color: var(--accent-primary-soft);
+  color: var(--accent-primary-text);
+}
+
+// The chip itself is the control; the box behind it only carries focus and
+// the accessible name.
+.checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+
+  &:focus-visible + * {
+    outline: 2px solid var(--accent-primary);
+  }
+}
+
+.sport:has(.checkbox:focus-visible) {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}

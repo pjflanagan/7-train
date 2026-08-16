@@ -1,0 +1,22 @@
+// Strava's own orange, so the mark reads as the badge it is on every card and
+// in either theme.
+$strava-orange: #fc4c02;
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  // The card is a drag handle everywhere else, so the link says otherwise.
+  cursor: pointer;
+  color: $strava-orange;
+  font-size: var(--icon-sm);
+  line-height: 1;
+  opacity: 0.85;
+  transition: var(--transition-smooth);
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+}

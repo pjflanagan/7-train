@@ -89,6 +89,10 @@ function eventSignature(event: ScheduledEvent, activity: Activity | undefined): 
     // real change to push, not just a local relabel.
     JSON.stringify(event.activitySnapshot ?? null),
     event.activityFrozen ? '1' : '',
+    // Matching a Strava recording to a workout is a change to push: it is what
+    // puts the link on the calendar entry, and what tells another device the
+    // workout is already accounted for.
+    event.stravaActivityId ?? '',
   ].join('|');
 }
 
@@ -116,6 +120,7 @@ interface EventDraftPayload {
   activitySnapshot?: ScheduledEvent['activitySnapshot'];
   activityFrozen?: boolean;
   weekStart: string;
+  stravaActivityId?: number | null;
 }
 
 function draftFor(
@@ -144,6 +149,7 @@ function draftFor(
     activitySnapshot: event.activitySnapshot ?? buildActivitySnapshot(activity),
     activityFrozen: event.activityFrozen,
     weekStart: event.weekStart,
+    stravaActivityId: event.stravaActivityId ?? null,
   };
 }
 
@@ -188,6 +194,7 @@ function eventFromGoogle(
     updatedAt: event.updated,
     activitySnapshot: event.activitySnapshot,
     activityFrozen: event.activityFrozen,
+    stravaActivityId: event.stravaActivityId ?? null,
   };
 }
 
@@ -342,9 +349,9 @@ export function useCalendarSync(): void {
   // Before that `getState()` answers with the seeded defaults, and adopting
   // those would upload a sample week and mark the real plan as handed over.
   const isHydrated = usePlannerHydrated();
-  // Which calendar to write to is the user's decision, asked for by
-  // `CalendarSetupModal`. Until it is answered there is nowhere to sync to —
-  // syncing anyway is what used to conjure a calendar per browser.
+  // Until the account has a calendar there is nowhere to sync to. It is not a
+  // decision any more — `useEnsureCalendar` makes one — but it is still a thing
+  // that has to have happened, and it is asynchronous.
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const isConnected =
     isHydrated &&

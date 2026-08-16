@@ -9,6 +9,7 @@ import { getIconByKey } from '@/lib/icons';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
+import { StravaLink } from '@/components/PlannerPage/StravaLink/StravaLink';
 import { TimeChip } from './TimeChip/TimeChip';
 import styles from './EventCard.module.scss';
 
@@ -85,6 +86,11 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
             its card drops the length field — but when it happens is still
             something to set here. */}
         <TimeChip event={event} activity={activity} showDuration={!isDuration} />
+        {/* A workout that was actually done says so here, and links out to the
+            recording it was done as. */}
+        {event.stravaActivityId != null && (
+          <StravaLink stravaActivityId={event.stravaActivityId} className={styles.strava} />
+        )}
       </div>
 
       <div className={styles.body}>

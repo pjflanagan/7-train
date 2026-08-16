@@ -4,11 +4,13 @@ import { GOOGLE_INTEGRATIONS } from '@/lib/google';
 import { ensureWorkoutsCalendar, GoogleApiError } from '@/lib/googleCalendar';
 
 /**
- * Makes the `Workouts` calendar, once, because the user asked for it.
+ * Makes the `Workouts` calendar, once.
  *
- * The only place a calendar is ever created. Syncing deliberately cannot do it:
- * a calendar is a thing the user ends up owning and looking at, so it comes
- * from a decision rather than from a background request finding an id missing.
+ * The only place a calendar is ever created, and still deliberately not
+ * something syncing can do by itself: this is called by `useEnsureCalendar`,
+ * which first waits to be told whether the account already has one. Letting a
+ * sync create a calendar whenever it noticed an id missing is what once made
+ * three of them.
  */
 export async function POST(request: Request) {
   const accessToken = await getGoogleAccessToken(request, GOOGLE_INTEGRATIONS.calendar.scopes);

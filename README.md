@@ -32,6 +32,26 @@ Optional, and off until it is configured. Signing in with Google is what will
 eventually back calendar sync and the spreadsheet export. See
 `docs/google-setup.md` for the Google Cloud and environment setup.
 
+### Strava
+
+Optional, and hidden until `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` are
+set. Once connected, the app reads this week's and last week's recordings after
+the calendar pull, corrects planned workouts to what was actually done, and adds
+anything you did without planning. It is its own grant, so it works without a
+Google account. See `_todo/-MANUAL-strava-setup.md` for registering the app with
+Strava.
+
+### Database
+
+Optional, and dormant until `DATABASE_URL` is set. Neon Postgres via Drizzle,
+holding **settings only** — your Google and Strava account ids, which `Workouts`
+calendar your plan lives in, your preferences, and "My activities". Events are
+not in it and will not be: Google Calendar stores those.
+
+What it buys is that a second device finds the *same* calendar instead of making
+its own. See `_todo/-MANUAL-database-setup.md` to set it up, and
+`_todo/database.md` for what comes next.
+
 ### Contributing
 
 See `AGENTS.md` for strict architectural and styling rules before making changes.

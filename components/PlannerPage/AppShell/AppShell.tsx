@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from './AppShell.module.scss';
 import { AppHeader } from './AppHeader/AppHeader';
-import { CalendarSetupModal } from './CalendarSetupModal/CalendarSetupModal';
 import { ScheduleFocusProvider } from '@/hooks/useScheduleFocus';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -12,7 +11,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <div className={styles.mainContent}>
           {children}
         </div>
-        <CalendarSetupModal />
       </div>
     </ScheduleFocusProvider>
   );

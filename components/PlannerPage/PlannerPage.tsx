@@ -13,6 +13,10 @@ import { MobileDayFeed } from './MobileDayFeed/MobileDayFeed';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useInitWeather } from '@/hooks/useWeather';
 import { useCalendarSync } from '@/hooks/useCalendarSync';
+import { useEnsureCalendar } from '@/hooks/useEnsureCalendar';
+import { useUserSync } from '@/hooks/useUserSync';
+import { useStravaSync } from '@/hooks/useStrava';
+import { useStravaConnectOutcome } from '@/hooks/useStravaConnectOutcome';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
@@ -82,7 +86,11 @@ export function PlannerPage() {
   const isHydrated = useHydrated() && usePlannerStore.persist.hasHydrated();
   const isMobile = useIsMobile();
   useInitWeather();
+  useUserSync();
+  useEnsureCalendar();
   useCalendarSync();
+  useStravaSync();
+  useStravaConnectOutcome();
 
   if (!isHydrated) {
     return (

@@ -15,6 +15,8 @@ import {
   startMinutesOf
 } from './schedule';
 import { arrayMove } from '@dnd-kit/sortable';
+import type { StravaEventUpdate } from './strava';
+import type { UserSettings } from './userSettings';
 
 type DayName = typeof DAYS[number];
 
@@ -56,6 +58,33 @@ type PlannerStore = PlannerState & {
   setEventTime: (id: string, startMinutes: number) => void;
   /** Set how long an event runs. Minutes, snapped to 15. */
   setEventDuration: (id: string, durationMinutes: number) => void;
+
+  /**
+   * Write what Strava says actually happened into the plan: planned workouts
+   * corrected to their real numbers, and recordings nothing was planned for
+   * added as new events on the day they happened.
+   *
+   * One action rather than a loop of `updateEventValue`/`addEvent` calls,
+   * because calendar sync watches `events` — a sync of twelve recordings should
+   * be one push, not twelve.
+   */
+  applyStrava: (result: {
+    updates: StravaEventUpdate[];
+    creations: Omit<ScheduledEvent, 'id'>[];
+  }) => void;
+
+  /**
+   * Take what the server holds for this user: their settings, and the
+   * activities "My activities" is built from.
+   *
+   * One action, in one write, because everything watching the store — calendar
+   * sync above all — should see a settled user rather than a settings change
+   * followed a frame later by an activity change.
+   */
+  applyRemoteUser: (remote: {
+    settings: UserSettings;
+    activities?: Activity[];
+  }) => void;
 
   setGoogleCalendarId: (calendarId: string | null) => void;
   /** Record that the whole plan now lives in Google Calendar. */
@@ -380,6 +409,49 @@ export const usePlannerStore = create<PlannerStore>()(
         )
       })),
 
+      applyStrava: ({ updates, creations }) => set((state) => {
+        if (updates.length === 0 && creations.length === 0) return {};
+
+        const byEventId = new Map(updates.map((update) => [update.eventId, update]));
+
+        const corrected = state.events.map((event) => {
+          const update = byEventId.get(event.id);
+          // An event that picked up a recording since the reconciliation was
+          // worked out is finished, and is left exactly as it is.
+          if (!update || event.stravaActivityId != null) return event;
+          return stamp({
+            ...event,
+            value: update.value,
+            startMinutes: update.startMinutes,
+            durationMinutes: update.durationMinutes,
+            stravaActivityId: update.stravaActivityId,
+          });
+        });
+
+        const added = creations.map((event) => stamp({
+          ...event,
+          id: newId('event'),
+          activitySnapshot:
+            event.activitySnapshot ?? snapshotFor(state, event.weekStart, event.typeId)
+        }));
+
+        return { events: [...corrected, ...added] };
+      }),
+
+      applyRemoteUser: ({ settings, activities }) => set(() => ({
+        googleCalendarId: settings.googleCalendarId,
+        googleAdoptedAt: settings.googleAdoptedAt,
+        googleSheetId: settings.googleSheetId,
+        weekStartsOn: settings.weekStartsOn as WeekStartsOn,
+        tempUnit: settings.tempUnit,
+        use24HourClock: settings.use24HourClock,
+        defaultStartMinutes: settings.defaultStartMinutes,
+        // Only when the server actually has some. An account that has never
+        // synced must not blank out the activities this browser is holding —
+        // that is the whole reason the pull reports `isNew`.
+        ...(activities && activities.length > 0 ? { activities } : {}),
+      })),
+
       setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
       setGoogleAdopted: () => set({ googleAdoptedAt: new Date().toISOString() }),
       setGoogleSheetId: (googleSheetId) => set({ googleSheetId }),
@@ -505,7 +577,7 @@ export const usePlannerStore = create<PlannerStore>()(
     }),
     {
       name: 'workout-week',
-      version: 9,
+      version: 10,
       migrate: migrateStore,
       onRehydrateStorage: () => () => {
         // Run once on hydrate, this imports legacy if needed

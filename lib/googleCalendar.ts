@@ -12,6 +12,7 @@
 
 import { z } from 'zod';
 import { Activity, ActivitySchema, ActivitySnapshot, ActivitySnapshotSchema } from './types';
+import { stravaActivityUrl } from './strava';
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 
@@ -43,6 +44,12 @@ const PROP_WEEK_START = 'workoutWeekStart';
  * written before this existed looks like, so absence means "a workout".
  */
 const PROP_RECORD = 'workoutRecord';
+/**
+ * The Strava recording this workout was done as. It rides along with the event
+ * so a second device pulling the calendar knows the workout is already
+ * accounted for, rather than matching the same recording to it all over again.
+ */
+const PROP_STRAVA_ID = 'workoutStravaId';
 const RECORD_TARGETS = 'targets';
 /** `workoutTargets0`, `workoutTargets1`, … holding one JSON string between them. */
 const PROP_TARGETS_PREFIX = 'workoutTargets';
@@ -192,10 +199,13 @@ export async function getCalendar(
  * `calendarList.list` is the only way to search, and it does not accept
  * `calendar.app.created` — reaching it would mean asking for a scope that reads
  * every calendar the user has. So the remembered id is the only thread back to
- * an existing calendar, and losing it (a cleared `localStorage`, a new device)
- * means a second `Workouts` calendar rather than a resumed one. That is the
- * cost of the narrow scope, and the reason the id belongs in a settings store —
- * see `_todo/database.md`.
+ * an existing calendar, and losing it means a second `Workouts` calendar rather
+ * than a resumed one.
+ *
+ * That is why the id is no longer remembered by a browser. It lives on the
+ * user's row (`lib/db/schema.ts`), keyed by their Google `sub`, so a new device
+ * is told which calendar to resume instead of guessing. `useEnsureCalendar`
+ * waits for that answer before calling this.
  */
 export async function ensureWorkoutsCalendar(
   accessToken: string,
@@ -259,6 +269,8 @@ export interface EventDraft {
   activityFrozen?: boolean;
   /** `YYYY-MM-DD` of the week the event is filed under. */
   weekStart: string;
+  /** The Strava recording this workout was done as, when it has been matched. */
+  stravaActivityId?: number | null;
 }
 
 /**
@@ -285,10 +297,23 @@ function eventSummary(draft: EventDraft): string {
   return distance ? `${named} — ${distance}` : named;
 }
 
+/**
+ * What the event says inside Google Calendar. A workout matched to a Strava
+ * recording carries the link to it, so the calendar entry is a way back to the
+ * full record without coming through the app first.
+ */
+function eventDescription(draft: EventDraft): string | undefined {
+  const lines = [
+    draft.description,
+    draft.stravaActivityId ? stravaActivityUrl(draft.stravaActivityId) : undefined,
+  ].filter(Boolean);
+  return lines.length > 0 ? lines.join('\n\n') : undefined;
+}
+
 function eventBody(draft: EventDraft) {
   return {
     summary: eventSummary(draft),
-    description: draft.description,
+    description: eventDescription(draft),
     start: { dateTime: draft.start, timeZone: draft.timeZone },
     end: { dateTime: draft.end, timeZone: draft.timeZone },
     extendedProperties: {
@@ -300,6 +325,7 @@ function eventBody(draft: EventDraft) {
         [PROP_ACTIVITY]: serializeSnapshot(draft.activitySnapshot),
         [PROP_ACTIVITY_FROZEN]: draft.activityFrozen ? '1' : '',
         [PROP_WEEK_START]: draft.weekStart,
+        [PROP_STRAVA_ID]: draft.stravaActivityId ? String(draft.stravaActivityId) : '',
       },
     },
   };
@@ -485,9 +511,12 @@ export function eventPropsFromEvent(event: GoogleEvent): {
   activitySnapshot?: ActivitySnapshot;
   activityFrozen?: boolean;
   weekStart?: string;
+  stravaActivityId?: number;
 } | null {
   const props = event.extendedProperties?.private;
   if (!props?.[PROP_TYPE_ID]) return null;
+
+  const stravaActivityId = Number(props[PROP_STRAVA_ID]);
 
   return {
     eventId: props[PROP_EVENT_ID] || event.id,
@@ -497,6 +526,9 @@ export function eventPropsFromEvent(event: GoogleEvent): {
     activitySnapshot: parseSnapshot(props[PROP_ACTIVITY]),
     activityFrozen: props[PROP_ACTIVITY_FROZEN] === '1',
     weekStart: props[PROP_WEEK_START] || undefined,
+    stravaActivityId: Number.isFinite(stravaActivityId) && stravaActivityId > 0
+      ? stravaActivityId
+      : undefined,
   };
 }
 
@@ -531,4 +563,6 @@ export interface PulledEvent {
   activityFrozen?: boolean;
   /** The week the event was filed under, when it was written with one. */
   weekStart?: string;
+  /** The Strava recording it was done as, when one has been matched to it. */
+  stravaActivityId?: number;
 }

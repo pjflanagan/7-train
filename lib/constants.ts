@@ -42,7 +42,8 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     paceMinutes: 8.5,
     paceDistance: 1,
     color: '#E5484D', // red
-    workoutTypes: ['Long', 'Tempo']
+    workoutTypes: ['Long', 'Tempo'],
+    stravaSportTypes: ['Run', 'TrailRun', 'VirtualRun']
   },
   {
     id: 'type-bike',
@@ -52,7 +53,8 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     unit: 'mins',
     target: 240,
     color: '#F76B15', // orange
-    workoutTypes: []
+    workoutTypes: [],
+    stravaSportTypes: ['Ride', 'GravelRide', 'VirtualRide', 'EBikeRide']
   },
   {
     id: 'type-swim',
@@ -66,6 +68,7 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     paceDistance: 100,
     color: '#00A2C7', // cyan
     workoutTypes: [],
+    stravaSportTypes: ['Swim'],
     links: [
       { id: 'link-swim-howto', title: 'How to Swim', url: 'https://youtu.be/Rr_CnIfr5u8?si=rbdujpGZdmoIR_Ie' }
     ]
@@ -78,7 +81,8 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     unit: 'sessions',
     target: 5,
     color: '#8E4EC6', // violet
-    workoutTypes: ['Chest', 'Arms', 'Back', 'Shoulders', 'Core']
+    workoutTypes: ['Chest', 'Arms', 'Back', 'Shoulders', 'Core'],
+    stravaSportTypes: ['WeightTraining', 'Workout', 'Crossfit']
   },
   {
     id: 'type-yoga',
@@ -89,7 +93,8 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
     target: null,
     optional: true,
     color: '#30A46C', // green
-    workoutTypes: []
+    workoutTypes: [],
+    stravaSportTypes: ['Yoga', 'Pilates']
   }
 ];
 

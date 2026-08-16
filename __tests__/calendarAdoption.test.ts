@@ -76,7 +76,7 @@ function stubCalendarApi() {
 
 beforeEach(() => {
   usePlannerStore.getState().clearAll();
-  // A calendar has been chosen; picking one is `CalendarSetupModal`'s job and
+  // The account has a calendar; making one is `useEnsureCalendar`'s job and
   // sync does nothing at all until it has been.
   usePlannerStore.setState({ googleAdoptedAt: null, googleCalendarId: 'cal-1' });
   useCalendarSyncStore.setState({ status: 'off', resyncNonce: 0, baselineNonce: 0 });

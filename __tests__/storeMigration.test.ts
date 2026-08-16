@@ -59,8 +59,8 @@ describe('migrateStore v2 -> v3', () => {
   it('renames goals to activities and items to events', () => {
     const result = migrateStore(v2, 2) as Record<string, unknown>;
 
-    expect(result.activities).toEqual(v2.goals);
     // Later steps add fields of their own, so this is about the rename only.
+    expect(result.activities).toMatchObject(v2.goals);
     expect(result.events).toMatchObject(v2.items);
     expect(result.goals).toBeUndefined();
     expect(result.items).toBeUndefined();
@@ -209,5 +209,48 @@ describe('migrateStore v8 -> v9', () => {
     const event = eventsById()['already'];
     expect(event.activitySnapshot.name).toBe('Old running');
     expect(event.activityFrozen).toBe(true);
+  });
+});
+
+describe('migrateStore v9 -> v10', () => {
+  const v9 = {
+    activities: [
+      { id: 'run', name: 'Long run', icon: 'run' },
+      { id: 'erg', name: 'Erg', icon: 'row' },
+      { id: 'mob', name: 'Mobility', icon: 'heart' },
+      { id: 'set', name: 'Already answered', icon: 'run', stravaSportTypes: ['TrailRun'] },
+    ],
+    weekActivities: {
+      '2026-08-10:run': { id: 'run', name: 'Long run', icon: 'run' },
+    },
+  };
+
+  const result = migrateStore(v9, 9) as Record<string, unknown>;
+  const activities = result.activities as Record<string, unknown>[];
+  const byId = Object.fromEntries(activities.map((a) => [a.id as string, a]));
+
+  it('seeds the sports an activity accepts from the icon it already had', () => {
+    expect(byId.run.stravaSportTypes).toEqual(['Run', 'TrailRun', 'VirtualRun']);
+  });
+
+  it('stops a rowing activity from swallowing paddle sports', () => {
+    expect(byId.erg.stravaSportTypes).toEqual(['Rowing', 'VirtualRow']);
+  });
+
+  it('leaves an icon with no Strava equivalent matching nothing', () => {
+    expect(byId.mob.stravaSportTypes).toEqual([]);
+  });
+
+  it('never overwrites an answer that is already there', () => {
+    expect(byId.set.stravaSportTypes).toEqual(['TrailRun']);
+  });
+
+  it('seeds each week’s own copies too, since those are what sync matches', () => {
+    const weekActivities = result.weekActivities as Record<string, Record<string, unknown>>;
+    expect(weekActivities['2026-08-10:run'].stravaSportTypes).toEqual([
+      'Run',
+      'TrailRun',
+      'VirtualRun',
+    ]);
   });
 });

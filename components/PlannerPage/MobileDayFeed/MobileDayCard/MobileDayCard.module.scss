@@ -124,3 +124,8 @@
   color: var(--text-muted);
   white-space: pre-wrap;
 }
+
+// The row runs name then value, so the Strava mark closes it out on the right.
+.strava {
+  margin-left: var(--space-2);
+}

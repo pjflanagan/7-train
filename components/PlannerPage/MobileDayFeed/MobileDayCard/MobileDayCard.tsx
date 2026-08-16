@@ -6,6 +6,7 @@ import { useWeekActivities, useDayEvents, useNote, useWeekStartsOn, useUse24Hour
 import { resolveEventActivity } from '@/lib/activitySnapshot';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
+import { StravaLink } from '@/components/PlannerPage/StravaLink/StravaLink';
 import { getIconByKey } from '@/lib/icons';
 import {
   dayHeaderLabel,
@@ -84,6 +85,13 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
                     {event.value}
                     <span className={styles.unit}>{activity.unit}</span>
                   </span>
+                )}
+                {/* Done, and a way through to the recording it was done as. */}
+                {event.stravaActivityId != null && (
+                  <StravaLink
+                    stravaActivityId={event.stravaActivityId}
+                    className={styles.strava}
+                  />
                 )}
               </li>
             );

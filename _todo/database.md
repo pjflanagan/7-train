@@ -1,5 +1,17 @@
 # Adding a database
 
+> **Status: phase 1 has landed.** `users` (identity + settings), `accounts`
+> (third-party account ids) and `activities` are live, with `GET`/`PUT
+> /api/user` and `hooks/useUserSync.ts` in front of them. Setup is
+> `_todo/-MANUAL-database-setup.md`. The calendar-id problem this document opens
+> with is **solved**; everything below about weekActivities, notes, links,
+> history, the outbox and the connector interface is still ahead.
+>
+> Two decisions the phase settled, both flagged as open questions below:
+> `planId` exists as a nullable column on `activities` and nothing reads it, so
+> the multiple-plans door is open at no cost; and Strava's tokens stayed in
+> their cookie, so the server still holds no third-party credentials at rest.
+
 Right now the plan lives in `localStorage` (`usePlannerStore` + `persist`) and,
 if the user connects it, is mirrored into a `Workouts` Google calendar by
 `hooks/useCalendarSync.ts`. That was a deliberate "no database" call — see
@@ -35,17 +47,21 @@ permanently, with the events split across both:
 - any bug that nulls it (one shipped, and made three calendars before it was
   caught — `clearAll` used to reset it).
 
-Two repairs exist, and neither is a fix:
+Two repairs existed, and neither was a fix: `CalendarSetupModal` asked on a
+browser with no calendar id — adopt one by pasting its id, or make a new one —
+and `CalendarPicker` offered the same choice later in the integrations modal.
+Both were the user doing by hand what a `users` row does by itself.
 
-- `CalendarSetupModal` asks on a browser that has no calendar id — adopt an
-  existing calendar by pasting its id, or make a new one. Sync does nothing
-  until it is answered, and creating a calendar now happens only here
-  (`POST /api/calendar/create`), never as a side effect of syncing.
-- `CalendarPicker` in the integrations modal offers the same choice later.
+**The fix is storing the id against the user's Google `sub` rather than against
+a browser** — one row, `users.googleCalendarId`, which makes a second device
+resume the same calendar instead of forking one.
 
-Both are the user doing by hand what a `users` row would do by itself. **The fix is storing the id against the user's Google
-`sub` rather than against a browser** — one row, `users.googleCalendarId`, which
-makes a second device resume the same calendar instead of forking one.
+**Both repairs have since been deleted.** With the id on the account, a browser
+holding no calendar id is not one that needs a new calendar, it is one that has
+not read its settings yet — so `useEnsureCalendar` waits for the settings pull
+and then makes one silently if the account genuinely has none. There is no
+question and no picker; which calendar the plan lives in is not a user-facing
+choice any more.
 
 This is the smallest possible version of this document and the one with the
 clearest payoff. If the rest of the design is too big to start, start here.
@@ -313,9 +329,17 @@ Signed-out users are untouched: no `userId`, no engine, the app as it is today.
 
 Each phase ships on its own and leaves the app working.
 
-**1 — Schema and API.** Tables, Drizzle migrations, `revision`/`updatedAt`/
-`deletedAt`/`source` metadata, `/api/sync` GET delta + POST batch (transactional,
-idempotent on change id). No client changes; tested against the API directly.
+**1 — Schema and API. ✅ Done.** Landed as `users`, `accounts` and `activities`
+with `revision`/`updatedAt`/`deletedAt` metadata, and `GET`/`PUT /api/user`
+rather than the `/api/sync` delta endpoint described above — a delta pull needs
+the outbox to be worth having, and settings are one small row. `source` is not
+on the rows yet; it starts mattering when a second writer touches the same
+entity, which for settings and activities is not yet true.
+
+Also landed, ahead of phase 2 but too small to hold back: `hooks/useUserSync.ts`
+does the pull, the first-sign-in merge (`mergeOnFirstPull`) and a debounced
+push. It is a fourth hand-rolled sync loop, which is the argument for phase 2,
+not against it.
 
 **2 — Engine and outbox.** `lib/sync/*`, the db connector, the migration path,
 the header indicator. At the end of this phase the plan persists to Postgres and
@@ -351,7 +375,10 @@ the modal is open.
 - **Scheduled pulls** — do Strava/Garmin refresh on a cron, or only when the app
   is open? Cron is nicer but means storing third-party refresh tokens server
   side, which is a meaningfully larger security surface than the current
-  JWT-only design in `lib/auth.ts`.
+  JWT-only design in `lib/auth.ts`. **Still open.** Phase 1 deliberately left
+  Strava's tokens in their encrypted cookie (`lib/stravaServer.ts`) even though
+  there is now a table to put them in, so the server continues to hold no
+  third-party credentials at rest. `accounts` stores the athlete id only.
 - **Realtime** — a second open tab is currently invisible. Polling on focus is
   probably enough; skip websockets until someone asks.
 - **History** — it is event-shaped but Google has no notion of "done". Either it
@@ -360,5 +387,8 @@ the modal is open.
   table is the safer call; decide before phase 4.
 - **Multiple plans** — Griley's two-calendar case (`_todo/griley-ideas.md`,
   training for a half and a tri at once) suggests a `plans` table above
-  `activities`, plus a calendar per plan rather than one `Workouts` calendar. Cheap to add now as a nullable `planId`, expensive to retrofit.
-  Worth deciding before phase 1 lands.
+  `activities`, plus a calendar per plan rather than one `Workouts` calendar.
+  **Partly settled:** `activities.plan_id` exists, is nullable and is read by
+  nothing, so the expensive half — retrofitting a column onto a populated table
+  — is already paid for. The `plans` table and a calendar per plan are still
+  undecided.
