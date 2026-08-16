@@ -50,8 +50,8 @@
   }
 }
 
-// A tinted disc with the glyph in the muted tone, rather than a solid puck of
-// colour with a white glyph on it.
+// A tinted disc with the glyph in the activity's own colour. The progress fill
+// behind it is neutral now, so nothing competes with it.
 .iconBadge {
   display: inline-flex;
   align-items: center;
@@ -61,7 +61,7 @@
   height: var(--space-6);
   border-radius: 50%;
   background-color: var(--activity-surface);
-  color: var(--activity-ink);
+  color: var(--activity-color);
 }
 
 .icon {
@@ -71,7 +71,7 @@
 .name {
   font-weight: 600;
   font-size: var(--font-sm);
-  color: var(--text-muted);
+  color: var(--text-main);
 }
 
 // Sits with the name rather than the tally, so the right edge stays the
@@ -115,14 +115,16 @@
 }
 
 // The week's progress, drawn as the header's own fill rather than a bar of its
-// own. Behind the text, but still above the band's background.
+// own. Behind the text, but still above the band's background. Neutral and
+// barely there: it reports the tally, so the activity's colour stays the
+// badge's and the sub-tags'.
 .progressFill {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: -1;
-  background-color: color-mix(in srgb, var(--activity-color) 30%, transparent);
+  background-color: color-mix(in srgb, var(--text-dim) 22%, transparent);
   transition: var(--transition-smooth);
 }
 

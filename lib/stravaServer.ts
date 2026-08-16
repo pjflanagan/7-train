@@ -67,13 +67,34 @@ export function stravaRedirectUri(request: Request): string {
 }
 
 /**
- * True once the deployment has Strava credentials. Like the Google equivalent,
- * this is read server side and handed down, so a deployment without them hides
- * the integration rather than offering a button that can only fail.
+ * The Strava kill switch. Set `STRAVA_ENABLED=false` to turn the integration
+ * off completely, credentials and all.
+ *
+ * This exists because Strava moved activity reads behind a paid tier, so a
+ * deployment can be perfectly well configured and still unable to read
+ * anything. Deleting the credentials would work too, but it throws away the
+ * setup and makes turning it back on a chore — this is one line, and reversible.
+ *
+ * Off means *off*: no status read, no sync, no tab, no toasts, and the routes
+ * refuse. See `isStravaConfigured` below for how that reaches the client.
  */
-export const isStravaConfigured = Boolean(
-  process.env.STRAVA_CLIENT_ID && process.env.STRAVA_CLIENT_SECRET && process.env.AUTH_SECRET
-);
+export const isStravaEnabled = process.env.STRAVA_ENABLED !== 'false';
+
+/**
+ * True when the integration is both switched on and has credentials. Read
+ * server side and handed to the client through `AuthProvider`, so a deployment
+ * that cannot use Strava hides it rather than offering buttons that only fail.
+ *
+ * Every Strava surface gates on this one boolean — the tab in the integrations
+ * modal, the tab in the activity form, the sync hook, the connect flow — which
+ * is what makes the switch above a single toggle rather than a list of places
+ * to remember.
+ */
+export const isStravaConfigured =
+  isStravaEnabled &&
+  Boolean(
+    process.env.STRAVA_CLIENT_ID && process.env.STRAVA_CLIENT_SECRET && process.env.AUTH_SECRET
+  );
 
 function requireSecret(): string {
   const secret = process.env.AUTH_SECRET;

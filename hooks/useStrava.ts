@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
 import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
+import { useIsStravaConfigured } from '@/hooks/useAuth';
 import { useCalendarSettled } from '@/hooks/useCalendarSyncStatus';
 import { useStravaSyncStore } from '@/hooks/useStravaStatus';
 import { buildActivitySnapshot } from '@/lib/activitySnapshot';
@@ -70,8 +71,15 @@ export const useStravaConnectionStore = create<StravaConnectionState>((set, get)
   },
 }));
 
-/** The Strava connection, read once per page and shared by everyone who asks. */
+/**
+ * The Strava connection, read once per page and shared by everyone who asks.
+ *
+ * With the integration switched off this never calls the server and reports a
+ * settled "not connected", so every caller — the tab in the activity form, the
+ * sync hook — goes quiet without needing to know about the switch itself.
+ */
 export function useStravaConnection(): StravaConnection {
+  const isStravaConfigured = useIsStravaConfigured();
   const isConnected = useStravaConnectionStore((state) => state.isConnected);
   const athleteName = useStravaConnectionStore((state) => state.athleteName);
   const isLoading = useStravaConnectionStore((state) => state.isLoading);
@@ -79,10 +87,17 @@ export function useStravaConnection(): StravaConnection {
   const disconnect = useStravaConnectionStore((state) => state.disconnect);
 
   useEffect(() => {
+    if (!isStravaConfigured) return;
     // Loading is the untouched state, and `refresh` clears it, so however many
     // components ask, the status is read once per page.
     if (useStravaConnectionStore.getState().isLoading) void refresh();
-  }, [refresh]);
+  }, [isStravaConfigured, refresh]);
+
+  if (!isStravaConfigured) {
+    // Settled, not loading: a caller waiting for this to resolve would wait for
+    // ever otherwise, and "still checking" would keep spinners on screen.
+    return { isConnected: false, athleteName: null, isLoading: false, refresh, disconnect };
+  }
 
   return { isConnected, athleteName, isLoading, refresh, disconnect };
 }
@@ -128,6 +143,8 @@ export function useStravaSync(): void {
   const readNonceRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // `isConnected` is already false when the integration is switched off — see
+    // `useStravaConnection` — so this covers the kill switch too.
     if (!isHydrated || !isConnected) {
       setStatus('off');
       // Deliberately not clearing `readNonceRef`. Connecting Strava is a full

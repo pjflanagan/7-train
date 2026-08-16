@@ -68,9 +68,16 @@ is set in the `finally` of the create so a failure resolves it too.
 
 ## API budgets
 
-**Strava: one read per page load.** The limit is 100 reads per fifteen minutes
-*for the whole app*, not per user, so it is a shared resource that a busy day
-can exhaust for everybody. `useStravaSync` reads once per `resyncNonce`; the
+**Strava: off entirely when `STRAVA_ENABLED=false`.** One flag,
+`isStravaConfigured`, folds the switch together with "are there credentials",
+and every Strava surface gates on that one boolean — which is what makes it a
+single toggle rather than a list of places to remember. `useStravaConnection`
+reports a settled "not connected" without calling the server, so the hooks below
+it go quiet without knowing the switch exists.
+
+**Strava: one read per page load**, when it is on. The limit is 100 reads per
+fifteen minutes *for the whole app*, not per user, so it is a shared resource
+that a busy day can exhaust for everybody. `useStravaSync` reads once per `resyncNonce`; the
 nonce starts at 0 and only the "sync now" button moves it. The plan being
 edited, the calendar re-settling, or the component re-rendering must never buy
 another read.
@@ -110,3 +117,5 @@ it holds, so an unchanged push is never sent.
 - `__tests__/calendarWire.test.ts`, `__tests__/updatedAt.test.ts` — the wire
   format and which side of a merge wins.
 - `__tests__/strava.test.ts` — matching recordings to planned events.
+- `__tests__/stravaSwitch.test.ts` — that `STRAVA_ENABLED=false` reaches
+  `isStravaConfigured`, and that only the exact string `false` disables.

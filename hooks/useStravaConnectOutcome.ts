@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useStravaConnectionStore } from '@/hooks/useStrava';
+import { useIsStravaConfigured } from '@/hooks/useAuth';
 import { COPY } from '@/lib/copy';
 
 /**
@@ -15,12 +16,16 @@ import { COPY } from '@/lib/copy';
  */
 
 export function useStravaConnectOutcome(): void {
+  const isStravaConfigured = useIsStravaConfigured();
   const refresh = useStravaConnectionStore((state) => state.refresh);
   /** Strict mode mounts effects twice, and one trip deserves one toast. */
   const hasReportedRef = useRef(false);
 
   useEffect(() => {
     if (hasReportedRef.current) return;
+    // Switched off. A `?strava=` left in a bookmarked or shared URL should not
+    // toast about an integration this deployment does not have.
+    if (!isStravaConfigured) return;
 
     const url = new URL(window.location.href);
     const outcome = url.searchParams.get('strava');
@@ -37,5 +42,5 @@ export function useStravaConnectOutcome(): void {
 
     url.searchParams.delete('strava');
     window.history.replaceState(null, '', url.toString());
-  }, [refresh]);
+  }, [isStravaConfigured, refresh]);
 }

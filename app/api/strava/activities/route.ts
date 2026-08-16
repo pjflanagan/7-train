@@ -3,6 +3,7 @@ import { apiError, badRequest, notConnected } from '@/lib/apiError';
 import {
   StravaAuthError,
   getStravaTokens,
+  isStravaConfigured,
   listStravaActivities,
   stravaCookieHeader,
 } from '@/lib/stravaServer';
@@ -15,6 +16,12 @@ import {
  * whole app, so this is one call per sync and never a page-through.
  */
 export async function GET(request: Request) {
+  // Switched off, or never configured. Either way there is nothing to read, and
+  // a client holding a stale cookie must not get as far as calling Strava.
+  if (!isStravaConfigured) {
+    return NextResponse.json({ error: 'Strava is turned off' }, { status: 501 });
+  }
+
   const { searchParams } = new URL(request.url);
   const from = searchParams.get('from');
   const to = searchParams.get('to');

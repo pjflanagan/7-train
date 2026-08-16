@@ -57,6 +57,18 @@ with no stored calendar id will create a calendar, and with nowhere to record
 that, a second browser creates a second one. A deployment that signs users in
 should have a database. See [_docs/storage.md](_docs/storage.md).
 
+### Turning Strava off
+
+`STRAVA_ENABLED=false` switches the integration off entirely — no tab in the
+integrations modal, no Strava tab when editing an activity, no links on cards,
+no sync, and the `/api/strava/*` routes answer 501. The credentials stay put, so
+turning it back on is one line.
+
+This exists because Strava moved activity reads behind a paid tier: a deployment
+can be perfectly well configured and still unable to read anything. Events keep
+their `stravaActivityId` while it is off — the switch hides Strava, it does not
+edit your plan — so every link comes back if it is turned on again.
+
 ### What Strava does
 
 Once connected, the app reads the last two weeks of recordings **after** the

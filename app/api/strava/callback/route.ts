@@ -3,6 +3,7 @@ import { STRAVA_SCOPES } from '@/lib/strava';
 import {
   STRAVA_STATE_COOKIE,
   exchangeStravaCode,
+  isStravaConfigured,
   readCookie,
   requestOrigin,
   stravaCookieHeader,
@@ -20,6 +21,10 @@ export async function GET(request: Request) {
 
   const back = (outcome: string) =>
     NextResponse.redirect(`${origin}/?strava=${outcome}`);
+
+  // Turned off between starting the trip and coming back. Do not store a grant
+  // for an integration that is not going to use it.
+  if (!isStravaConfigured) return back('failed');
 
   // The athlete pressed cancel, or Strava is unhappy. Either way, nothing to do.
   if (searchParams.get('error')) return back('denied');
