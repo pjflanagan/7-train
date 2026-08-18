@@ -9,6 +9,7 @@ import { MyActivitiesModal } from './MyActivitiesModal/MyActivitiesModal';
 import { LinksModal } from './LinksModal/LinksModal';
 import { ProfileMenu } from './ProfileMenu/ProfileMenu';
 import { SyncIndicator } from './SyncIndicator/SyncIndicator';
+import { GoogleCalendarLink } from './GoogleCalendarLink/GoogleCalendarLink';
 import { COPY } from '@/lib/copy';
 
 export const AppHeader: React.FC = () => {
@@ -26,6 +27,9 @@ export const AppHeader: React.FC = () => {
 
           <div className={styles.headerActions}>
             <SyncIndicator />
+            {/* Next to the pill that says the plan is saved in Google, because
+                both are about the same calendar. */}
+            <GoogleCalendarLink />
             <IconButton aria-label={COPY.nav.links} onClick={() => setIsLinksOpen(true)}>
               <MdBookmark />
             </IconButton>

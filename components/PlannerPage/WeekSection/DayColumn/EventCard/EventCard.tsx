@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useDraggable } from '@dnd-kit/core';
 import { ScheduledEvent } from '@/lib/types';
 import { useEventActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
@@ -27,14 +26,15 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
   const removeEvent = usePlannerStore(state => state.removeEvent);
 
+  // Draggable, not sortable: a workout is dragged to another day, never into a
+  // position within one. A day is ordered by its start times, which come from
+  // Google Calendar.
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging,
-  } = useSortable({
+  } = useDraggable({
     id: event.id,
     // The day travels with the card so whatever is under the pointer can say
     // which column a drop would land in, card or bare column alike.
@@ -43,10 +43,11 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
 
   if (!activity) return null;
 
+  // No transform: what follows the pointer is the drag overlay, and moving the
+  // card itself as well would leave a hole in the day and fly a second copy of
+  // the workout across the board.
   const style = {
     '--activity-color': activity.color,
-    transform: CSS.Transform.toString(transform),
-    transition,
     opacity: isDragging ? 0.5 : 1,
   } as React.CSSProperties;
 

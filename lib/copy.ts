@@ -72,6 +72,8 @@ export const COPY = {
 
   calendar: {
     sectionTitle: 'Google Calendar',
+    /** The header's way out to where the plan is really kept. */
+    open: 'Open Google Calendar',
     /** Shown before Google has told us what the calendar is called. */
     unnamed: 'Your workouts calendar',
     creating: 'Setting one up…',

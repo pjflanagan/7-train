@@ -7,6 +7,18 @@
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 /**
+ * Google Calendar on the web — where the plan actually lives, and where a
+ * workout's start time is changed.
+ *
+ * Deliberately the plain view rather than a link to the Workouts calendar by
+ * id: Google has no URL that opens a single calendar, and the `cid` form offers
+ * to *subscribe* to one, which is not what pressing this means. No `/u/0/`
+ * either — that pins the link to whichever Google account signed in first,
+ * which need not be the one holding the calendar.
+ */
+export const GOOGLE_CALENDAR_URL = 'https://calendar.google.com/calendar/r';
+
+/**
  * Signing in asks for identity only. The API scopes below are granted later,
  * one integration at a time, so a user who just wants a profile picture never
  * sees a consent screen asking for their calendar.
