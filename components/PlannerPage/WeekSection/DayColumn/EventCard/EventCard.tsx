@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useDraggable } from '@dnd-kit/core';
 import { ScheduledEvent } from '@/lib/types';
-import { useEventActivity } from '@/hooks/usePlannerSelectors';
+import { useEventActivity, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { usePlannerStore } from '@/lib/store';
 import { getIconByKey } from '@/lib/icons';
+import { formatChipTime, startMinutesOf } from '@/lib/schedule';
 import { Select } from '@/components/elements/Select/Select';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
 import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
 import { StravaLink } from '@/components/PlannerPage/StravaLink/StravaLink';
-import { TimeChip } from './TimeChip/TimeChip';
+import { DurationField } from './DurationField/DurationField';
 import styles from './EventCard.module.scss';
 import { COPY } from '@/lib/copy';
 
 export function EventCard({ event }: { event: ScheduledEvent }) {
   const activity = useEventActivity(event);
+  const use24Hour = useUse24HourClock();
   // An untyped event reads as the activity itself rather than an empty slot —
   // but inside the open list that same row is the "no type" choice, so it goes
   // back to a dash while the list is up. A native select paints its options from
@@ -25,14 +26,15 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
   const setEventSubType = usePlannerStore(state => state.setEventSubType);
   const removeEvent = usePlannerStore(state => state.removeEvent);
 
+  // Draggable, not sortable: a workout is dragged to another day, never into a
+  // position within one. A day is ordered by its start times, which come from
+  // Google Calendar.
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging,
-  } = useSortable({
+  } = useDraggable({
     id: event.id,
     // The day travels with the card so whatever is under the pointer can say
     // which column a drop would land in, card or bare column alike.
@@ -41,10 +43,11 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
 
   if (!activity) return null;
 
+  // No transform: what follows the pointer is the drag overlay, and moving the
+  // card itself as well would leave a hole in the day and fly a second copy of
+  // the workout across the board.
   const style = {
     '--activity-color': activity.color,
-    transform: CSS.Transform.toString(transform),
-    transition,
     opacity: isDragging ? 0.5 : 1,
   } as React.CSSProperties;
 
@@ -58,20 +61,9 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
       : offered;
   // An "instance" activity is always one occurrence, so "1 sessions" is noise.
   const hasValue = activity.metric !== 'instance';
-  // A duration activity's value is its length, so the number entry sits where the
-  // length control would be instead of repeating it a line further down.
+  // A duration activity's value is its length, so it never gets a length field
+  // of its own — the number below already is one.
   const isDuration = activity.metric === 'duration';
-
-  const valueEntry = (
-    <div className={styles.valueRow}>
-      <InlineNumberInput
-        value={event.value || 0}
-        onCommit={(val) => updateEventValue(event.id, val)}
-        className={styles.valueInput}
-      />
-      <span className={styles.unit}>{activity.unit}</span>
-    </div>
-  );
 
   return (
     <RemovableCard label={COPY.events.remove} onRemove={() => removeEvent(event.id)}>
@@ -80,13 +72,12 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
       style={style}
       ref={setNodeRef}
     >
-      {/* The band is the drag handle, so it sits darker than the card body and
-          reads as something to grab. */}
+      {/* Nothing in the band is editable, so the whole of it is the drag
+          handle: it sits darker than the card body and reads as something to
+          grab. When the workout starts is Google Calendar's to say — the plan
+          only shows what it was told. */}
       <div className={styles.header} {...attributes} {...listeners}>
-        {/* A duration activity's own value already says how long it runs, so
-            its card drops the length field — but when it happens is still
-            something to set here. */}
-        <TimeChip event={event} activity={activity} showDuration={!isDuration} />
+        <span className={styles.time}>{formatChipTime(startMinutesOf(event), use24Hour)}</span>
         {/* A workout that was actually done says so here, and links out to the
             recording it was done as. */}
         {event.stravaActivityId != null && (
@@ -134,7 +125,23 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
           )}
         </div>
 
-        {hasValue && valueEntry}
+        {/* Both of the card's numbers, on one line: how much of the workout,
+            and how long it takes. Every metric has at least one of them — a
+            duration activity's value is its length, and an instance activity
+            has nothing but one. */}
+        <div className={styles.fields}>
+          {hasValue && (
+            <div className={styles.valueField}>
+              <InlineNumberInput
+                value={event.value || 0}
+                onCommit={(val) => updateEventValue(event.id, val)}
+                className={styles.valueInput}
+              />
+              <span className={styles.unit}>{activity.unit}</span>
+            </div>
+          )}
+          {!isDuration && <DurationField event={event} activity={activity} />}
+        </div>
       </div>
     </div>
     </RemovableCard>

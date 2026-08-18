@@ -72,6 +72,8 @@ export const COPY = {
 
   calendar: {
     sectionTitle: 'Google Calendar',
+    /** The header's way out to where the plan is really kept. */
+    open: 'Open Google Calendar',
     /** Shown before Google has told us what the calendar is called. */
     unnamed: 'Your workouts calendar',
     creating: 'Setting one up…',
@@ -200,10 +202,25 @@ export const COPY = {
 
   events: {
     add: 'Add an event',
+    /** The day feed's slot says what it is; the week board's is wordless. */
+    addLabel: 'Add a workout',
     remove: 'Remove event',
+    /** The picker has nothing to list because the week has no targets yet. */
+    noActivities: 'No activities on this week yet',
     estimated: 'Estimated',
     lengthLabel: 'Length, in minutes',
+    /** The unit beside a length field, short enough to sit on a card. */
+    minutes: 'mins',
     viewOnStrava: 'View on Strava',
+    /** The day feed's editor, which is how a phone changes a workout. */
+    editTitle: 'Edit workout',
+    date: 'Date',
+    workoutType: 'Type',
+    /** The row labels in that editor: how much of the workout, and how long. */
+    distance: 'Distance',
+    length: 'Length',
+    noType: 'No type',
+    done: 'Done',
   },
 
   links: {

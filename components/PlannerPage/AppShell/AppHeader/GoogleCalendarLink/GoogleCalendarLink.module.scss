@@ -1,0 +1,25 @@
+@use '@/styles/mixins' as *;
+
+// A link, not a button, so it gets its own copy of the icon button's shape
+// rather than borrowing that element's classes across a module boundary.
+.link {
+  @include focus-ring();
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--control-md);
+  height: var(--control-md);
+  font-size: var(--icon-md);
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-smooth);
+
+  &:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-main);
+  }
+}

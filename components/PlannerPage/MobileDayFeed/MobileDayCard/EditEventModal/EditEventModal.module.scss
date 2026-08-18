@@ -1,0 +1,78 @@
+@use '@/styles/mixins' as *;
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+// Label on the left, control on the right — the same shape the settings sheet
+// uses, so the two read as one kind of screen.
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--control-md);
+}
+
+.label {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.control {
+  flex: 0 0 auto;
+  width: 11rem;
+}
+
+.dateInput {
+  @include focus-ring();
+
+  flex: 0 0 auto;
+  width: 11rem;
+  min-height: var(--control-md);
+  padding: 0 var(--space-3);
+  font-family: inherit;
+  font-size: var(--font-md);
+  color: var(--text-main);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.withUnit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.numberInput {
+  width: 5rem;
+  min-height: var(--control-md);
+  padding: 0 var(--space-3);
+  text-align: right;
+  font-size: var(--font-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.unit {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+// Delete sits away from Done, so the destructive one is never the button a
+// thumb lands on by habit.
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+}

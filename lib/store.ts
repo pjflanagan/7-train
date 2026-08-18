@@ -8,7 +8,6 @@ import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';
 import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 import {
-  byStartTime,
   clampDuration,
   clampStartMinutes,
   DEFAULT_START_MINUTES,
@@ -53,11 +52,18 @@ type PlannerStore = PlannerState & {
   updateEventValue: (id: string, value: number) => void;
   setEventSubType: (id: string, subType: string | null) => void;
   removeEvent: (id: string) => void;
-  moveEvent: (id: string, targetDay: DayName, targetWeekStart: string, newIndex?: number) => void;
-  reorderDay: (day: DayName, weekStart: string, oldIndex: number, newIndex: number) => void;
-  /** Move an event through the day. Minutes from local midnight, snapped to 15. */
-  setEventTime: (id: string, startMinutes: number) => void;
-  /** Set how long an event runs. Minutes, snapped to 15. */
+  /**
+   * Put an event on another day. It keeps the time it already had: where a
+   * workout sits within a day follows from when it starts, and when it starts
+   * is Google Calendar's to say.
+   */
+  moveEvent: (id: string, targetDay: DayName, targetWeekStart: string) => void;
+  /**
+   * Set how long an event runs. Minutes, snapped to 15.
+   *
+   * The only hand edit left to an event's timing: when a workout starts is
+   * Google Calendar's to change, and comes back here on the next pull.
+   */
   setEventDuration: (id: string, durationMinutes: number) => void;
 
   /**
@@ -199,32 +205,6 @@ function lengthOf(state: PlannerState, event: ScheduledEvent): number {
   return durationMinutesOf(event, activity);
 }
 
-/** The moment a workout finishes: its start plus however long it runs. */
-function endOf(state: PlannerState, event: ScheduledEvent): number {
-  return startMinutesOf(event) + lengthOf(state, event);
-}
-
-/**
- * The time a workout takes when it is dropped into a day at `index`.
- *
- * Dropping something after another workout means exactly that: it starts when
- * that one ends. Nothing else on the day moves — the workouts it was dropped
- * between keep the times they were given.
- *
- * `ordered` is the day already in its new order, the dragged workout included.
- */
-function startAtIndex(state: PlannerState, ordered: ScheduledEvent[], index: number): number {
-  const previous = ordered[index - 1];
-  if (previous) return clampStartMinutes(endOf(state, previous));
-
-  // Dropped at the top of the day: it only has to be no later than what now
-  // follows it, so a workout dragged up there keeps its own earlier time.
-  const moved = ordered[index];
-  const next = ordered[index + 1];
-  if (!next) return startMinutesOf(moved);
-  return Math.min(startMinutesOf(moved), startMinutesOf(next));
-}
-
 /**
  * The copy of an activity a new event on `weekStart` should carry — the week's
  * own version of it, else the template in "My activities". A week is filled from
@@ -360,51 +340,13 @@ export const usePlannerStore = create<PlannerStore>()(
       removeEvent: (id) => set((state) => ({
         events: state.events.filter(i => i.id !== id)
       })),
-      moveEvent: (id, targetDay, targetWeekStart, newIndex) => set((state) => {
-        const event = state.events.find(i => i.id === id);
-        if (!event) return state;
-
-        let newEvents = state.events.filter(i => i.id !== id);
-        const updatedEvent: ScheduledEvent = stamp({
-          ...event,
-          day: targetDay,
-          weekStart: targetWeekStart
-        });
-
-        if (newIndex !== undefined) {
-          const inTarget = (i: ScheduledEvent) =>
-            i.day === targetDay && i.weekStart === targetWeekStart;
-          const targetDayEvents = byStartTime(newEvents.filter(inTarget));
-          targetDayEvents.splice(newIndex, 0, updatedEvent);
-          // Dropped after a workout, so it starts when that one ends; the rest
-          // of the day is left where it was.
-          updatedEvent.startMinutes = startAtIndex(state, targetDayEvents, newIndex);
-          newEvents = [...newEvents.filter(i => !inTarget(i)), ...targetDayEvents];
-        } else {
-          newEvents.push(updatedEvent);
-        }
-
-        return { events: newEvents };
-      }),
-      reorderDay: (day, weekStart, oldIndex, newIndex) => set((state) => {
-        const inDay = (i: ScheduledEvent) => i.day === day && i.weekStart === weekStart;
-        const dayEvents = byStartTime(state.events.filter(inDay));
-        const otherEvents = state.events.filter(i => !inDay(i));
-
-        // Only the dragged workout is re-timed: it starts when the one it was
-        // dropped after ends. The workouts it moved past keep their times
-        // rather than trading slots with it.
-        const reordered = arrayMove(dayEvents, oldIndex, newIndex);
-        reordered[newIndex] = stamp({
-          ...reordered[newIndex],
-          startMinutes: startAtIndex(state, reordered, newIndex)
-        });
-
-        return { events: [...otherEvents, ...reordered] };
-      }),
-      setEventTime: (id, startMinutes) => set((state) => ({
+      // Only which day it is on changes. Dropping a workout onto a day used to
+      // re-time it from whatever it landed beside, which was the last way left
+      // to set a start time by hand — a day's order is read off its start
+      // times, and those come from the calendar.
+      moveEvent: (id, targetDay, targetWeekStart) => set((state) => ({
         events: state.events.map(i =>
-          i.id === id ? stamp({ ...i, startMinutes: clampStartMinutes(startMinutes) }) : i
+          i.id === id ? stamp({ ...i, day: targetDay, weekStart: targetWeekStart }) : i
         )
       })),
       setEventDuration: (id, durationMinutes) => set((state) => ({

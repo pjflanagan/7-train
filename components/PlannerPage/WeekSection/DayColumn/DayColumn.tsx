@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useDndContext, useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useDayEvents } from '@/hooks/usePlannerSelectors';
-import { AddEventZone } from './AddEventZone/AddEventZone';
+import { AddEventZone } from '@/components/PlannerPage/AddEventZone/AddEventZone';
 import { DayHeader } from './DayHeader/DayHeader';
 import { DayNotes } from './DayNotes/DayNotes';
 import { EventCard } from './EventCard/EventCard';
@@ -22,24 +21,16 @@ export interface DayColumnProps {
 
 export function DayColumn({ day, weekStart, date, isToday }: DayColumnProps) {
   const events = useDayEvents(day, weekStart);
-  const eventIds = events.map(event => event.id);
 
-  // One droppable for the whole cell, label included: the header is part of the
-  // day, so aiming at it is aiming at the day.
-  const { setNodeRef } = useDroppable({
+  // One droppable for the whole cell, label and cards included: the header is
+  // part of the day, so aiming at it is aiming at the day, and a card is the
+  // only thing sitting on one. Nothing inside the column is a drop target of
+  // its own — a drop asks which day, not which position — so this is always the
+  // innermost droppable under the pointer and answers for the whole cell.
+  const { setNodeRef, isOver } = useDroppable({
     id: `col-${weekStart}-${day}`,
     data: { kind: 'column', day, weekStart },
   });
-
-  // `isOver` alone only fires when the pointer is over the column's own empty
-  // space: hit-testing reports the innermost droppable, so hovering one of the
-  // day's cards makes the day itself stop reading as the target — exactly what
-  // dragging into a day that already has workouts does the whole way across.
-  // The day a drop would land in is whichever day owns whatever is under the
-  // pointer, card or column alike.
-  const { over } = useDndContext();
-  const overData = over?.data.current as { day?: string; weekStart?: string } | undefined;
-  const isOver = overData?.day === day && overData?.weekStart === weekStart;
 
   return (
     <div
@@ -48,11 +39,9 @@ export function DayColumn({ day, weekStart, date, isToday }: DayColumnProps) {
     >
       <DayHeader day={day} date={date} isToday={isToday} />
       <div className={styles.itemsList}>
-        <SortableContext items={eventIds} strategy={verticalListSortingStrategy}>
-          {events.map(event => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </SortableContext>
+        {events.map(event => (
+          <EventCard key={event.id} event={event} />
+        ))}
         <AddEventZone day={day} weekStart={weekStart} />
       </div>
       <DayNotes day={day} weekStart={weekStart} />

@@ -131,3 +131,16 @@ export function weekLabel(weekStartKey: string, currentWeekStartKey: string): st
   return `Week of ${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
 }
 
+/**
+ * Which slot in the plan a calendar date belongs to: the day name it is, and
+ * the week that holds it. Moving an event by date is really moving it to a
+ * (day, week) pair, and the two have to be worked out together — a date late in
+ * a week resolves to a different week key depending on where weeks start.
+ */
+export function slotForDate(
+  dateKey: string,
+  weekStartsOn: WeekStartsOn = 1
+): { day: DayName; weekStart: string } {
+  const date = parseDateLocal(dateKey);
+  return { day: dayNameForDate(date), weekStart: getWeekStartKey(date, weekStartsOn) };
+}

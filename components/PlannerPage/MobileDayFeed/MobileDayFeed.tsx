@@ -8,8 +8,9 @@ import { formatDateLocal } from '@/lib/dates';
 import styles from './MobileDayFeed.module.scss';
 
 /**
- * The mobile planner: a read-only day-by-day scroll that starts on today.
- * No week chrome, no activity strip, no editing — phones are for looking things up.
+ * The mobile planner: a day-by-day scroll that starts on today. No week chrome
+ * and no target strip — a phone plans one day at a time, adding, moving and
+ * removing workouts, while what a whole week aims at stays on the board.
  */
 export function MobileDayFeed() {
   const todayKey = formatDateLocal(new Date());
