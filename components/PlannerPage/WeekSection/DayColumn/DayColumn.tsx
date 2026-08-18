@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import clsx from 'clsx';
 import { DAYS } from '@/lib/constants';
 import { useDayEvents } from '@/hooks/usePlannerSelectors';
-import { AddEventZone } from './AddEventZone/AddEventZone';
+import { AddEventZone } from '@/components/PlannerPage/AddEventZone/AddEventZone';
 import { DayHeader } from './DayHeader/DayHeader';
 import { DayNotes } from './DayNotes/DayNotes';
 import { EventCard } from './EventCard/EventCard';

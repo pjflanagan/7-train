@@ -35,13 +35,8 @@ describe('event updatedAt', () => {
     expect(only().updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
   });
 
-  it('restamps when the time or length changes', () => {
+  it('restamps when the length changes', () => {
     backdate();
-    usePlannerStore.getState().setEventTime(only().id, 9 * 60);
-    const afterTime = only().updatedAt!;
-    expect(afterTime).not.toBe('2020-01-01T00:00:00.000Z');
-
-    usePlannerStore.setState({ events: [{ ...only(), updatedAt: '2020-01-01T00:00:00.000Z' }] });
     usePlannerStore.getState().setEventDuration(only().id, 90);
     expect(only().updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
   });

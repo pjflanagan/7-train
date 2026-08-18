@@ -57,6 +57,14 @@ export const useDayEvents = (day: DayName, weekStart: string) => {
   }, [events, day, weekStart]);
 };
 
+/**
+ * One event by id, wherever in the plan it currently sits. The day feed's
+ * editor holds an id rather than the event itself, so moving a workout to
+ * another date does not pull it out from under the open editor.
+ */
+export const useEvent = (id: string | null) =>
+  usePlannerStore((state) => (id ? state.events.find((event) => event.id === id) : undefined));
+
 export const useNote = (day: DayName, weekStart: string) =>
   usePlannerStore((state) => state.notes[noteKey(weekStart, day)] || '');
 

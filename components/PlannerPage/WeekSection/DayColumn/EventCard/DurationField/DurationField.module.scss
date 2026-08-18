@@ -1,0 +1,38 @@
+@use '@/styles/mixins' as *;
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+// Sized and coloured to match the value beside it — the two read as one row of
+// the card's numbers, not as a field and a chip.
+.input {
+  @include focus-ring();
+
+  width: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  text-align: right;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--font-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: text;
+  transition: var(--transition-smooth);
+
+  &:hover,
+  &:focus {
+    color: var(--text-main);
+  }
+}
+
+.unit {
+  font-size: var(--font-2xs);
+  color: var(--text-muted);
+}

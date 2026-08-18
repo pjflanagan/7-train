@@ -7,6 +7,7 @@ import {
   dateForDay,
   weekLabel,
   formatDateLocal,
+  slotForDate,
 } from '@/lib/dates';
 
 // 2023-10-18 is a Wednesday.
@@ -88,5 +89,35 @@ describe('weekLabel', () => {
   it('falls back to a dated label further out', () => {
     expect(weekLabel('2023-10-30', current)).toContain('Week of');
     expect(weekLabel('2023-10-02', current)).toContain('Week of');
+  });
+});
+
+describe('slotForDate', () => {
+  // Moving a workout on a phone is a date, and the plan stores a (day, week)
+  // pair: getting the week wrong drops the workout into a week nobody is
+  // looking at, so the pair is worked out in one place.
+  it('names the day and the week a date belongs to', () => {
+    expect(slotForDate('2023-10-18', 1)).toEqual({
+      day: 'wednesday',
+      weekStart: '2023-10-16',
+    });
+  });
+
+  it('puts the same date in a different week when weeks start elsewhere', () => {
+    // A Sunday is the last day of a Monday-first week and the first day of a
+    // Sunday-first one — same day name, different week.
+    expect(slotForDate('2023-10-22', 1)).toEqual({
+      day: 'sunday',
+      weekStart: '2023-10-16',
+    });
+    expect(slotForDate('2023-10-22', 0)).toEqual({
+      day: 'sunday',
+      weekStart: '2023-10-22',
+    });
+  });
+
+  it('reads a date key as local midnight rather than UTC', () => {
+    // Parsed as UTC, a date west of Greenwich lands on the day before.
+    expect(slotForDate('2023-10-16', 1).weekStart).toBe('2023-10-16');
   });
 });

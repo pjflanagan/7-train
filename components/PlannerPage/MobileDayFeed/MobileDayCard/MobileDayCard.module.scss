@@ -57,11 +57,30 @@
 
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  padding-right: var(--space-3);
   background-color: var(--activity-surface);
   border: 1px solid var(--activity-border);
   border-radius: var(--radius-md);
+}
+
+// The whole row opens the workout's editor, so it is a button filling the
+// tinted card rather than a control perched inside it.
+.open {
+  @include focus-ring();
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--space-3);
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
 }
 
 .icon {
@@ -128,4 +147,13 @@
 // The row runs name then value, so the Strava mark closes it out on the right.
 .strava {
   margin-left: var(--space-2);
+}
+
+// A slot waiting to be filled. Quieter than the workouts above it — a feed of
+// twenty days should read as the plan, not as twenty buttons.
+.addEvent {
+  height: var(--control-md);
+  min-height: var(--control-md);
+  font-size: var(--font-sm);
+  font-weight: 500;
 }

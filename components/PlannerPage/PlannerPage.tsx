@@ -100,7 +100,7 @@ export function PlannerPage() {
     );
   }
 
-  // Phones get the read-only day feed: no drag-and-drop, no week chrome.
+  // Phones get the day feed: no drag-and-drop, no week chrome, no targets.
   if (isMobile) {
     return (
       <AppShell>

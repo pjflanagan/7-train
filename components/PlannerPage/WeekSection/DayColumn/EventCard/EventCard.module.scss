@@ -17,7 +17,8 @@
 }
 
 // Darker than the card it sits on, because it is the grab point: the whole
-// band drags the workout to another day.
+// band drags the workout to another day. Nothing in it is a control, so there
+// is no gesture here to lose the drag to.
 .header {
   display: flex;
   align-items: center;
@@ -31,13 +32,19 @@
   &:active {
     cursor: grabbing;
   }
+}
 
-  // The time chip is a grid child inside a flex row, so it needs an explicit
-  // grow or it shrinks to its own content instead of filling the band.
-  > :first-child {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
+// When the workout starts, as the calendar has it. Read-only: starts are
+// changed in Google Calendar and come back on the next pull.
+.time {
+  @include truncate();
+
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: var(--font-2xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
 }
 
 .body {
@@ -121,15 +128,26 @@
   @include reads-as-title();
 }
 
-.valueRow {
+// The card's numbers, side by side: how much of the workout, and how long it
+// takes. They wrap rather than squeeze once the column is narrow enough that
+// both no longer fit on one line.
+.fields {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.valueField {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  min-width: 0;
 }
 
-// Scoped through the row so it outranks the inline input's own width and
+// Scoped through the field so it outranks the inline input's own width and
 // alignment whichever stylesheet lands first.
-.valueRow .valueInput {
+.valueField .valueInput {
   width: 2.5rem;
   text-align: right;
   font-size: var(--font-2xs);

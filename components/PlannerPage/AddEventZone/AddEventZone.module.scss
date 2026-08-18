@@ -1,15 +1,18 @@
 @use '@/styles/mixins' as mixins;
 
-// Deliberately wordless: it reads as a slot waiting to be filled, and a column
-// of seven "add workout" labels would be louder than the workouts themselves.
-// The same fixed strip whether the day is empty or full: a slot is a slot, and
-// an empty day stretched to the height of a full one is mostly dashed border.
+// On the week board this is deliberately wordless: it reads as a slot waiting
+// to be filled, and a column of seven "add workout" labels would be louder than
+// the workouts themselves. The same fixed strip whether the day is empty or
+// full: a slot is a slot, and an empty day stretched to the height of a full
+// one is mostly dashed border.
 .zone {
   flex: 0 0 auto;
   width: 100%;
   min-height: 3rem;
   height: 3rem;
   padding: 0;
+  font-family: inherit;
+  color: var(--text-dim);
   background: none;
   border: 1px dashed var(--border-color);
   border-radius: var(--radius-md);
@@ -70,4 +73,11 @@
 
 .optionLabel {
   @include mixins.truncate();
+}
+
+// A week with no targets set has no activities to offer.
+.emptyPicker {
+  padding: var(--space-3);
+  font-size: var(--font-sm);
+  color: var(--text-dim);
 }

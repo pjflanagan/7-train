@@ -55,9 +55,12 @@ type PlannerStore = PlannerState & {
   removeEvent: (id: string) => void;
   moveEvent: (id: string, targetDay: DayName, targetWeekStart: string, newIndex?: number) => void;
   reorderDay: (day: DayName, weekStart: string, oldIndex: number, newIndex: number) => void;
-  /** Move an event through the day. Minutes from local midnight, snapped to 15. */
-  setEventTime: (id: string, startMinutes: number) => void;
-  /** Set how long an event runs. Minutes, snapped to 15. */
+  /**
+   * Set how long an event runs. Minutes, snapped to 15.
+   *
+   * The only hand edit left to an event's timing: when a workout starts is
+   * Google Calendar's to change, and comes back here on the next pull.
+   */
   setEventDuration: (id: string, durationMinutes: number) => void;
 
   /**
@@ -402,11 +405,6 @@ export const usePlannerStore = create<PlannerStore>()(
 
         return { events: [...otherEvents, ...reordered] };
       }),
-      setEventTime: (id, startMinutes) => set((state) => ({
-        events: state.events.map(i =>
-          i.id === id ? stamp({ ...i, startMinutes: clampStartMinutes(startMinutes) }) : i
-        )
-      })),
       setEventDuration: (id, durationMinutes) => set((state) => ({
         events: state.events.map(i =>
           i.id === id ? stamp({ ...i, durationMinutes: clampDuration(durationMinutes) }) : i
