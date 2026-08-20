@@ -96,6 +96,41 @@ polls Google — a workout moved in Google Calendar arrives when someone asks.
 Signatures of settings and activities are compared against what the server said
 it holds, so an unchanged push is never sent.
 
+## What counts as a change
+
+Both loops write when the store changes, and the store hands out a new object
+far more often than the user makes an edit: a form saved untouched, a number
+field committing on blur the number it was already showing, a note box losing
+focus, a pull agreeing with us, a push writing back the ids it was just given.
+Each of those used to cost a `localStorage` write, a countdown in the header,
+and — announced to the user as saving — a request that found nothing to send.
+
+So change detection sits at three depths, and each one is load-bearing:
+
+1. **The store bails before it writes.** An action that would leave its slice
+   exactly as it stands returns without calling `set`, keeping the same array or
+   object identity. `lib/changes.ts` does the comparing: deep, blind to key
+   order, and reading `null`, `undefined` and an absent key as one absence,
+   because the schema spells "nothing" all three ways.
+2. **A pull lands in one write.** `applyRemoteSchedule` and `applyRemoteUser`
+   take both halves of what came down at once. Two writes would leave a moment
+   holding the events of the pull against the targets from before it — a
+   schedule matching neither side, which the push loop reads as an edit and
+   sends straight back.
+3. **The loops compare against the *remote* copy, not against the store.**
+   `syncedRef` (calendar) and its settings twin say what the far side already
+   holds. The calendar's watcher runs `collectWrites` before it announces
+   anything, so the header's countdown means "there is something to send"
+   rather than "something re-rendered".
+
+The first is not enough on its own — a pull genuinely changes the plan without
+giving anyone anything to send — and neither is the third: what the store never
+writes never reaches `localStorage` either.
+
+One thing deliberately does **not** count as a change: an event's `updatedAt` is
+only stamped when the workout itself moves. It decides which side of a merge
+wins, and blurring a field is not a reason to win one.
+
 ## Consequences worth knowing
 
 - **Two open tabs do not live-update each other.** A change in one reaches the
@@ -110,6 +145,11 @@ it holds, so an unchanged push is never sent.
 
 ## How this is enforced
 
+- `__tests__/changeDetection.test.ts` — every store action that must leave its
+  slice untouched when nothing was edited, and `isSameValue` itself.
+- `__tests__/calendarChangeDetection.test.ts` — that a no-op edit, a pull, and a
+  push writing back its own ids all announce nothing, and that a real edit
+  still announces immediately.
 - `__tests__/stravaGate.test.ts` — every state of `useCalendarSettled`,
   including the first-render case that regressed.
 - `__tests__/calendarAdoption.test.ts` — the upload-then-pull order, and that a

@@ -6,6 +6,7 @@ import { DAYS } from './constants';
 import { importLegacy, migrateStore } from './migrate';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';
+import { isSameUpdate, isSameValue } from './changes';
 import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 import {
   clampDuration,
@@ -102,16 +103,20 @@ type PlannerStore = PlannerState & {
   /** Record which Google event now mirrors each event, keyed by event id. */
   setGoogleEventIds: (eventIds: Record<string, string>) => void;
   /**
-   * Swap the whole schedule for what Google Calendar holds. Activities, notes and
-   * settings stay put: the calendar owns events only.
+   * Swap the schedule for what Google Calendar holds — the events, and what
+   * each week aims at. Activities, notes and settings stay put: the calendar
+   * owns those two and nothing else. The caller has already decided which weeks
+   * the calendar spoke for and which it was not asked about.
+   *
+   * One action, in one write, for the same reason as `applyRemoteUser`, and a
+   * sharper one: the push loop watches both halves, and the moment between two
+   * separate writes is a schedule that matches neither side. It would read as
+   * an edit, and book a push of the pull that had just landed.
    */
-  replaceEvents: (events: ScheduledEvent[]) => void;
-  /**
-   * Swap every week's targets for what Google Calendar holds. Same contract as
-   * `replaceEvents`: the caller has already decided which weeks the calendar
-   * spoke for and which it was not asked about.
-   */
-  replaceWeekActivities: (weekActivities: WeekActivities) => void;
+  applyRemoteSchedule: (schedule: {
+    events: ScheduledEvent[];
+    weekActivities: WeekActivities;
+  }) => void;
 
   setNote: (day: DayName, weekStart: string, note: string) => void;
   /**
@@ -233,15 +238,22 @@ function stamp(event: ScheduledEvent): ScheduledEvent {
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...buildInitialState(),
 
       // Template only. A week that was built from this activity keeps the copy
       // it was given, so editing or deleting here never reaches a plan.
       addActivity: (activity) => set((state) => ({ activities: [...state.activities, activity] })),
-      updateActivity: (id, updates) => set((state) => ({
-        activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g)
-      })),
+      updateActivity: (id, updates) => {
+        const current = get().activities.find(g => g.id === id);
+        // Closing the activity form saves whatever is in it, whether or not a
+        // field was touched. An edit that changes nothing is not an edit: it
+        // would be written to `localStorage` and pushed to the server as one.
+        if (!current || isSameUpdate(current, updates)) return;
+        set((state) => ({
+          activities: state.activities.map(g => g.id === id ? { ...g, ...updates } : g)
+        }));
+      },
       deleteActivity: (id) => set((state) => ({
         activities: state.activities.filter(g => g.id !== id)
       })),
@@ -249,16 +261,22 @@ export const usePlannerStore = create<PlannerStore>()(
         activities: arrayMove(state.activities, oldIndex, newIndex)
       })),
 
-      addWeekActivity: (weekStart, activity) => set((state) => ({
-        weekActivities: {
-          ...(state.weekActivities || {}),
-          [weekActivityKey(weekStart, activity.id)]: activity
-        }
-      })),
-      updateWeekActivity: (weekStart, id, updates) => set((state) => {
+      addWeekActivity: (weekStart, activity) => {
+        const key = weekActivityKey(weekStart, activity.id);
+        // Adding the activity the week already aims at, exactly as it stands,
+        // leaves the week as it was.
+        if (isSameValue(get().weekActivities?.[key], activity)) return;
+        set((state) => ({
+          weekActivities: { ...(state.weekActivities || {}), [key]: activity }
+        }));
+      },
+      updateWeekActivity: (weekStart, id, updates) => {
         const key = weekActivityKey(weekStart, id);
-        const current = state.weekActivities?.[key];
-        if (!current) return {};
+        const current = get().weekActivities?.[key];
+        // Nothing to edit, or nothing edited. The second matters more than it
+        // looks: every event on the week follows this activity's copy, so a
+        // save that changed nothing would still rewrite all of them.
+        if (!current || isSameUpdate(current, updates)) return;
 
         // How an event's `value` is read — its metric and its unit — is the one
         // thing an edit cannot reach backwards and change. Re-measuring
@@ -277,7 +295,7 @@ export const usePlannerStore = create<PlannerStore>()(
         const frozenSnapshot = buildActivitySnapshot(current);
         const trackingSnapshot = buildActivitySnapshot(updated);
 
-        return {
+        set((state) => ({
           weekActivities: { ...state.weekActivities, [key]: updated },
           events: state.events.map(i => {
             if (i.typeId !== id || i.weekStart !== weekStart || i.activityFrozen) return i;
@@ -285,8 +303,8 @@ export const usePlannerStore = create<PlannerStore>()(
               ? { ...i, activitySnapshot: frozenSnapshot, activityFrozen: true }
               : { ...i, activitySnapshot: trackingSnapshot };
           })
-        };
-      }),
+        }));
+      },
       removeWeekActivity: (weekStart, id) => set((state) => {
         const key = weekActivityKey(weekStart, id);
         const removed = state.weekActivities?.[key];
@@ -311,12 +329,16 @@ export const usePlannerStore = create<PlannerStore>()(
             : state.events
         };
       }),
-      setActivityTarget: (id, target, weekStart) => set((state) => {
+      setActivityTarget: (id, target, weekStart) => {
         const key = weekActivityKey(weekStart, id);
-        const current = state.weekActivities?.[key];
-        if (!current) return {};
-        return { weekActivities: { ...state.weekActivities, [key]: { ...current, target } } };
-      }),
+        const current = get().weekActivities?.[key];
+        // A target field commits on blur, so the number already stored arrives
+        // here again every time the chip loses focus.
+        if (!current || current.target === target) return;
+        set((state) => ({
+          weekActivities: { ...state.weekActivities, [key]: { ...current, target } }
+        }));
+      },
 
       addEvent: (event) => set((state) => ({
         events: [
@@ -331,12 +353,26 @@ export const usePlannerStore = create<PlannerStore>()(
           })
         ]
       })),
-      updateEventValue: (id, value) => set((state) => ({
-        events: state.events.map(i => i.id === id ? stamp({ ...i, value }) : i)
-      })),
-      setEventSubType: (id, subType) => set((state) => ({
-        events: state.events.map(i => i.id === id ? stamp({ ...i, workoutType: subType }) : i)
-      })),
+      updateEventValue: (id, value) => {
+        const event = get().events.find(i => i.id === id);
+        // Committing the number that was already there must not restamp the
+        // event: `updatedAt` decides which side of a merge wins, and blurring a
+        // field is not a reason to win one.
+        if (!event || event.value === value) return;
+        set((state) => ({
+          events: state.events.map(i => i.id === id ? stamp({ ...i, value }) : i)
+        }));
+      },
+      setEventSubType: (id, subType) => {
+        const event = get().events.find(i => i.id === id);
+        // "No type" is an empty string from the picker and a null in the store;
+        // both mean the same absence, and swapping one for the other is not a
+        // change to the workout.
+        if (!event || (event.workoutType || null) === (subType || null)) return;
+        set((state) => ({
+          events: state.events.map(i => i.id === id ? stamp({ ...i, workoutType: subType }) : i)
+        }));
+      },
       removeEvent: (id) => set((state) => ({
         events: state.events.filter(i => i.id !== id)
       })),
@@ -344,16 +380,32 @@ export const usePlannerStore = create<PlannerStore>()(
       // re-time it from whatever it landed beside, which was the last way left
       // to set a start time by hand — a day's order is read off its start
       // times, and those come from the calendar.
-      moveEvent: (id, targetDay, targetWeekStart) => set((state) => ({
-        events: state.events.map(i =>
-          i.id === id ? stamp({ ...i, day: targetDay, weekStart: targetWeekStart }) : i
-        )
-      })),
-      setEventDuration: (id, durationMinutes) => set((state) => ({
-        events: state.events.map(i =>
-          i.id === id ? stamp({ ...i, durationMinutes: clampDuration(durationMinutes) }) : i
-        )
-      })),
+      moveEvent: (id, targetDay, targetWeekStart) => {
+        const event = get().events.find(i => i.id === id);
+        // Dropped back on the day it came from — a drag that ended where it
+        // started moves nothing.
+        if (!event || (event.day === targetDay && event.weekStart === targetWeekStart)) return;
+        set((state) => ({
+          events: state.events.map(i =>
+            i.id === id ? stamp({ ...i, day: targetDay, weekStart: targetWeekStart }) : i
+          )
+        }));
+      },
+      setEventDuration: (id, durationMinutes) => {
+        const current = get();
+        const event = current.events.find(i => i.id === id);
+        if (!event) return;
+        const minutes = clampDuration(durationMinutes);
+        // Compared against the length the event is *drawn* at, estimate and
+        // all: the field shows that number, so committing it back is agreeing
+        // with the estimate rather than setting a length.
+        if (minutes === lengthOf(current, event)) return;
+        set((state) => ({
+          events: state.events.map(i =>
+            i.id === id ? stamp({ ...i, durationMinutes: minutes }) : i
+          )
+        }));
+      },
 
       applyStrava: ({ updates, creations }) => set((state) => {
         if (updates.length === 0 && creations.length === 0) return {};
@@ -384,41 +436,94 @@ export const usePlannerStore = create<PlannerStore>()(
         return { events: [...corrected, ...added] };
       }),
 
-      applyRemoteUser: ({ settings, activities }) => set(() => ({
-        googleCalendarId: settings.googleCalendarId,
-        googleAdoptedAt: settings.googleAdoptedAt,
-        googleSheetId: settings.googleSheetId,
-        weekStartsOn: settings.weekStartsOn as WeekStartsOn,
-        tempUnit: settings.tempUnit,
-        use24HourClock: settings.use24HourClock,
-        defaultStartMinutes: settings.defaultStartMinutes,
-        // Only when the server actually has some. An account that has never
-        // synced must not blank out the activities this browser is holding —
-        // that is the whole reason the pull reports `isNew`.
-        ...(activities && activities.length > 0 ? { activities } : {}),
-      })),
+      applyRemoteUser: ({ settings, activities }) => {
+        const state = get();
+        const incoming: Partial<PlannerState> = {
+          googleCalendarId: settings.googleCalendarId,
+          googleAdoptedAt: settings.googleAdoptedAt,
+          googleSheetId: settings.googleSheetId,
+          weekStartsOn: settings.weekStartsOn as WeekStartsOn,
+          tempUnit: settings.tempUnit,
+          use24HourClock: settings.use24HourClock,
+          defaultStartMinutes: settings.defaultStartMinutes,
+          // Only when the server actually has some. An account that has never
+          // synced must not blank out the activities this browser is holding —
+          // that is the whole reason the pull reports `isNew`.
+          ...(activities && activities.length > 0 ? { activities } : {}),
+        };
 
-      setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
-      setGoogleCalendarName: (googleCalendarName) => set({ googleCalendarName }),
+        // A pull hands back what this browser sent last time far more often
+        // than not, and the activities alone would be a fresh array every time
+        // — which reads downstream as "the activities changed" and books
+        // another push of the very list that just came down.
+        const changed = Object.fromEntries(
+          Object.entries(incoming).filter(
+            ([key, value]) => !isSameValue(state[key as keyof PlannerState], value)
+          )
+        ) as Partial<PlannerState>;
+        if (Object.keys(changed).length === 0) return;
+
+        set(changed);
+      },
+
+      // Every pull re-states these, mostly with what we already hold. Setting
+      // a field to the value it has costs a `localStorage` write and wakes
+      // everything watching the store, so none of them do.
+      setGoogleCalendarId: (googleCalendarId) => {
+        if (get().googleCalendarId !== googleCalendarId) set({ googleCalendarId });
+      },
+      setGoogleCalendarName: (googleCalendarName) => {
+        if (get().googleCalendarName !== googleCalendarName) set({ googleCalendarName });
+      },
       setGoogleAdopted: () => set({ googleAdoptedAt: new Date().toISOString() }),
-      setGoogleSheetId: (googleSheetId) => set({ googleSheetId }),
-      setGoogleEventIds: (eventIds) => set((state) => ({
-        events: state.events.map(i =>
-          eventIds[i.id] ? { ...i, googleEventId: eventIds[i.id] } : i
-        )
-      })),
-      replaceEvents: (events) => set({ events }),
-      replaceWeekActivities: (weekActivities) => set({ weekActivities }),
-
-      setNote: (day, weekStart, note) => set((state) => {
-        const key = noteKey(weekStart, day);
-        if (!note) {
-          const newNotes = { ...state.notes };
-          delete newNotes[key];
-          return { notes: newNotes };
+      setGoogleSheetId: (googleSheetId) => {
+        if (get().googleSheetId !== googleSheetId) set({ googleSheetId });
+      },
+      setGoogleEventIds: (eventIds) => {
+        // A push reports the id of everything it wrote, and for an update that
+        // is an id we already had. Only an id we did not know is worth writing:
+        // touching `events` for the rest would read as an edit and start the
+        // countdown to a push that has nothing to send.
+        const isNews = get().events.some(
+          i => eventIds[i.id] && eventIds[i.id] !== i.googleEventId
+        );
+        if (!isNews) return;
+        set((state) => ({
+          events: state.events.map(i =>
+            eventIds[i.id] ? { ...i, googleEventId: eventIds[i.id] } : i
+          )
+        }));
+      },
+      applyRemoteSchedule: ({ events, weekActivities }) => {
+        const state = get();
+        // Google handing back exactly what it was given is the common case, and
+        // it is not a change to the plan — keeping the array we already have is
+        // what stops a pull from booking a push.
+        const changed: Partial<PlannerState> = {};
+        if (!isSameValue(state.events, events)) changed.events = events;
+        if (!isSameValue(state.weekActivities, weekActivities)) {
+          changed.weekActivities = weekActivities;
         }
-        return { notes: { ...state.notes, [key]: note } };
-      }),
+        if (Object.keys(changed).length === 0) return;
+
+        set(changed);
+      },
+
+      setNote: (day, weekStart, note) => {
+        const key = noteKey(weekStart, day);
+        // The note box commits on blur, so the note already stored comes back
+        // every time it loses focus, saved or not.
+        if ((get().notes[key] ?? '') === note) return;
+
+        set((state) => {
+          if (!note) {
+            const newNotes = { ...state.notes };
+            delete newNotes[key];
+            return { notes: newNotes };
+          }
+          return { notes: { ...state.notes, [key]: note } };
+        });
+      },
       copyWeek: (fromWeekStart, toWeekStart, parts) => set((state) => {
         const { schedule = true, notes = true, activities = true } = parts ?? {};
 
@@ -490,12 +595,21 @@ export const usePlannerStore = create<PlannerStore>()(
       addLink: (link) => set((state) => ({ links: [...state.links, link] })),
       removeLink: (id) => set((state) => ({ links: state.links.filter(l => l.id !== id) })),
 
-      setTempUnit: (tempUnit) => set({ tempUnit }),
-      setUse24HourClock: (use24HourClock) => set({ use24HourClock }),
-      setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
-      setDefaultStartMinutes: (startMinutes) => set({
-        defaultStartMinutes: clampStartMinutes(startMinutes)
-      }),
+      // Settings arrive from the server as well as from the settings modal, so
+      // "set it to what it already is" is routine here too.
+      setTempUnit: (tempUnit) => {
+        if (get().tempUnit !== tempUnit) set({ tempUnit });
+      },
+      setUse24HourClock: (use24HourClock) => {
+        if (get().use24HourClock !== use24HourClock) set({ use24HourClock });
+      },
+      setWeekStartsOn: (weekStartsOn) => {
+        if (get().weekStartsOn !== weekStartsOn) set({ weekStartsOn });
+      },
+      setDefaultStartMinutes: (startMinutes) => {
+        const defaultStartMinutes = clampStartMinutes(startMinutes);
+        if (get().defaultStartMinutes !== defaultStartMinutes) set({ defaultStartMinutes });
+      },
       replaceAll: (state) => set(state),
       // Which Google calendar and spreadsheet we own is a connection setting,
       // not part of the plan — dropping it makes the next sync create a second
