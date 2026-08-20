@@ -199,21 +199,47 @@ function eventFromGoogle(
   };
 }
 
+/** Everything a push would send, and what it would leave behind untouched. */
+interface CalendarWrites {
+  create: EventDraftPayload[];
+  update: (EventDraftPayload & { googleEventId: string })[];
+  remove: string[];
+  targets: TargetsPayload[];
+  removeTargets: string[];
+  /** Events still in the plan, so a push can rebuild its baseline from them. */
+  seen: Set<string>;
+  /** Weeks still aiming at something, for the same reason. */
+  weeksSeen: Set<string>;
+}
+
+/** Whether that comes to anything. Nothing to write is nothing to announce. */
+function hasWrites(writes: CalendarWrites): boolean {
+  return (
+    writes.create.length > 0 ||
+    writes.update.length > 0 ||
+    writes.remove.length > 0 ||
+    writes.targets.length > 0 ||
+    writes.removeTargets.length > 0
+  );
+}
+
 /**
- * Writes every local change Google does not already have, and returns once
- * Google has it.
+ * What the plan holds that Google does not, worked out against `synced` — the
+ * record of what we last wrote. An empty baseline therefore means "assume
+ * Google has nothing", which is exactly what the first push after connecting
+ * wants: the entire plan, every week of it, rather than only the weeks the pull
+ * window covers.
  *
- * `synced` is both the input and the output: it says what Google already holds,
- * and is updated in place with what this push wrote. An empty map therefore
- * means "assume Google has nothing", which is exactly what the first push after
- * connecting wants — it uploads the entire plan, every week of it, rather than
- * only the weeks the pull window covers.
+ * Separate from the push itself because the answer is worth having *before*
+ * deciding to write: the store hands out a new `events` array for a good many
+ * things that are not edits — a pull that agreed with us, a push learning the
+ * ids of what it just wrote — and only a real difference should start the
+ * countdown in the header.
  */
-async function pushLocalEvents(
+function collectWrites(
   synced: Map<string, SyncedEvent>,
-  syncedTargets: Map<string, SyncedTargets>,
-  onWrite?: () => void
-): Promise<void> {
+  syncedTargets: Map<string, SyncedTargets>
+): CalendarWrites {
   const store = usePlannerStore.getState();
   const weekStartsOn = (store.weekStartsOn ?? 1) as WeekStartsOn;
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -269,15 +295,25 @@ async function pushLocalEvents(
     .filter(([weekStart]) => !weeksSeen.has(weekStart))
     .map(([, { googleEventId }]) => googleEventId);
 
-  if (
-    create.length === 0 &&
-    update.length === 0 &&
-    remove.length === 0 &&
-    targets.length === 0 &&
-    removeTargets.length === 0
-  ) {
-    return;
-  }
+  return { create, update, remove, targets, removeTargets, seen, weeksSeen };
+}
+
+/**
+ * Writes every local change Google does not already have, and returns once
+ * Google has it.
+ *
+ * `synced` is both the input and the output: it says what Google already holds,
+ * and is updated in place with what this push wrote.
+ */
+async function pushLocalEvents(
+  synced: Map<string, SyncedEvent>,
+  syncedTargets: Map<string, SyncedTargets>,
+  onWrite?: () => void
+): Promise<void> {
+  const writes = collectWrites(synced, syncedTargets);
+  if (!hasWrites(writes)) return;
+
+  const { create, update, remove, targets, removeTargets, seen, weeksSeen } = writes;
 
   // Only now is there definitely something to send, which is what the header
   // announces — a push that turns out to have no work should not flash.
@@ -307,10 +343,14 @@ async function pushLocalEvents(
 
   const after = usePlannerStore.getState();
   if (calendarId) after.setGoogleCalendarId(calendarId);
-  after.setGoogleEventIds(eventIds);
 
   // Rebuild the baseline from what we just wrote, not from the store, which may
   // have moved on while the request was in flight.
+  //
+  // Before the ids are written back, deliberately: learning them changes
+  // `events`, and the watcher below reads that against this baseline. It has to
+  // already say "Google has these" by then, or our own write comes back to us
+  // as an edit to send.
   for (const [eventId] of synced) {
     if (!seen.has(eventId)) synced.delete(eventId);
   }
@@ -338,6 +378,8 @@ async function pushLocalEvents(
       ),
     });
   }
+
+  after.setGoogleEventIds(eventIds);
 }
 
 /**
@@ -529,8 +571,10 @@ export function useCalendarSync(): void {
 
       syncedRef.current = synced;
       syncedTargetsRef.current = syncedTargets;
-      store.replaceEvents([...outsideWindow, ...pulled, ...unwritten]);
-      store.replaceWeekActivities(weekActivities);
+      store.applyRemoteSchedule({
+        events: [...outsideWindow, ...pulled, ...unwritten],
+        weekActivities,
+      });
       isReadyRef.current = true;
       setStatus('synced');
       setHasPulled(true);
@@ -589,6 +633,12 @@ export function useCalendarSync(): void {
       ) {
         return;
       }
+      // Changed, but not necessarily changed *from Google's copy*: a pull that
+      // brought something new, or a push writing back the ids it was just
+      // given, both land here. Announcing a save for those means a countdown in
+      // the header for a write that will find nothing to do.
+      if (!hasWrites(collectWrites(syncedRef.current, syncedTargetsRef.current))) return;
+
       // The wait restarts with every edit, so the countdown shown in the header
       // restarts with it.
       hasUnpushedRef.current = true;
