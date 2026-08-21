@@ -207,17 +207,35 @@ export async function getCalendar(
  * is told which calendar to resume instead of guessing. `useEnsureCalendar`
  * waits for that answer before calling this.
  */
+export interface EnsuredCalendar {
+  calendarId: string;
+  /** Google's own name for it, which the user may have changed. */
+  calendarName: string | null;
+  /**
+   * False when the known id was resumed. The caller needs this: a resumed
+   * calendar already holds the plan, and treating it as newly made is what
+   * would push a whole local plan on top of the copy already there.
+   */
+  created: boolean;
+}
+
 export async function ensureWorkoutsCalendar(
   accessToken: string,
   knownCalendarId?: string | null
-): Promise<string> {
+): Promise<EnsuredCalendar> {
   if (knownCalendarId) {
     try {
       const existing = await callGoogle<CalendarResource>(
         accessToken,
         `/calendars/${encodeURIComponent(knownCalendarId)}`
       );
-      if (existing?.id) return existing.id;
+      if (existing?.id) {
+        return {
+          calendarId: existing.id,
+          calendarName: existing.summary ?? null,
+          created: false,
+        };
+      }
     } catch (error) {
       // Deleted in Google, or belonging to another account — fall through and
       // make a fresh one rather than failing the whole sync.
@@ -234,7 +252,11 @@ export async function ensureWorkoutsCalendar(
       description: 'Workouts planned in 7 Train.',
     }),
   });
-  return created.id;
+  return {
+    calendarId: created.id,
+    calendarName: created.summary ?? WORKOUTS_CALENDAR_SUMMARY,
+    created: true,
+  };
 }
 
 export interface GoogleEvent {

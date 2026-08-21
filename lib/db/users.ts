@@ -126,6 +126,55 @@ export async function readUserState(
   };
 }
 
+/**
+ * The `Workouts` calendar this user's plan lives in, or null if they have none.
+ *
+ * Narrow on purpose. `readUserState` answers the same question, but making a
+ * calendar is not a settings load — the create route wants one string and
+ * should not pay for, or be able to disturb, the rest of the row.
+ */
+export async function readCalendarId(userId: string): Promise<string | null> {
+  const [row] = await getDb()
+    .select({ googleCalendarId: users.googleCalendarId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return row?.googleCalendarId ?? null;
+}
+
+/**
+ * Remember a freshly made calendar, immediately.
+ *
+ * The browser will push this in its own time — `useUserSync` debounces settings
+ * by a couple of seconds — and that window is long enough for a second tab to
+ * ask for a calendar, be told the row still has none, and make another one. So
+ * the route that made it writes it down before answering, and the debounced
+ * push that follows is a harmless repeat of the same string.
+ *
+ * Only ever fills a blank, and reports whichever id ended up in the row. Two
+ * tabs that both got past the read and both made a calendar cannot un-make
+ * them, but they can still be told to use the same one: the loser returns the
+ * winner's id rather than its own, so the plan lives in one calendar and the
+ * stray is left empty instead of holding half of it.
+ */
+export async function writeCalendarId(userId: string, calendarId: string): Promise<string> {
+  const [won] = await getDb()
+    .update(users)
+    .set({
+      googleCalendarId: calendarId,
+      revision: sql`${users.revision} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(users.id, userId), isNull(users.googleCalendarId)))
+    .returning({ googleCalendarId: users.googleCalendarId });
+
+  if (won?.googleCalendarId) return won.googleCalendarId;
+
+  // Somebody wrote one between our read and our write. Theirs is the answer.
+  return (await readCalendarId(userId)) ?? calendarId;
+}
+
 /** Write the settings half. Bumps the revision, and reports the new one. */
 export async function writeSettings(
   userId: string,

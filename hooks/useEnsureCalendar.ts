@@ -27,7 +27,16 @@ import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
  *
  * Which is why `useUserSettled` is the load-bearing part of this: creating
  * before the settings pull lands would rebuild the very bug the pull exists to
- * prevent.
+ * prevent. It is a real wait now — it used to be satisfied by the sync store's
+ * initial `off`, so this fired in the same commit the pull started in and made
+ * a second calendar on every browser that had none of its own.
+ *
+ * It is still only half the guard, and the weaker half: whether this browser
+ * has read its settings is a question this browser answers, and a pull that
+ * failed answers it wrongly. `POST /api/calendar/create` asks the user's row
+ * as well, so an account that already has a calendar is handed it back. Hence
+ * `created` in the response — a calendar that was resumed rather than made is
+ * already full, and adopting it is not the same as filling it.
  */
 export function useEnsureCalendar(): void {
   const { scopes, isSignedIn } = useGoogleAccount();
@@ -73,15 +82,27 @@ export function useEnsureCalendar(): void {
       if (!response.ok) throw new Error(body?.error ?? 'Could not create a calendar');
       if (cancelled) return;
 
-      // A new calendar is empty, so this device's plan is the only one there
-      // is — leaving `googleAdoptedAt` unset is what makes sync upload all of
-      // it. Storing the id is itself a settings change, so `useUserSync` picks
-      // it up and the next device inherits it rather than making a second one.
       const store = usePlannerStore.getState();
       store.setGoogleCalendarId(body.calendarId);
       // The pull refreshes this, but it is a few seconds away and the modal
       // should not be showing a blank calendar in the meantime.
       store.setGoogleCalendarName(body.calendarName ?? null);
+
+      if (body.created === false) {
+        // The route found a calendar already on the account and handed that
+        // back instead of making a second one — this browser only thought there
+        // was none. It is already full of this plan, so it gets adopted the way
+        // a second device adopts it: mark it taken over and let the pull bring
+        // the schedule down. Leaving the baseline empty here would push a local
+        // copy on top of the events already up there.
+        store.setGoogleAdopted();
+      }
+      // Otherwise the calendar really is new and empty, so this device's plan is
+      // the only one there is — leaving `googleAdoptedAt` unset is what makes
+      // sync upload all of it. Storing the id is itself a settings change, so
+      // `useUserSync` picks it up and the next device inherits it rather than
+      // making a second one.
+
       useCalendarSyncStore.getState().resync();
     };
 
