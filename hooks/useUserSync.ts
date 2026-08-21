@@ -66,11 +66,34 @@ export const useUserSyncStore = create<UserSyncState>((set) => ({
  *
  * The distinction matters for exactly one thing: `useEnsureCalendar` must not
  * create a second `Workouts` calendar a beat before being told about the first.
+ *
+ * It used to answer `status === 'off' || hasPulled`, which is the same bug
+ * `useCalendarSettled` was fixed for and for the same reason: `off` is the
+ * store's initial value, and it is also what the pull effect writes while it is
+ * still waiting on hydration or on the session. So on the very first render
+ * where a signed in user's plan has hydrated — the one render that matters —
+ * `status` was still the `off` left behind by the signed-out commit, this said
+ * "settled", and `useEnsureCalendar` made a calendar in the same tick that the
+ * pull which knows about the existing one was setting off. A browser with no
+ * `googleCalendarId` in `localStorage` is exactly the browser this is supposed
+ * to protect, so it fired every time: new device, cleared cache, private
+ * window, second browser.
+ *
+ * `hasPulled` is the only positive evidence that the question was actually
+ * asked, and every way the pull can end sets it — including 501 no database,
+ * 401, and an outright failure. So a signed in user waits on that and nothing
+ * else. The remaining cases are read live during render rather than out of a
+ * status an effect writes a commit later, because that lag *was* the bug.
  */
 export function useUserSettled(): boolean {
-  const status = useUserSyncStore((state) => state.status);
   const hasPulled = useUserSyncStore((state) => state.hasPulled);
-  return status === 'off' || hasPulled;
+  const { isSignedIn, isLoading } = useGoogleAccount();
+
+  if (hasPulled) return true;
+  // Mid-flight. Signed out has to be *known*, not merely not-yet-authenticated.
+  if (isLoading) return false;
+  // Nobody to ask about, so there is no answer coming and none needed.
+  return !isSignedIn;
 }
 
 /** How long a settings change sits before it is sent, matching calendar sync. */
