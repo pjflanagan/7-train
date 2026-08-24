@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { usePlannerStore, noteKey } from '@/lib/store';
+import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { WeekStartsOn } from '@/lib/dates';
 import { byStartTime, DEFAULT_START_MINUTES } from '@/lib/schedule';
@@ -65,15 +65,9 @@ export const useDayEvents = (day: DayName, weekStart: string) => {
 export const useEvent = (id: string | null) =>
   usePlannerStore((state) => (id ? state.events.find((event) => event.id === id) : undefined));
 
-export const useNote = (day: DayName, weekStart: string) =>
-  usePlannerStore((state) => state.notes[noteKey(weekStart, day)] || '');
-
-/** True when a week has no scheduled events and no day notes. */
+/** True when a week has nothing scheduled. Notes live on the events now. */
 export const useIsWeekEmpty = (weekStart: string) =>
-  usePlannerStore((state) =>
-    !state.events.some(i => i.weekStart === weekStart) &&
-    !DAYS.some(day => state.notes[noteKey(weekStart, day)]?.trim())
-  );
+  usePlannerStore((state) => !state.events.some(i => i.weekStart === weekStart));
 
 /**
  * The `workoutType` sub-tags already scheduled in a week, per activity — used to

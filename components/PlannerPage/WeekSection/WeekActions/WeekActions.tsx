@@ -43,7 +43,7 @@ export function WeekActions({ weekStart }: { weekStart: string }) {
 
   const handleCopy = (
     source: CopySource,
-    parts: { schedule: boolean; notes: boolean; activities: boolean }
+    parts: { schedule: boolean; activities: boolean }
   ) => {
     const fromWeekStart =
       source === 'current' ? currentWeek : source === 'previous' ? previousWeek : null;

@@ -11,6 +11,7 @@ import { InlineNumberInput } from '@/components/elements/InlineNumberInput/Inlin
 import { RemovableCard } from '@/components/elements/RemovableCard/RemovableCard';
 import { StravaLink } from '@/components/PlannerPage/StravaLink/StravaLink';
 import { DurationField } from './DurationField/DurationField';
+import { EventNote } from './EventNote/EventNote';
 import styles from './EventCard.module.scss';
 import { COPY } from '@/lib/copy';
 
@@ -142,6 +143,11 @@ export function EventCard({ event }: { event: ScheduledEvent }) {
           )}
           {!isDuration && <DurationField event={event} activity={activity} />}
         </div>
+
+        {/* What the workout is actually meant to be, in the user's words. The
+            last line of the card, where the day's note used to sit under the
+            whole column. */}
+        <EventNote eventId={event.id} note={event.note} />
       </div>
     </div>
     </RemovableCard>

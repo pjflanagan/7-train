@@ -11,7 +11,9 @@ import {
 import { Modal } from '@/components/elements/Modal/Modal';
 import { Button } from '@/components/elements/Button/Button';
 import { Select } from '@/components/elements/Select/Select';
+import { Textarea } from '@/components/elements/Textarea/Textarea';
 import { InlineNumberInput } from '@/components/elements/InlineNumberInput/InlineNumberInput';
+import { MAX_EVENT_NOTE_LENGTH } from '@/lib/constants';
 import { dateForDay, formatDateLocal, slotForDate } from '@/lib/dates';
 import { clampDuration, durationMinutesOf } from '@/lib/schedule';
 import styles from './EditEventModal.module.scss';
@@ -48,6 +50,7 @@ function EventEditor({ event, onClose }: { event: ScheduledEvent; onClose: () =>
   const updateEventValue = usePlannerStore((state) => state.updateEventValue);
   const setEventSubType = usePlannerStore((state) => state.setEventSubType);
   const setEventDuration = usePlannerStore((state) => state.setEventDuration);
+  const setEventNote = usePlannerStore((state) => state.setEventNote);
 
   // An event whose activity is gone entirely: nothing to describe it with,
   // and nothing sensible to edit.
@@ -161,6 +164,20 @@ function EventEditor({ event, onClose }: { event: ScheduledEvent; onClose: () =>
             </span>
           </label>
         )}
+
+        {/* Last, because it is the one field with no answer already in it.
+            Committed on blur, which on a phone is closing the sheet. */}
+        <label className={styles.noteRow}>
+          <span className={styles.label}>{COPY.events.note}</span>
+          <Textarea
+            className={styles.noteInput}
+            defaultValue={event.note ?? ''}
+            placeholder={COPY.events.notePlaceholder}
+            maxLength={MAX_EVENT_NOTE_LENGTH}
+            rows={2}
+            onBlur={(e) => setEventNote(event.id, e.target.value)}
+          />
+        </label>
       </div>
     </Modal>
   );

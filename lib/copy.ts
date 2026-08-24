@@ -193,9 +193,8 @@ export const COPY = {
     progress: 'Week progress',
     fill: 'Fill week',
     clear: 'Clear week',
-    clearMessage: 'This will remove all events and notes from this week. Are you sure?',
+    clearMessage: 'This will remove every workout on this week, and the notes on them. Are you sure?',
     confirm: 'Confirm',
-    notesPlaceholder: 'Notes…',
     showEarlier: 'Show more past weeks',
     showLater: 'Show more upcoming weeks',
     jumpToToday: 'Jump to today',
@@ -205,8 +204,7 @@ export const COPY = {
       default: MY_ACTIVITIES,
     },
     copyActivities: 'Activities and targets',
-    copySchedule: 'Schedule',
-    copyNotes: 'Notes',
+    copySchedule: 'Schedule and notes',
   },
 
   events: {
@@ -230,6 +228,9 @@ export const COPY = {
     length: 'Length',
     noType: 'No type',
     done: 'Done',
+    /** The line at the bottom of a card: what this workout is meant to be. */
+    note: 'Note',
+    notePlaceholder: 'Add a note…',
   },
 
   links: {

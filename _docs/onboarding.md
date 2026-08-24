@@ -62,9 +62,9 @@ the UI knows on its first render rather than after a round trip:
 ## What a signed-in user can still not do
 
 - Choose or change which calendar the plan lives in.
-- Keep day notes or helpful links at all. Neither has a backend, and with the
-  browser cache gone they last only as long as the tab; see
-  [storage.md](storage.md). Week targets are fine — Google Calendar holds them.
+- Keep a standalone bookmark list. It has no backend, and with the browser
+  cache gone it lasts only as long as the tab; see [storage.md](storage.md).
+  Week targets and workout notes are fine — Google Calendar holds both.
 - Have anything sync while no browser is open.
 
 ## How this is enforced

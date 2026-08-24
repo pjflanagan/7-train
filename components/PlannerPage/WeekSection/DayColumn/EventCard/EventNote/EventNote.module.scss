@@ -1,0 +1,35 @@
+// Deliberately quiet: an empty note should read as a line the card is offering
+// rather than a field demanding something. It only looks like an input once
+// there is something in it or the cursor is in it.
+.note {
+  width: 100%;
+
+  textarea {
+    display: block;
+    width: 100%;
+    height: 1.4em;
+    min-height: unset;
+    max-height: none;
+    margin: 0;
+    padding: var(--space-05) 0 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--text-muted);
+    font-size: var(--font-2xs);
+    line-height: 1.4;
+    resize: none;
+    overflow: hidden;
+
+    &::placeholder {
+      color: var(--text-dim);
+    }
+
+    &:focus {
+      border: none;
+      box-shadow: none;
+      color: var(--text-main);
+    }
+  }
+}

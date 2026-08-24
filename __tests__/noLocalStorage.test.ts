@@ -23,7 +23,6 @@ describe('the store keeps nothing in the browser', () => {
     expect(state.activities).toEqual([]);
     expect(state.events).toEqual([]);
     expect(state.weekActivities).toEqual({});
-    expect(state.notes).toEqual({});
     expect(state.links).toEqual([]);
     expect(state.googleCalendarId).toBeNull();
   });

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import clsx from 'clsx';
-import { useWeekActivities, useDayEvents, useNote, useWeekStartsOn, useUse24HourClock } from '@/hooks/usePlannerSelectors';
+import { useWeekActivities, useDayEvents, useWeekStartsOn, useUse24HourClock } from '@/hooks/usePlannerSelectors';
 import { resolveEventActivity } from '@/lib/activitySnapshot';
 import { useWeather } from '@/hooks/useWeather';
 import { WeatherPill } from '@/components/PlannerPage/WeatherPill/WeatherPill';
@@ -43,7 +43,6 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
 
   const events = useDayEvents(day, weekStart);
   const activities = useWeekActivities(weekStart);
-  const note = useNote(day, weekStart);
   const { data: weather } = useWeather();
   const forecast = weather?.days.find((d) => d.date === dateKey);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,7 +63,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
         )}
       </header>
 
-      {events.length === 0 && !note && <p className={styles.empty}>Rest day</p>}
+      {events.length === 0 && <p className={styles.empty}>Rest day</p>}
 
       {events.length > 0 && (
         <ul className={styles.events}>
@@ -82,34 +81,40 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
                 {/* The row is the way in to everything editable about the
                     workout. The Strava mark is a link out, so it stays beside
                     the button rather than inside it. */}
-                <button
-                  type="button"
-                  className={styles.open}
-                  onClick={() => setEditingId(event.id)}
-                >
-                  <Icon className={styles.icon} />
-                  <span className={styles.eventName}>
-                    <span className={styles.time}>{formatTimeOfDay(startMinutesOf(event), use24Hour)}</span>
-                    {activity.name}
-                    {event.workoutType && (
-                      <span className={styles.subType}>{event.workoutType}</span>
-                    )}
-                  </span>
-                  {/* An "instance" activity is always one occurrence, so "1 sessions" is noise. */}
-                  {activity.metric !== 'instance' && event.value > 0 && (
-                    <span className={styles.value}>
-                      {event.value}
-                      <span className={styles.unit}>{activity.unit}</span>
+                <div className={styles.eventMain}>
+                  <button
+                    type="button"
+                    className={styles.open}
+                    onClick={() => setEditingId(event.id)}
+                  >
+                    <Icon className={styles.icon} />
+                    <span className={styles.eventName}>
+                      <span className={styles.time}>{formatTimeOfDay(startMinutesOf(event), use24Hour)}</span>
+                      {activity.name}
+                      {event.workoutType && (
+                        <span className={styles.subType}>{event.workoutType}</span>
+                      )}
                     </span>
+                    {/* An "instance" activity is always one occurrence, so "1 sessions" is noise. */}
+                    {activity.metric !== 'instance' && event.value > 0 && (
+                      <span className={styles.value}>
+                        {event.value}
+                        <span className={styles.unit}>{activity.unit}</span>
+                      </span>
+                    )}
+                  </button>
+                  {/* Done, and a way through to the recording it was done as. */}
+                  {event.stravaActivityId != null && (
+                    <StravaLink
+                      stravaActivityId={event.stravaActivityId}
+                      className={styles.strava}
+                    />
                   )}
-                </button>
-                {/* Done, and a way through to the recording it was done as. */}
-                {event.stravaActivityId != null && (
-                  <StravaLink
-                    stravaActivityId={event.stravaActivityId}
-                    className={styles.strava}
-                  />
-                )}
+                </div>
+                {/* Read here, edited in the sheet the row opens: a phone has no
+                    room for a note field on every row, but a note nobody can
+                    see without tapping through is a note nobody reads. */}
+                {event.note && <p className={styles.note}>{event.note}</p>}
               </li>
             );
           })}
@@ -124,8 +129,6 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
         className={styles.addEvent}
         label={COPY.events.addLabel}
       />
-
-      {note && <p className={styles.note}>{note}</p>}
 
       <EditEventModal eventId={editingId} onClose={() => setEditingId(null)} />
     </section>

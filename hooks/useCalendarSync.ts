@@ -93,6 +93,9 @@ function eventSignature(event: ScheduledEvent, activity: Activity | undefined): 
     // puts the link on the calendar entry, and what tells another device the
     // workout is already accounted for.
     event.stravaActivityId ?? '',
+    // The note is part of the workout and goes up with it. Notes had no store
+    // at all before they moved onto the event; this line is that store.
+    event.note ?? '',
   ].join('|');
 }
 
@@ -121,6 +124,7 @@ interface EventDraftPayload {
   activityFrozen?: boolean;
   weekStart: string;
   stravaActivityId?: number | null;
+  note?: string;
 }
 
 function draftFor(
@@ -150,6 +154,7 @@ function draftFor(
     activityFrozen: event.activityFrozen,
     weekStart: event.weekStart,
     stravaActivityId: event.stravaActivityId ?? null,
+    note: event.note,
   };
 }
 
@@ -195,6 +200,7 @@ function eventFromGoogle(
     activitySnapshot: event.activitySnapshot,
     activityFrozen: event.activityFrozen,
     stravaActivityId: event.stravaActivityId ?? null,
+    note: event.note,
   };
 }
 

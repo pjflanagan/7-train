@@ -56,11 +56,18 @@
   @include activity-tones-event();
 
   display: flex;
-  align-items: center;
-  padding-right: var(--space-3);
+  flex-direction: column;
   background-color: var(--activity-surface);
   border: 1px solid var(--activity-border);
   border-radius: var(--radius-md);
+}
+
+// The tappable line itself: everything that identifies the workout, plus the
+// one link that leads away from it. The note sits under the pair.
+.eventMain {
+  display: flex;
+  align-items: center;
+  padding-right: var(--space-3);
 }
 
 // The whole row opens the workout's editor, so it is a button filling the
@@ -132,12 +139,14 @@
   color: var(--text-muted);
 }
 
-// Read-only here, but it is the one thing on the page worth copying out of.
+// Read-only here — the sheet the row opens is where it is written — but it is
+// the one thing on the page worth copying out of.
 .note {
   -webkit-user-select: text;
   user-select: text;
+  margin: 0 var(--space-3) var(--space-3);
   padding-left: var(--space-3);
-  border-left: 2px solid var(--border-color);
+  border-left: 2px solid var(--activity-border);
   font-size: var(--font-sm);
   line-height: 1.5;
   color: var(--text-muted);

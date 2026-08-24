@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent, HelpfulLink } from './types';
 import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './seed';
-import { DAYS } from './constants';
+import { DAYS, MAX_EVENT_NOTE_LENGTH } from './constants';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';
 import { isSameUpdate, isSameValue } from './changes';
@@ -18,8 +18,6 @@ import type { StravaEventUpdate } from './strava';
 import type { UserSettings } from './userSettings';
 
 type DayName = typeof DAYS[number];
-
-export const noteKey = (weekStart: string, day: DayName) => `${weekStart}-${day}`;
 
 type PlannerStore = PlannerState & {
   /**
@@ -102,8 +100,8 @@ type PlannerStore = PlannerState & {
   setGoogleEventIds: (eventIds: Record<string, string>) => void;
   /**
    * Swap the schedule for what Google Calendar holds — the events, and what
-   * each week aims at. Activities, notes and settings stay put: the calendar
-   * owns those two and nothing else. The caller has already decided which weeks
+   * each week aims at. Activities and settings stay put: the calendar owns
+   * those two and nothing else. The caller has already decided which weeks
    * the calendar spoke for and which it was not asked about.
    *
    * One action, in one write, for the same reason as `applyRemoteUser`, and a
@@ -116,19 +114,30 @@ type PlannerStore = PlannerState & {
     weekActivities: WeekActivities;
   }) => void;
 
-  setNote: (day: DayName, weekStart: string, note: string) => void;
   /**
-   * Pull another week into this one. The schedule, day notes, and the activity
-   * targets are copied independently, so a week can inherit any subset of
-   * them. Whichever part is copied overwrites what was there.
+   * What this workout is meant to be, in the user's own words. Trimmed and
+   * capped; an empty note is stored as no note at all.
+   *
+   * On the event rather than on the day, which is where notes used to live:
+   * a note about a workout follows it when it moves, and — unlike a day note,
+   * which had no store behind it — goes to Google Calendar with the event.
+   */
+  setEventNote: (id: string, note: string) => void;
+  /**
+   * Pull another week into this one. The schedule and the activity targets are
+   * copied independently, so a week can inherit either or both. Whichever part
+   * is copied overwrites what was there.
    * A null `fromWeekStart` resets targets to each activity's baseline instead
-   * of copying another week's bent values; schedule and notes are skipped in
-   * that case.
+   * of copying another week's bent values; the schedule is skipped in that
+   * case.
+   *
+   * Notes are not a part of their own: they are on the events now, so copying
+   * the schedule copies them with it.
    */
   copyWeek: (
     fromWeekStart: string | null,
     toWeekStart: string,
-    parts?: { schedule?: boolean; notes?: boolean; activities?: boolean }
+    parts?: { schedule?: boolean; activities?: boolean }
   ) => void;
   clearWeek: (weekStart: string) => void;
 
@@ -168,7 +177,6 @@ function buildBlankState(): PlannerState {
   return {
     activities: [],
     events: [],
-    notes: {},
     weekActivities: {},
     links: [],
     history: [],
@@ -557,23 +565,22 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
     set(changed);
   },
 
-  setNote: (day, weekStart, note) => {
-    const key = noteKey(weekStart, day);
-    // The note box commits on blur, so the note already stored comes back
-    // every time it loses focus, saved or not.
-    if ((get().notes[key] ?? '') === note) return;
+  setEventNote: (id, note) => {
+    const trimmed = note.trim().slice(0, MAX_EVENT_NOTE_LENGTH);
+    const event = get().events.find(i => i.id === id);
+    // The note box commits on a pause and again on blur, so the note already
+    // stored arrives here far more often than it changes. An empty string and
+    // an absent note are the same absence and must not restamp the event.
+    if (!event || (event.note ?? '') === trimmed) return;
 
-    set((state) => {
-      if (!note) {
-        const newNotes = { ...state.notes };
-        delete newNotes[key];
-        return { notes: newNotes };
-      }
-      return { notes: { ...state.notes, [key]: note } };
-    });
+    set((state) => ({
+      events: state.events.map(i =>
+        i.id === id ? stamp({ ...i, note: trimmed || undefined }) : i
+      )
+    }));
   },
   copyWeek: (fromWeekStart, toWeekStart, parts) => set((state) => {
-    const { schedule = true, notes = true, activities = true } = parts ?? {};
+    const { schedule = true, activities = true } = parts ?? {};
 
     let events = state.events;
     if (schedule && fromWeekStart !== null) {
@@ -589,18 +596,6 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
         googleEventId: null
       }));
       events = [...retainedEvents, ...copiedEvents];
-    }
-
-    const newNotes = { ...state.notes };
-    if (notes && fromWeekStart !== null) {
-      DAYS.forEach(day => {
-        const from = state.notes[noteKey(fromWeekStart, day)];
-        if (from) {
-          newNotes[noteKey(toWeekStart, day)] = from;
-        } else {
-          delete newNotes[noteKey(toWeekStart, day)];
-        }
-      });
     }
 
     // Filling a week means copying activities into it — from another week,
@@ -624,18 +619,15 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
       weekActivities = kept;
     }
 
-    return { events, notes: newNotes, weekActivities };
+    return { events, weekActivities };
   }),
   clearWeek: (weekStart) => set((state) => {
-    const newNotes = { ...state.notes };
-    DAYS.forEach(day => { delete newNotes[noteKey(weekStart, day)]; });
     const weekActivities = { ...(state.weekActivities || {}) };
     Object.keys(weekActivities).forEach(key => {
       if (key.startsWith(`${weekStart}:`)) delete weekActivities[key];
     });
     return {
       events: state.events.filter(i => i.weekStart !== weekStart),
-      notes: newNotes,
       weekActivities
     };
   }),

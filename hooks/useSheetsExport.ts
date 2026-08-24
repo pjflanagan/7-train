@@ -24,7 +24,6 @@ export function useSheetsExport() {
 
     const scheduled = entriesFromSchedule(
       store.events,
-      store.notes,
       (store.weekStartsOn ?? 1) as WeekStartsOn,
       store.weekActivities
     );

@@ -1,4 +1,5 @@
 import { getWeekStartKey, addWeeks } from './dates';
+import { MAX_EVENT_NOTE_LENGTH } from './constants';
 import { IconKey } from './icons';
 import { DEFAULT_SPORTS_BY_ICON } from './stravaSports';
 
@@ -12,7 +13,7 @@ import { DEFAULT_SPORTS_BY_ICON } from './stravaSports';
  */
 
 /** The shape `migrateStore` migrates *to*, and what a fresh backup is stamped with. */
-export const CURRENT_STATE_VERSION = 10;
+export const CURRENT_STATE_VERSION = 11;
 
 /** Rekey notes from the legacy `${day}-${week}` form to `${weekStart}-${day}`. */
 function migrateNotes(
@@ -367,6 +368,45 @@ function migrateV9toV10(state: Record<string, unknown>): Record<string, unknown>
   return { ...state, activities, weekActivities };
 }
 
+/**
+ * Day notes became notes on the workouts themselves.
+ *
+ * A note was keyed `${weekStart}-${day}` and belonged to a column, which meant
+ * it stayed behind when the workout it was about was dragged to another day —
+ * and, more to the point, that it had nowhere to live once the browser stopped
+ * caching the plan. On the event it travels with the workout and goes to Google
+ * Calendar with it.
+ *
+ * A day's note goes to the first workout on that day, which is the only reading
+ * that can be made without asking: a day with two workouts had one note between
+ * them, and a day with none had a note about a rest day that no workout can
+ * carry. Those are dropped rather than invented onto a neighbouring day.
+ */
+function migrateV10toV11(state: Record<string, unknown>): Record<string, unknown> {
+  const notes = state.notes;
+  const rest = { ...state };
+  delete rest.notes;
+  // Nothing to move. The key still goes, since the shape no longer has it.
+  if (!notes || typeof notes !== 'object' || !Array.isArray(state.events)) return rest;
+
+  const claimed = new Set<string>();
+  const events = state.events.map((raw) => {
+    const event = raw as Record<string, unknown>;
+    const key = `${event.weekStart}-${event.day}`;
+    // Already has one of its own, or its day's note has gone to an earlier
+    // workout on the same day.
+    if (event.note || claimed.has(key)) return event;
+
+    const note = (notes as Record<string, unknown>)[key];
+    if (typeof note !== 'string' || !note.trim()) return event;
+
+    claimed.add(key);
+    return { ...event, note: note.trim().slice(0, MAX_EVENT_NOTE_LENGTH) };
+  });
+
+  return { ...rest, events };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -380,5 +420,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 8) state = migrateV7toV8(state);
   if (version < 9) state = migrateV8toV9(state);
   if (version < 10) state = migrateV9toV10(state);
+  if (version < 11) state = migrateV10toV11(state);
   return state;
 }

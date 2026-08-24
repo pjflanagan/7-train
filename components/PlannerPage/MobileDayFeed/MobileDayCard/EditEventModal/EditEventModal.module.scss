@@ -67,6 +67,23 @@
   color: var(--text-muted);
 }
 
+// The note is the one field that needs room to be read as well as typed, so it
+// stacks instead of sitting to the right of its label.
+.noteRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.noteInput {
+  width: 100%;
+
+  textarea {
+    width: 100%;
+    font-size: var(--font-md);
+  }
+}
+
 // Delete sits away from Done, so the destructive one is never the button a
 // thumb lands on by habit.
 .footer {

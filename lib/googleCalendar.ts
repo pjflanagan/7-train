@@ -50,6 +50,15 @@ const PROP_RECORD = 'workoutRecord';
  * accounted for, rather than matching the same recording to it all over again.
  */
 const PROP_STRAVA_ID = 'workoutStravaId';
+/**
+ * The note on the workout, in the user's own words.
+ *
+ * The property is the truth, and the description below is a copy of it for
+ * Google Calendar to show — the same bargain every other field makes, so
+ * rewriting the description over there no more changes the note than renaming
+ * the event changes the activity.
+ */
+const PROP_NOTE = 'workoutNote';
 const RECORD_TARGETS = 'targets';
 /** `workoutTargets0`, `workoutTargets1`, … holding one JSON string between them. */
 const PROP_TARGETS_PREFIX = 'workoutTargets';
@@ -105,6 +114,24 @@ function fromChunks(props: Record<string, string>): string | undefined {
     json += chunk;
   }
   return json;
+}
+
+/**
+ * A property value trimmed to fit Google's 1024-byte cap, which truncates
+ * silently rather than failing — and would cut a multi-byte character in half
+ * doing it. `MAX_EVENT_NOTE_LENGTH` keeps ordinary text well under this; only a
+ * note made entirely of emoji reaches it.
+ */
+function fitProperty(value: string): string {
+  const encoder = new TextEncoder();
+  if (encoder.encode(value).length <= MAX_PROPERTY_BYTES) return value;
+
+  let fitted = value;
+  while (fitted.length > 0 && encoder.encode(fitted).length > MAX_PROPERTY_BYTES) {
+    // By code point, so a surrogate pair is dropped whole.
+    fitted = [...fitted].slice(0, -1).join('');
+  }
+  return fitted;
 }
 
 function serializeSnapshot(snapshot: ActivitySnapshot | undefined): string {
@@ -293,6 +320,8 @@ export interface EventDraft {
   weekStart: string;
   /** The Strava recording this workout was done as, when it has been matched. */
   stravaActivityId?: number | null;
+  /** What the workout is meant to be, in the user's own words. */
+  note?: string;
 }
 
 /**
@@ -327,6 +356,11 @@ function eventSummary(draft: EventDraft): string {
 function eventDescription(draft: EventDraft): string | undefined {
   const lines = [
     draft.description,
+    // The note, so the calendar entry says what the workout is for on a phone
+    // lock screen. It is written from the property rather than read back out of
+    // here: parsing a field the user can also edit in Google Calendar would
+    // make two sources of truth out of one.
+    draft.note?.trim() || undefined,
     draft.stravaActivityId ? stravaActivityUrl(draft.stravaActivityId) : undefined,
   ].filter(Boolean);
   return lines.length > 0 ? lines.join('\n\n') : undefined;
@@ -348,6 +382,7 @@ function eventBody(draft: EventDraft) {
         [PROP_ACTIVITY_FROZEN]: draft.activityFrozen ? '1' : '',
         [PROP_WEEK_START]: draft.weekStart,
         [PROP_STRAVA_ID]: draft.stravaActivityId ? String(draft.stravaActivityId) : '',
+        [PROP_NOTE]: fitProperty(draft.note ?? ''),
       },
     },
   };
@@ -534,6 +569,7 @@ export function eventPropsFromEvent(event: GoogleEvent): {
   activityFrozen?: boolean;
   weekStart?: string;
   stravaActivityId?: number;
+  note?: string;
 } | null {
   const props = event.extendedProperties?.private;
   if (!props?.[PROP_TYPE_ID]) return null;
@@ -551,6 +587,7 @@ export function eventPropsFromEvent(event: GoogleEvent): {
     stravaActivityId: Number.isFinite(stravaActivityId) && stravaActivityId > 0
       ? stravaActivityId
       : undefined,
+    note: props[PROP_NOTE] || undefined,
   };
 }
 
@@ -587,4 +624,6 @@ export interface PulledEvent {
   weekStart?: string;
   /** The Strava recording it was done as, when one has been matched to it. */
   stravaActivityId?: number;
+  /** The note on the workout, when it has one. */
+  note?: string;
 }

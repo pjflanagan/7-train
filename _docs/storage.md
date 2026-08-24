@@ -48,6 +48,27 @@ the first time the server says `isNew`, and pushes it up as the account's first
 revision. `buildSeededState()` in `lib/store.ts` is the same data "full reset"
 puts back.
 
+## Notes are on the workouts
+
+A note used to belong to a day, keyed `${weekStart}-${day}`, and lived only in
+`localStorage`. Both halves of that were wrong once the cache went: it had no
+store at all, and a note about Tuesday's intervals stayed on Tuesday when the
+intervals were dragged to Wednesday.
+
+A note is now a field of the event — `note` on `ScheduledEvent`, capped at
+`MAX_EVENT_NOTE_LENGTH` (500). It follows the workout when it moves, is copied
+with the schedule when a week is filled, and rides to Google Calendar in the
+`workoutNote` private property like every other field of the event. It is
+*also* written into the calendar entry's description, so a phone lock screen
+says what the session is for — but the property is what is read back, so
+rewriting that description in Google Calendar no more changes the note than
+renaming the event changes the activity.
+
+`migrateV10toV11` moves day notes out of an old backup and onto the first
+workout of each day. A day with no workout on it had a note about a rest day
+and nothing to carry it, so that one is dropped rather than invented onto a
+neighbour.
+
 ## Why the plan is in Google Calendar and not our database
 
 Because a workout is a thing at a time, and people already own a calendar. The
@@ -81,13 +102,12 @@ would create a second source of truth to reconcile, for no gain.
   meaningfully larger security surface than the current design, where the server
   holds no third-party credentials at rest. Open question in
   `_todo/database.md`; not settled.
-- **Day notes and helpful links** — nowhere at all, and this is now a real gap
-  rather than a device-sync one. Neither has ever had a backend, and with no
-  cache in front of them they live in memory for as long as the tab is open: a
-  note typed on Tuesday is gone on reload. Week targets are fine — Google
-  Calendar holds those alongside the events — and `history` is a dead field
-  nothing writes any more. Giving notes and links a home is the next piece of
-  work this change makes necessary.
+- **Helpful links** — the standalone bookmark list has no backend, and with no
+  cache in front of it, it lives in memory for as long as the tab is open. Week
+  targets are fine — Google Calendar holds those alongside the events — and
+  `history` is a dead field nothing writes any more.
+
+Notes used to be on this list. They are not any more: see below.
 
 ## Backend-first, precisely
 
@@ -134,7 +154,7 @@ token that works.
 ## Shapes and migrations
 
 - `lib/migrate.ts` still exists, and has exactly one caller left: backup import.
-  The chain runs to `CURRENT_STATE_VERSION` (10), and `BACKUP_VERSION` *is* that
+  The chain runs to `CURRENT_STATE_VERSION` (11), and `BACKUP_VERSION` *is* that
   constant rather than a second number kept in step by hand — a backup stamped
   older gets needlessly re-migrated on import, which
   `__tests__/backup.test.ts` catches. `importLegacy`, which read the pre-Next
@@ -163,6 +183,9 @@ token that works.
 - `__tests__/signInGate.test.tsx` — the door offers a sign in, has no way past
   it, and says so instead when there are no Google credentials.
 - `__tests__/backup.test.ts` — version stamping, and what a backup excludes.
-- `__tests__/storeMigration.test.ts` — every version step.
+- `__tests__/storeMigration.test.ts` — every version step, including where an
+  old day note ends up and when it is dropped.
+- `__tests__/calendarWire.test.ts` — that a note round-trips through Google and
+  is trimmed to fit rather than cut mid-character.
 - `__tests__/userSettings.test.ts` — the first-pull merge, including that a
   remote `googleCalendarId` never loses to a local one.

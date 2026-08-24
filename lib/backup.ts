@@ -27,7 +27,7 @@ export type Backup = {
 /** Strip the store's action functions, keeping only the persisted data. */
 export function toBackup(state: PlannerState): Backup {
   const {
-    activities, events, notes, weekActivities, links, history, lastViewedMonday, tempUnit,
+    activities, events, weekActivities, links, history, lastViewedMonday, tempUnit,
     use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleAdoptedAt,
     googleSheetId
   } = state;
@@ -38,7 +38,7 @@ export function toBackup(state: PlannerState): Backup {
     // The Google ids ride along so a restore onto the same account picks the
     // existing calendar and spreadsheet back up instead of making new ones.
     state: {
-      activities, events, notes, weekActivities, links, history, lastViewedMonday, tempUnit,
+      activities, events, weekActivities, links, history, lastViewedMonday, tempUnit,
       use24HourClock, weekStartsOn, defaultStartMinutes, googleCalendarId, googleAdoptedAt,
       googleSheetId
     }
