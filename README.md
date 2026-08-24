@@ -39,9 +39,9 @@ the plan: settings and activities from Postgres, the schedule from the
 `Workouts` calendar in the user's own Google account. Signing out empties it
 again, so a shared machine never shows the last person's week.
 
-The trade is deliberate and worth knowing: signed out there is nothing to fetch,
-so the planner is empty and edits last only until the tab closes. See
-[_docs/storage.md](_docs/storage.md).
+The trade is deliberate and worth knowing: there is no signed-out mode. With
+nothing to fetch and nowhere to keep an edit, a signed out browser gets a sign
+in and nothing else. See [_docs/storage.md](_docs/storage.md).
 
 ## Optional integrations
 

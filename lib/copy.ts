@@ -42,6 +42,15 @@ export const COPY = {
     logoTitle: '7 train',
   },
 
+  /** The locked door a signed-out browser gets instead of an empty planner. */
+  signIn: {
+    title: 'Sign in to plan your week',
+    blurb:
+      'Your plan lives in your own Google Calendar, so it follows you between devices. Signing in is how the app finds it.',
+    notConfiguredMessage:
+      'This deployment has no Google credentials, so there is nothing to sign in to yet.',
+  },
+
   account: {
     menuLabel: 'Account',
     signIn: 'Sign in with Google',
@@ -147,7 +156,7 @@ export const COPY = {
     /** Shown on the Strava tab when there is no connection yet. */
     stravaNotConnected: 'Not connected',
     signInBlurb:
-      'Sign in to keep your plan in Google Calendar, so it follows you between devices. Your plan stays on this device either way.',
+      'Sign in to keep your plan in Google Calendar, so it follows you between devices.',
     reauth: 'Google access expired. Sign in again to restore it.',
     reconnect: 'Reconnect',
     connect: 'Connect',

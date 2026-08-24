@@ -1,7 +1,7 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
 import { usePlannerStore } from '@/lib/store';
+import { useIsMounted } from '@/hooks/useIsMounted';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { useUserSettled } from '@/hooks/useUserSync';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
@@ -29,22 +29,6 @@ import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
  * week grid's `new Date()` both rely on that.
  */
 
-/** Nothing to subscribe to: mounting is the only transition there is. */
-const subscribeToNothing = () => () => {};
-
-/**
- * False through SSR and the hydrating render, true afterwards — the shape
- * `useSyncExternalStore` exists for, and React's own way of saying "this render
- * has to match the server's".
- */
-function useIsMounted(): boolean {
-  return useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false
-  );
-}
-
 export function usePlannerLoaded(): boolean {
   const isMounted = useIsMounted();
   const { scopes, isSignedIn, isLoading } = useGoogleAccount();
@@ -58,8 +42,10 @@ export function usePlannerLoaded(): boolean {
   // Signed out and not-yet-known are different answers, and only one of them
   // means nothing is coming.
   if (isLoading) return false;
-  // Nobody to fetch a plan for. Blank is the plan.
-  if (!isSignedIn) return true;
+  // Nobody to fetch a plan for, so there is no plan and never will be on this
+  // load. `PlannerPage` catches this case ahead of the spinner and shows the
+  // sign in instead — an empty week is not what a signed out browser gets.
+  if (!isSignedIn) return false;
   // The settings and "My activities" are still on their way.
   if (!isUserSettled) return false;
   // The schedule landed, or the pull failed and none is coming this load.

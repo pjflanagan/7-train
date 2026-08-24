@@ -17,6 +17,9 @@ import { useUserSync } from '@/hooks/useUserSync';
 import { useStravaSync } from '@/hooks/useStrava';
 import { useStravaConnectOutcome } from '@/hooks/useStravaConnectOutcome';
 import { useSignedOutReset } from '@/hooks/useSignedOutReset';
+import { useGoogleAccount } from '@/hooks/useAuth';
+import { useIsMounted } from '@/hooks/useIsMounted';
+import { SignInModal } from './SignInModal/SignInModal';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
@@ -88,6 +91,8 @@ export function PlannerPage() {
   // and the plan is a network round trip away. The spinner covers that wait
   // rather than showing an empty week to someone who has one.
   const isLoaded = usePlannerLoaded();
+  const isMounted = useIsMounted();
+  const { isSignedIn, isLoading: isSessionLoading } = useGoogleAccount();
   const isMobile = useIsMobile();
   useInitWeather();
   useUserSync();
@@ -96,6 +101,13 @@ export function PlannerPage() {
   useStravaSync();
   useStravaConnectOutcome();
   useSignedOutReset();
+
+  // Signed out there is no plan to fetch and nowhere to keep one, so the app is
+  // the sign in and nothing else — see `SignInModal`. Only once the session is
+  // actually known: "not signed in yet" is the first answer `useSession` gives
+  // everybody, and showing the door on it would flash it at every returning
+  // user.
+  if (isMounted && !isSessionLoading && !isSignedIn) return <SignInModal />;
 
   if (!isLoaded) {
     return (

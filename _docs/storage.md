@@ -31,10 +31,16 @@ So there is no cache. `usePlannerStore` is a plain zustand store — no `persist
 no `migrate`, no `onRehydrateStorage` — and it starts empty on every load. What
 is on screen has been fetched.
 
-**What this costs, deliberately:** the planner cannot be used signed out or
-offline. Signed out there is nothing to fetch, so the week is empty, and an edit
-made there lasts until the tab is closed. A deployment that wants a usable app
-signs people in and has a `DATABASE_URL`.
+**What this costs, deliberately:** there is no signed-out mode. Signed out there
+is nothing to fetch and nowhere to keep an edit, so the app does not pretend
+otherwise — `PlannerPage` renders `SignInModal` and nothing else: no header, no
+week behind it, and no way to dismiss it. An empty week that quietly forgets
+every edit on reload is worse than a locked door, because it looks like it is
+working. The legal pages are their own routes and stay reachable.
+
+A deployment that wants a usable app therefore needs Google credentials *and* a
+`DATABASE_URL`. With no Google credentials the door says so rather than offering
+a sign in that can only fail.
 
 **Where the sample plan went.** It is not what a fresh browser starts with any
 more; it is what a brand new *account* starts from. `useUserSync` writes it once,
@@ -101,9 +107,9 @@ would create a second source of truth to reconcile, for no gain.
   Since the "which calendar?" question was removed, a browser with no calendar
   id creates one — and with nowhere to record that, every load creates another
   calendar. A deployment that signs users in must have a database.
-- **Signing out empties the store**, via `useSignedOutReset`. A sign out is not
-  a page load: the session flips and React carries on with the same state in
-  memory, so the wipe is deliberate.
+- **Signing out empties the store**, via `useSignedOutReset`, and drops the user
+  back at the sign in. A sign out is not a page load: the session flips and
+  React carries on with the same state in memory, so the wipe is deliberate.
 
 ## Identity: the key everything hangs off
 
@@ -154,6 +160,8 @@ token that works.
   that starts signed out does not.
 - `__tests__/plannerLoadedGate.test.ts` — every state of `usePlannerLoaded`,
   including the ones that must not leave a spinner up for ever.
+- `__tests__/signInGate.test.tsx` — the door offers a sign in, has no way past
+  it, and says so instead when there are no Google credentials.
 - `__tests__/backup.test.ts` — version stamping, and what a backup excludes.
 - `__tests__/storeMigration.test.ts` — every version step.
 - `__tests__/userSettings.test.ts` — the first-pull merge, including that a

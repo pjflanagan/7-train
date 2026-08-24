@@ -26,7 +26,8 @@ not negotiable" made `localStorage` the source of truth and the two remote
 stores its replicas, which meant a sign out left the plan on screen for the next
 person and the next sign in pushed it up as theirs. See
 [storage.md](storage.md) for what that cost and what this one costs instead —
-mainly that there is no usable signed-out or offline mode any more.
+mainly that there is no signed-out mode any more: signed out, the app is a sign
+in and nothing else.
 
 What survives from the old rule: **no failed sync may lose or block an edit**,
 and every gate settles on failure as well as on success, so a broken pull leaves

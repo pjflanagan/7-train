@@ -58,10 +58,13 @@ describe('usePlannerLoaded', () => {
     expect(result.current).toBe(false);
   });
 
-  it('is true for a signed out browser, which has no plan to wait for', () => {
+  it('is false for a signed out browser, which has no plan at all', () => {
+    // Not "loaded, and it happens to be empty": there is nothing to load and
+    // nowhere to keep it. `PlannerPage` catches this ahead of the spinner and
+    // shows the sign in, so this never leaves one up.
     account.isSignedIn = false;
     const { result } = renderHook(() => usePlannerLoaded());
-    expect(result.current).toBe(true);
+    expect(result.current).toBe(false);
   });
 
   it('is false on the first render of a signed in user', () => {

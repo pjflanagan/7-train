@@ -1,0 +1,49 @@
+// The dialog is the page here rather than a layer over it, so it carries its
+// own vertical rhythm instead of leaving room for the header row it has no
+// title in.
+.dialog {
+  text-align: center;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-6);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.blurb {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.legal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-xs);
+  color: var(--text-dim);
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}

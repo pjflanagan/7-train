@@ -147,8 +147,8 @@ wins, and blurring a field is not a reason to win one.
 
 - **Two open tabs do not live-update each other.** A change in one reaches the
   other on its next load.
-- **Signed out, there is nothing to load.** The planner is empty and edits last
-  until the tab closes; see `_docs/storage.md`.
+- **Signed out, there is nothing to load** — and nothing is shown. The planner
+  is behind a sign in; see `_docs/storage.md`.
 - **A failed calendar pull still lets Strava read**, against a schedule that may
   be stale. This is the deliberate cost of "once per load"; the alternative is
   disabling Strava whenever Google has a bad minute.
