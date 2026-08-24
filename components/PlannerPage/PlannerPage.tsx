@@ -4,7 +4,7 @@ import { LuArrowUp, LuArrowDown } from 'react-icons/lu';
 import { AppShell } from './AppShell/AppShell';
 import { Spinner } from '@/components/elements/Spinner/Spinner';
 import { WeekSection } from './WeekSection/WeekSection';
-import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
+import { usePlannerLoaded } from '@/hooks/usePlannerLoaded';
 import { useWeekStartsOn } from '@/hooks/usePlannerSelectors';
 import { useInfiniteWeeks } from '@/hooks/useInfiniteWeeks';
 import { PlannerDndProvider } from './PlannerDndProvider/PlannerDndProvider';
@@ -16,6 +16,7 @@ import { useEnsureCalendar } from '@/hooks/useEnsureCalendar';
 import { useUserSync } from '@/hooks/useUserSync';
 import { useStravaSync } from '@/hooks/useStrava';
 import { useStravaConnectOutcome } from '@/hooks/useStravaConnectOutcome';
+import { useSignedOutReset } from '@/hooks/useSignedOutReset';
 import { useScheduleFocusTriggers } from '@/hooks/useScheduleFocus';
 import { getWeekStartKey } from '@/lib/dates';
 import styles from './PlannerPage.module.scss';
@@ -83,7 +84,10 @@ function WeekFeed() {
 }
 
 export function PlannerPage() {
-  const isHydrated = usePlannerHydrated();
+  // Nothing is cached in the browser, so the first paint has nothing to draw
+  // and the plan is a network round trip away. The spinner covers that wait
+  // rather than showing an empty week to someone who has one.
+  const isLoaded = usePlannerLoaded();
   const isMobile = useIsMobile();
   useInitWeather();
   useUserSync();
@@ -91,8 +95,9 @@ export function PlannerPage() {
   useCalendarSync();
   useStravaSync();
   useStravaConnectOutcome();
+  useSignedOutReset();
 
-  if (!isHydrated) {
+  if (!isLoaded) {
     return (
       <AppShell>
         <Spinner />

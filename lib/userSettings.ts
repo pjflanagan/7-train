@@ -32,9 +32,9 @@ export const UserStateSchema = z.object({
   /**
    * True when this read created the row — nobody has ever synced this account.
    *
-   * It is what decides the direction of the very first sync: an empty server
-   * takes what this browser is holding, and a populated one overwrites it. See
-   * `mergeOnFirstPull`.
+   * It is what decides the direction of the very first sync: an empty server is
+   * seeded with the sample plan and takes it, and a populated one hands its own
+   * down. See `mergeOnFirstPull`.
    */
   isNew: z.boolean(),
 });
@@ -72,15 +72,20 @@ export function activitiesSignature(activities: { id: string }[]): string {
 }
 
 /**
- * What the first sync after signing in on a device should do.
+ * What the first sync after signing in should do.
  *
- * The awkward case is the one everybody hits once: a browser with a plan in it,
- * signing in to an account the server has never seen. Taking the server's empty
- * settings would wipe a real plan, so the browser's copy goes up instead.
+ * The awkward case used to be a browser with a plan in it signing in to an
+ * account the server had never seen: taking the server's empty settings would
+ * wipe a real plan, so the browser's copy went up instead. No browser holds a
+ * plan of its own now, so `isNew` means something narrower and safer — the
+ * caller has just seeded the sample plan for a brand new account, and this says
+ * that it is the first revision rather than something to be overwritten by an
+ * empty row.
  *
  * Every other case is the server winning, which is the whole point — a second
  * device is supposed to look like the first, and that includes finding the same
- * calendar rather than making its own.
+ * calendar rather than making its own. It is also now every device, on every
+ * load.
  *
  * The one thing never taken from an empty server is `googleCalendarId`: a null
  * there means "not asked yet", and letting it overwrite a browser that already

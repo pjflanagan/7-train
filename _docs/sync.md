@@ -16,6 +16,11 @@ useStravaSync      recordings, from Strava              ← owns what was done
 All four are mounted once, at the top of `PlannerPage`. Mounting any of them
 twice means running it twice.
 
+They are also the *only* way anything gets into the store. There is no
+`localStorage` behind them any more, so this is not a set of loops keeping a
+cache fresh — it is the load path. `usePlannerLoaded()` holds the spinner over
+the top of it until it has run.
+
 ## Why this order
 
 **Settings before calendar.** `googleCalendarId` is the only thread back to a
@@ -26,10 +31,10 @@ made a second `Workouts` calendar for every private window and cleared cache,
 splitting the plan across both permanently.
 
 **Calendar before Strava.** Google Calendar is the source of truth for what was
-*planned*. A Strava read that beats the pull matches recordings against whatever
-was in `localStorage`, and adds duplicate events for the workouts the pull was
-about to bring in. Since Strava is read once per load, that damage is not
-self-correcting.
+*planned*. A Strava read that beats the pull matches recordings against a
+schedule that has not arrived — now an empty one — and adds a duplicate event
+for every workout the pull was about to bring in. Since Strava is read once per
+load, that damage is not self-correcting.
 
 ## The gates
 
@@ -40,10 +45,17 @@ on?" — and each has to distinguish **"no"** from **"not yet"**.
 | --- | --- |
 | `useUserSettled()` | The settings pull returned, *or* it is settled there will never be one (signed out, no `DATABASE_URL`) |
 | `useCalendarSettled()` | The first calendar pull returned, *or* no calendar is coming |
+| `usePlannerLoaded()` | Both of the above have run their course, so the week on screen is the one the backend has |
 
-Both go true on **failure** as well as success. A failed pull is an answer: the
-data is not arriving on this page load, and blocking forever would turn one
-broken integration into two.
+`usePlannerLoaded()` is the replacement for `usePlannerHydrated()`, which waited
+for `localStorage` to be read into the store. The wait moved rather than
+disappeared: the store is genuinely empty now, and empty is a real answer for a
+signed out browser and a wrong one for a signed in user whose week is in flight.
+
+All three go true on **failure** as well as success. A failed pull is an answer:
+the data is not arriving on this page load, and blocking forever would turn one
+broken integration into two — or, for `usePlannerLoaded()`, into a spinner that
+never leaves.
 
 ### Do not gate on a status enum
 
@@ -102,8 +114,8 @@ Both loops write when the store changes, and the store hands out a new object
 far more often than the user makes an edit: a form saved untouched, a number
 field committing on blur the number it was already showing, a note box losing
 focus, a pull agreeing with us, a push writing back the ids it was just given.
-Each of those used to cost a `localStorage` write, a countdown in the header,
-and — announced to the user as saving — a request that found nothing to send.
+Each of those costs a countdown in the header and — announced to the user as
+saving — a request that finds nothing to send.
 
 So change detection sits at three depths, and each one is load-bearing:
 
@@ -124,8 +136,8 @@ So change detection sits at three depths, and each one is load-bearing:
    rather than "something re-rendered".
 
 The first is not enough on its own — a pull genuinely changes the plan without
-giving anyone anything to send — and neither is the third: what the store never
-writes never reaches `localStorage` either.
+giving anyone anything to send — and neither is the third: the store bailing
+early is also what keeps React from re-rendering the week on a non-edit.
 
 One thing deliberately does **not** count as a change: an event's `updatedAt` is
 only stamped when the workout itself moves. It decides which side of a merge
@@ -135,6 +147,8 @@ wins, and blurring a field is not a reason to win one.
 
 - **Two open tabs do not live-update each other.** A change in one reaches the
   other on its next load.
+- **Signed out, there is nothing to load.** The planner is empty and edits last
+  until the tab closes; see `_docs/storage.md`.
 - **A failed calendar pull still lets Strava read**, against a schedule that may
   be stale. This is the deliberate cost of "once per load"; the alternative is
   disabling Strava whenever Google has a bad minute.
@@ -152,6 +166,8 @@ wins, and blurring a field is not a reason to win one.
   still announces immediately.
 - `__tests__/stravaGate.test.ts` — every state of `useCalendarSettled`,
   including the first-render case that regressed.
+- `__tests__/plannerLoadedGate.test.ts` — every state of `usePlannerLoaded`,
+  including the ones that must not leave a spinner up for ever.
 - `__tests__/calendarAdoption.test.ts` — the upload-then-pull order, and that a
   never-uploaded week is not overwritten by a pull.
 - `__tests__/calendarWire.test.ts`, `__tests__/updatedAt.test.ts` — the wire

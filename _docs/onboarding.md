@@ -41,8 +41,9 @@ the rest of the app is built on.
 
 `useEnsureCalendar` creates it, once, silently — and only after
 `useUserSettled()`. That gate is the entire point: creating before the settings
-pull lands rebuilds the duplicate-calendar bug the pull exists to prevent. See
-[sync.md](sync.md).
+pull lands rebuilds the duplicate-calendar bug the pull exists to prevent, and
+now that no browser remembers a calendar id between loads, every load is a
+browser that would have made one. See [sync.md](sync.md).
 
 The attempt is not retried within a page load, even on failure. A failed create
 that reset its own guard would be retried on the next render, and a create
@@ -61,7 +62,9 @@ the UI knows on its first render rather than after a round trip:
 ## What a signed-in user can still not do
 
 - Choose or change which calendar the plan lives in.
-- Sync week targets, notes or links to another device — those are still local.
+- Keep day notes or helpful links at all. Neither has a backend, and with the
+  browser cache gone they last only as long as the tab; see
+  [storage.md](storage.md). Week targets are fine — Google Calendar holds them.
 - Have anything sync while no browser is open.
 
 ## How this is enforced

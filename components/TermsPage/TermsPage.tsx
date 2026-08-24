@@ -3,7 +3,7 @@ import { LegalPage } from '@/components/LegalPage/LegalPage';
 
 /** The terms of service, rendered by `app/terms/page.tsx`. */
 export const TermsPage: React.FC = () => (
-  <LegalPage title="Terms of service" lastUpdated="15 August 2026">
+  <LegalPage title="Terms of service" lastUpdated="24 August 2026">
     <p>
       7 Train is a personal workout planner. By using it you agree to the terms below. If you
       do not agree, please stop using the app.
@@ -30,9 +30,10 @@ export const TermsPage: React.FC = () => (
     <h2>Your content</h2>
     <p>
       Your plan — activities, targets and scheduled events — is yours. You keep all rights to
-      it. It lives in your browser, and, if you connect the Google Calendar integration, in a
-      calendar that this app creates inside your own Google account. Deleting your browser
-      storage or that calendar deletes the data; keeping your own backups is up to you.
+      it. Your scheduled workouts live in a calendar this app creates inside your own Google
+      account, and your activities and settings in the app&apos;s database, tied to that
+      account. Nothing is kept in your browser between visits. Deleting that calendar deletes
+      the workouts in it; keeping your own backups is up to you.
     </p>
 
     <h2>Acceptable use</h2>

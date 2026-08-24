@@ -5,7 +5,6 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
-import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import {
   UserState,
@@ -27,10 +26,12 @@ import {
  * survives all of that.
  *
  * Events are not here. Google Calendar stores those; see
- * `_todo/google-calendar-as-storage.md` for the division of labour.
+ * `_docs/storage.md` for the division of labour.
  *
- * Local-first is unchanged. Signed out, or on a deployment with no database,
- * this does nothing at all and the app behaves exactly as it did before.
+ * This is now the only way "My activities" ever arrives — the browser caches
+ * nothing between loads. Signed out, or on a deployment with no database, the
+ * pull settles immediately and the planner stays empty, because there is
+ * nobody to have a plan.
  */
 
 export type UserSyncStatus =
@@ -70,14 +71,12 @@ export const useUserSyncStore = create<UserSyncState>((set) => ({
  * It used to answer `status === 'off' || hasPulled`, which is the same bug
  * `useCalendarSettled` was fixed for and for the same reason: `off` is the
  * store's initial value, and it is also what the pull effect writes while it is
- * still waiting on hydration or on the session. So on the very first render
- * where a signed in user's plan has hydrated — the one render that matters —
- * `status` was still the `off` left behind by the signed-out commit, this said
- * "settled", and `useEnsureCalendar` made a calendar in the same tick that the
- * pull which knows about the existing one was setting off. A browser with no
- * `googleCalendarId` in `localStorage` is exactly the browser this is supposed
- * to protect, so it fired every time: new device, cleared cache, private
- * window, second browser.
+ * still waiting on the session. So on the very first render of a signed in user
+ * — the one render that matters — `status` was still the `off` left behind by
+ * the signed-out commit, this said "settled", and `useEnsureCalendar` made a
+ * calendar in the same tick that the pull which knows about the existing one
+ * was setting off. A browser with no `googleCalendarId` of its own is now every
+ * browser, so it would fire on every load.
  *
  * `hasPulled` is the only positive evidence that the question was actually
  * asked, and every way the pull can end sets it — including 501 no database,
@@ -118,10 +117,6 @@ async function pushUser(body: {
  */
 export function useUserSync(): void {
   const { isSignedIn } = useGoogleAccount();
-  // Until the persisted plan is really in the store, `getState()` answers with
-  // the seeded defaults — and uploading those as someone's activities would
-  // overwrite the real ones on every other device.
-  const isHydrated = usePlannerHydrated();
 
   const setStatus = useUserSyncStore((state) => state.setStatus);
   const setHasPulled = useUserSyncStore((state) => state.setHasPulled);
@@ -132,7 +127,7 @@ export function useUserSync(): void {
   const isReadyRef = useRef(false);
 
   useEffect(() => {
-    if (!isHydrated || !isSignedIn) {
+    if (!isSignedIn) {
       isReadyRef.current = false;
       syncedRef.current = null;
       setStatus('off');
@@ -148,8 +143,9 @@ export function useUserSync(): void {
       const response = await fetch('/api/user');
 
       // 501 is a deployment with no database, 401 a session that expired
-      // mid-flight. Neither is an error worth showing: the plan is safe on this
-      // device, which is where it lived before any of this.
+      // mid-flight. Neither is an error worth showing, and neither loses
+      // anything: what the server holds is untouched, this load just has no way
+      // to read it.
       if (response.status === 501 || response.status === 401) {
         setStatus('off');
         setHasPulled(true);
@@ -162,23 +158,32 @@ export function useUserSync(): void {
       const remote: UserState = UserStateSchema.parse(await response.json());
       if (cancelled) return;
 
+      // Nobody has ever synced this account. This used to be the moment a
+      // browser's own plan became the first revision; there is no such plan any
+      // more, so the sample week is seeded here and becomes it — otherwise
+      // signing up lands on an empty grid with nothing to edit.
+      if (remote.isNew) usePlannerStore.getState().resetAll();
+
       const store = usePlannerStore.getState();
-      const local = {
-        settings: settingsFromState(store),
-        activities: store.activities,
-      };
+      const merged = mergeOnFirstPull(
+        { settings: settingsFromState(store), activities: store.activities },
+        remote
+      );
 
-      const merged = mergeOnFirstPull(local, remote);
-
-      if (remote.isNew || merged.shouldPush) {
-        // Nothing up there yet, so this browser's plan becomes the first
-        // revision rather than being replaced by an empty one.
-        await pushUser({ settings: merged.settings, activities: local.activities });
+      if (remote.isNew) {
+        await pushUser({ settings: merged.settings, activities: merged.activities });
         if (cancelled) return;
       } else {
-        usePlannerStore
-          .getState()
-          .applyRemoteUser({ settings: merged.settings, activities: remote.activities });
+        store.applyRemoteUser({ settings: merged.settings, activities: remote.activities });
+
+        // The merge may have taught the server something it did not know —
+        // only ever a setting. The activities are deliberately not sent back:
+        // this browser holds nothing the server did not just give it, so a
+        // push of them could only ever overwrite the real list with less.
+        if (merged.shouldPush) {
+          await pushUser({ settings: merged.settings });
+          if (cancelled) return;
+        }
       }
 
       const after = usePlannerStore.getState();
@@ -195,8 +200,9 @@ export function useUserSync(): void {
       if (cancelled) return;
       console.error('User sync failed', error);
       setStatus('error');
-      // The plan is not at risk — it is in `localStorage` either way — so this
-      // says what actually broke rather than alarming anyone about their data.
+      // Nothing was lost — the plan is on the server, this load just did not
+      // get it — so this says what actually broke rather than alarming anyone
+      // about their data.
       toast.error(COPY.user.loadFailed);
       // Settled, even though it failed. Anything waiting on the pull — making
       // a calendar above all — would otherwise wait forever.
@@ -206,12 +212,12 @@ export function useUserSync(): void {
     return () => {
       cancelled = true;
     };
-  }, [isHydrated, isSignedIn, setStatus, setHasPulled]);
+  }, [isSignedIn, setStatus, setHasPulled]);
 
   // Push: settings and activities, debounced, and only when they differ from
   // what the server already told us it has.
   useEffect(() => {
-    if (!isHydrated || !isSignedIn) return;
+    if (!isSignedIn) return;
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     let isPushing = false;
@@ -270,5 +276,5 @@ export function useUserSync(): void {
       clearTimeout(timer);
       unsubscribe();
     };
-  }, [isHydrated, isSignedIn, setStatus]);
+  }, [isSignedIn, setStatus]);
 }

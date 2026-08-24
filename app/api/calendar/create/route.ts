@@ -17,8 +17,8 @@ import { ensureWorkoutsCalendar } from '@/lib/googleCalendar';
  * three of them.
  *
  * That wait is no longer the only thing standing between a user and a second
- * calendar. It cannot be: it is a check one browser makes about its own
- * `localStorage`, and the failures that produce duplicates are the ones where
+ * calendar. It cannot be: it is a check one browser makes about what it has
+ * been told so far, and the failures that produce duplicates are the ones where
  * the browser is wrong about that — a settings pull that failed, two tabs
  * opened together, a render that got ahead of the pull. So the row is asked
  * here too, where the answer is shared by every browser and every tab, and a

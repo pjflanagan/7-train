@@ -1,12 +1,12 @@
 /**
  * The database connection. Server only.
  *
- * Deliberately optional. The planner is local-first and must work signed out
- * and offline exactly as it does today — remote storage is a replica, never a
- * prerequisite for rendering. So a deployment with no `DATABASE_URL` is a
- * supported deployment: `isDatabaseConfigured` is false, the settings routes
- * answer "not configured", and the app behaves precisely as it did before this
- * existed.
+ * Deliberately optional. A deployment with no `DATABASE_URL` is a supported
+ * deployment: `isDatabaseConfigured` is false, the settings routes answer "not
+ * configured", and the app runs with nowhere to keep settings or activities —
+ * an empty planner that forgets everything on reload, which is the honest
+ * behaviour for a deployment with no store behind it. It is not a deployment to
+ * sign users in on; see `_docs/storage.md`.
  */
 
 import { neon } from '@neondatabase/serverless';

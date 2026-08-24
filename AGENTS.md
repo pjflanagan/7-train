@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Agent Guidelines for Workout Planner
 
-Welcome, Agent. This codebase is a Next.js (App Router) + TypeScript application for a workout planner. It uses Zustand + localStorage for data persistence and SCSS Modules for styling. 
+Welcome, Agent. This codebase is a Next.js (App Router) + TypeScript application for a workout planner. State is held in Zustand **in memory only** — nothing is persisted in the browser — and the plan is fetched from the backend on every load. Styling is SCSS Modules. 
 
 ## Architectural Rules
 
@@ -50,10 +50,11 @@ Welcome, Agent. This codebase is a Next.js (App Router) + TypeScript application
    - Global variables/mixins are located in `styles/` and should be `@use`-imported inside the `.module.scss` files.
 
 5. **Data Management:**
-   - Global state is handled via `zustand` (`usePlannerStore`) combined with `persist` middleware.
+   - Global state is handled via `zustand` (`usePlannerStore`), plain and unpersisted.
    - Always validate data parsing with `zod`.
    - Never perform side effects directly in UI components; dispatch actions to the store.
-   - Be mindful of hydration mismatches: wrap client-side logic requiring `window` or `localStorage` behind a `useHydrated` gate.
+   - **Never persist the plan in the browser.** No `localStorage`, no `sessionStorage`, no zustand `persist`. The store starts blank on every load and is filled from `/api/user` and Google Calendar; see `_docs/storage.md` for why. Anything that must wait for that fill gates on `usePlannerLoaded()`.
+   - Be mindful of hydration mismatches: wrap client-side logic requiring `window` behind an effect or a mounted gate.
 
 6. **UI Copy:**
    - **Never use title case.** All user-facing text — buttons, headings, modal titles, labels, placeholders, menu items, toasts — is sentence case: capitalize the first word and proper nouns only.

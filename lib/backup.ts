@@ -1,13 +1,13 @@
 import { PlannerState, PlannerStateSchema } from './types';
-import { migrateStore } from './migrate';
+import { CURRENT_STATE_VERSION, migrateStore } from './migrate';
 
 /**
- * Bumped alongside the zustand `persist` version in `@/lib/store`. It is the
- * version stamped on an export and the one `parseBackup` migrates *from*, so
- * letting it drift behind the store means fresh exports get re-migrated on the
- * way back in.
+ * The shape an export is stamped with, and the one `parseBackup` migrates
+ * *from*. It is the migration chain's own version rather than a second number
+ * kept in step by hand — letting it drift behind means fresh exports get
+ * needlessly re-migrated on the way back in.
  */
-export const BACKUP_VERSION = 10;
+export const BACKUP_VERSION = CURRENT_STATE_VERSION;
 
 const BACKUP_FORMAT = 'workout-week-backup';
 
@@ -71,8 +71,9 @@ export function parseBackup(text: string): PlannerState {
 
   const envelope = raw as Record<string, unknown>;
 
-  // Accept both a wrapped backup and a bare `localStorage` blob, which zustand
-  // writes as `{ state, version }` — that is what a hand-copied export looks like.
+  // Accept both a wrapped backup and a bare `{ state, version }` blob, which is
+  // what zustand used to write to `localStorage` and what a hand-copied export
+  // from that era looks like.
   const hasState = envelope.state && typeof envelope.state === 'object';
   if (!hasState) {
     throw new BackupParseError('That file is not a workout backup.');

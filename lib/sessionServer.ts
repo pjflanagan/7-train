@@ -48,8 +48,9 @@ export async function readSessionIdentity(
     //
     // A session minted before `googleSub` existed has none, and is treated as
     // not signed in *for settings purposes only* — the route answers 401, the
-    // client quietly falls back to local storage, and the next sign in issues a
-    // token that works. Guessing an identity is the one thing not to do here.
+    // client settles without a plan rather than guessing at one, and the next
+    // sign in issues a token that works. Guessing an identity is the one thing
+    // not to do here.
     if (isUsableGoogleSub(token?.googleSub)) {
       return {
         googleSub: token.googleSub,

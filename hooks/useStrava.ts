@@ -5,7 +5,6 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
-import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useIsStravaConfigured } from '@/hooks/useAuth';
 import { useCalendarSettled } from '@/hooks/useCalendarSyncStatus';
 import { useStravaSyncStore } from '@/hooks/useStravaStatus';
@@ -120,7 +119,6 @@ export function connectStrava(): void {
  * should use `useStravaSyncStatus`.
  */
 export function useStravaSync(): void {
-  const isHydrated = usePlannerHydrated();
   const { isConnected } = useStravaConnection();
   // Google Calendar owns the schedule while it is connected, so its pull has to
   // land first — see `useCalendarSettled` for why this is not a status check.
@@ -145,7 +143,7 @@ export function useStravaSync(): void {
   useEffect(() => {
     // `isConnected` is already false when the integration is switched off — see
     // `useStravaConnection` — so this covers the kill switch too.
-    if (!isHydrated || !isConnected) {
+    if (!isConnected) {
       setStatus('off');
       // Deliberately not clearing `readNonceRef`. Connecting Strava is a full
       // page navigation through its consent screen, so a real reconnect brings
@@ -231,7 +229,6 @@ export function useStravaSync(): void {
       cancelled = true;
     };
   }, [
-    isHydrated,
     isConnected,
     isCalendarSettled,
     resyncNonce,

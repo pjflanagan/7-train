@@ -15,11 +15,11 @@ import { ActivitySchema } from '@/lib/types';
  * Calendar is the store for those.
  *
  * Both answer 501 when there is no database configured, which is a supported
- * deployment: the app is local-first, and without `DATABASE_URL` it behaves
- * exactly as it did before any of this existed.
+ * deployment — one where nothing is remembered between loads, because the
+ * browser remembers nothing either. See `_docs/storage.md`.
  */
 
-/** Not an error the user should see — the client falls back to local storage. */
+/** Not an error the user should see — the client settles with an empty plan. */
 const NOT_CONFIGURED = NextResponse.json(
   { error: 'No database is configured', code: 'no-database' },
   { status: 501 }
