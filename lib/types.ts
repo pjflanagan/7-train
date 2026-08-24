@@ -125,6 +125,16 @@ export const ScheduledEventSchema = z.object({
    */
   activitySnapshot: ActivitySnapshotSchema.optional(),
   /**
+   * What the workout is actually meant to be, in the user's own words: reps,
+   * a route, how it felt. Written on the event rather than on the day, so it
+   * travels with the workout when it moves and has somewhere durable to live —
+   * the day notes it replaces had no store behind them at all.
+   *
+   * Capped at `MAX_EVENT_NOTE_LENGTH`, which is what fits in the Google
+   * Calendar property it rides in.
+   */
+  note: z.string().optional(),
+  /**
    * Set once the week's activity stops describing this event — the week removed
    * it, or re-measured it (swimming in miles becoming swimming in minutes).
    * From then on the snapshot is the truth and stops tracking, so a logged "30"
@@ -150,7 +160,6 @@ export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 export const PlannerStateSchema = z.object({
   activities: z.array(ActivitySchema),
   events: z.array(ScheduledEventSchema),
-  notes: z.record(z.string(), z.string()), // `${weekStart}-${day}` -> text
   /**
    * What each week is aiming at, keyed `${weekStart}:${activityId}`. A week
    * holds its own copy of every activity it plans, taken from `activities` when
@@ -159,7 +168,6 @@ export const PlannerStateSchema = z.object({
    * or any other week moving. A week holds nothing until it is filled.
    */
   weekActivities: z.record(z.string(), ActivitySchema).optional().default({}),
-  links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),
   tempUnit: z.enum(['C', 'F']).optional().default('F'),

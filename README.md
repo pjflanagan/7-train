@@ -1,7 +1,7 @@
 # 7 Train
 
-A sleek, responsive, local-first workout planner built for maximum usability and
-zero loading screens.
+A sleek, responsive workout planner that keeps your plan in your own Google
+account rather than in this browser.
 
 Plan a week of activities, hit your targets, and — optionally — keep the whole
 thing in your own Google Calendar with what you actually did read back from
@@ -26,18 +26,22 @@ npm run build     # next build
 Next.js (App Router) in TypeScript.
 
 - **Next.js** for the app framework and API routes
-- **Zustand** (with `persist`) for local-first state
+- **Zustand** for in-memory state — nothing is cached in the browser
 - **Zod** for schema validation at every boundary
 - **@dnd-kit** for accessible, touch-friendly drag and drop
 - **SCSS Modules** for scoped styling — [no Tailwind](AGENTS.md)
-- **Drizzle** + Neon Postgres for settings, when configured
+- **Drizzle** + Neon Postgres for settings and activities
 
-### Local-first, precisely
+### Backend-first, precisely
 
-The plan lives in `localStorage` and the render path reads only that. Signed
-out, offline, with no database and no credentials, every feature that does not
-name a third party works. Google Calendar and Postgres are replicas, never
-prerequisites.
+The browser stores nothing. Every load starts from an empty store and fetches
+the plan: settings and activities from Postgres, the schedule from the
+`Workouts` calendar in the user's own Google account. Signing out empties it
+again, so a shared machine never shows the last person's week.
+
+The trade is deliberate and worth knowing: there is no signed-out mode. With
+nothing to fetch and nowhere to keep an edit, a signed out browser gets a sign
+in and nothing else. See [_docs/storage.md](_docs/storage.md).
 
 ## Optional integrations
 

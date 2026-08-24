@@ -39,6 +39,7 @@ const draft: EventDraft = {
 /** Captures the body `createEvent` sends, without touching the network. */
 async function writtenEvent(withDraft: EventDraft): Promise<{
   summary: string;
+  description?: string;
   extendedProperties: { private: Record<string, string> };
 }> {
   let body: string | undefined;
@@ -86,6 +87,33 @@ describe('what an event carries in Google', () => {
   it('reads a tracking event as not frozen', async () => {
     const props = await writtenProps(draft);
     expect(eventPropsFromEvent(eventWith(props))?.activityFrozen).toBe(false);
+  });
+
+  it("round-trips the workout's note, and shows it in the calendar entry", async () => {
+    // The note is where day notes went, and this is the store they never had.
+    const written = await writtenEvent({ ...draft, note: '4x100 on 1:45' });
+
+    expect(eventPropsFromEvent(eventWith(written.extendedProperties.private))?.note)
+      .toBe('4x100 on 1:45');
+    // Also written into the description, so a phone lock screen says what the
+    // session is for. The property is what is read back.
+    expect(written.description).toContain('4x100 on 1:45');
+  });
+
+  it('reads a workout with no note as having none, not an empty one', async () => {
+    const props = await writtenProps(draft);
+    expect(eventPropsFromEvent(eventWith(props))?.note).toBeUndefined();
+  });
+
+  it('trims a note that will not fit rather than letting Google cut it', async () => {
+    // Google truncates a property at 1024 bytes silently, mid-character if it
+    // has to. Only a note made of multi-byte characters can reach that.
+    const props = await writtenProps({ ...draft, note: '🏊'.repeat(500) });
+    const read = eventPropsFromEvent(eventWith(props))?.note ?? '';
+
+    expect(new TextEncoder().encode(read).length).toBeLessThanOrEqual(1024);
+    // Whole characters, not half of one.
+    expect([...read].every((char) => char === '🏊')).toBe(true);
   });
 
   it('drops the sub-kinds rather than the whole copy when it will not fit', async () => {

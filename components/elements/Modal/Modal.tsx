@@ -17,6 +17,13 @@ export interface ModalProps {
   footer?: React.ReactNode;
   className?: string;
   maxWidth?: string;
+  /**
+   * Whether there is a way out of it. False drops the close button and stops
+   * Escape and a backdrop click from closing — for a modal that is not a layer
+   * over the app but the whole of what the app is showing, where dismissing it
+   * would leave nothing behind. `onClose` is then never called.
+   */
+  isDismissible?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -26,7 +33,8 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   className,
-  maxWidth = '500px'
+  maxWidth = '500px',
+  isDismissible = true
 }) => {
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -49,7 +57,7 @@ export const Modal: React.FC<ModalProps> = ({
       
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          onClose();
+          if (isDismissible) onClose();
           return;
         }
 
@@ -97,7 +105,7 @@ export const Modal: React.FC<ModalProps> = ({
         document.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen, mounted, onClose]);
+  }, [isOpen, mounted, onClose, isDismissible]);
 
   if (!isOpen || !mounted) return null;
 
@@ -106,7 +114,7 @@ export const Modal: React.FC<ModalProps> = ({
       className={styles.overlay} 
       ref={overlayRef} 
       onMouseDown={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (isDismissible && e.target === overlayRef.current) onClose();
       }}
     >
       <div 
@@ -119,11 +127,13 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <div className={styles.header}>
           {title && <h2 className={styles.title}>{title}</h2>}
-          <div className={styles.closeWrapper}>
-            <IconButton onClick={onClose} aria-label={COPY.modal.close}>
-              <MdClose />
-            </IconButton>
-          </div>
+          {isDismissible && (
+            <div className={styles.closeWrapper}>
+              <IconButton onClick={onClose} aria-label={COPY.modal.close}>
+                <MdClose />
+              </IconButton>
+            </div>
+          )}
         </div>
         <div className={styles.content}>
           {children}

@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { usePlannerStore, noteKey } from '@/lib/store';
+import { usePlannerStore } from '@/lib/store';
 import { DAYS } from '@/lib/constants';
 import { WeekStartsOn } from '@/lib/dates';
 import { byStartTime, DEFAULT_START_MINUTES } from '@/lib/schedule';
 import { resolveEventActivity } from '@/lib/activitySnapshot';
 import { weekActivityKey, activitiesForWeek } from '@/lib/progress';
-import { ScheduledEvent } from '@/lib/types';
+import { Activity, HelpfulLink, ScheduledEvent } from '@/lib/types';
 
 type DayName = typeof DAYS[number];
 
@@ -65,15 +65,9 @@ export const useDayEvents = (day: DayName, weekStart: string) => {
 export const useEvent = (id: string | null) =>
   usePlannerStore((state) => (id ? state.events.find((event) => event.id === id) : undefined));
 
-export const useNote = (day: DayName, weekStart: string) =>
-  usePlannerStore((state) => state.notes[noteKey(weekStart, day)] || '');
-
-/** True when a week has no scheduled events and no day notes. */
+/** True when a week has nothing scheduled. Notes live on the events now. */
 export const useIsWeekEmpty = (weekStart: string) =>
-  usePlannerStore((state) =>
-    !state.events.some(i => i.weekStart === weekStart) &&
-    !DAYS.some(day => state.notes[noteKey(weekStart, day)]?.trim())
-  );
+  usePlannerStore((state) => !state.events.some(i => i.weekStart === weekStart));
 
 /**
  * The `workoutType` sub-tags already scheduled in a week, per activity — used to
@@ -92,7 +86,66 @@ export const useScheduledSubTags = (weekStart: string, typeId: string) => {
   }, [events, weekStart, typeId]);
 };
 
-export const useLinks = () => usePlannerStore((state) => state.links);
+/** One activity's links, for the list that gathers all of them. */
+export interface ActivityLinks {
+  activityId: string;
+  name: string;
+  icon: Activity['icon'];
+  color: string;
+  links: HelpfulLink[];
+}
+
+/**
+ * Every link on every activity, gathered under the activity it belongs to.
+ *
+ * This is the whole of the links list now. There used to be a second,
+ * standalone set of bookmarks kept beside the plan — a separate thing to
+ * curate, and the only part of the plan with no store behind it once the
+ * browser cache went. A link is about an activity ("how to swim", the pool
+ * timetable), so the activity is where it is written, and this is the reading
+ * view over the lot.
+ *
+ * Both sources are walked: "My activities" first, in the user's own order, and
+ * then any activity a week is aiming at that the template no longer has — a
+ * link on last month's activity is still a link the user put there.
+ */
+export const useAllActivityLinks = (): ActivityLinks[] => {
+  const activities = usePlannerStore((state) => state.activities);
+  const weekActivities = usePlannerStore((state) => state.weekActivities);
+
+  return useMemo(() => {
+    const byActivity = new Map<string, ActivityLinks>();
+
+    const collect = (activity: Activity) => {
+      const links = activity.links ?? [];
+      if (links.length === 0) return;
+
+      // The template's copy names the activity; a week's copy only fills in
+      // for one the template has dropped.
+      const entry = byActivity.get(activity.id) ?? {
+        activityId: activity.id,
+        name: activity.name,
+        icon: activity.icon,
+        color: activity.color,
+        links: [],
+      };
+      // A week holds its own copy of an activity, so the same link arrives
+      // once per week that aims at it.
+      const seen = new Set(entry.links.map((link) => link.url));
+      for (const link of links) {
+        if (seen.has(link.url)) continue;
+        seen.add(link.url);
+        entry.links.push(link);
+      }
+      byActivity.set(activity.id, entry);
+    };
+
+    activities.forEach(collect);
+    Object.values(weekActivities ?? {}).forEach(collect);
+
+    return [...byActivity.values()];
+  }, [activities, weekActivities]);
+};
 
 export const useWeekStartsOn = () =>
   usePlannerStore((state) => (state.weekStartsOn ?? 1) as WeekStartsOn);

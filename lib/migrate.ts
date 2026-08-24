@@ -1,42 +1,19 @@
-import { PlannerState, ActivitySchema, ScheduledEventSchema, HelpfulLinkSchema, HistoryEntrySchema, Activity, ScheduledEvent } from './types';
-import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './seed';
 import { getWeekStartKey, addWeeks } from './dates';
-import { ACTIVITY_ICONS, IconKey } from './icons';
+import { MAX_EVENT_NOTE_LENGTH } from './constants';
+import { IconKey } from './icons';
 import { DEFAULT_SPORTS_BY_ICON } from './stravaSports';
 
-function mapLegacyIcon(iconStr: string): IconKey {
-  const mapping = Object.entries(ACTIVITY_ICONS).find(([, val]) => val.legacy === iconStr);
-  return mapping ? (mapping[0] as IconKey) : 'other';
-}
+/**
+ * Shapes the plan has had, and how to get from each to the next.
+ *
+ * This used to be read on every page load, migrating whatever `localStorage`
+ * was holding. The browser holds nothing now, so the only thing left that can
+ * hand us an old shape is a backup file someone exported months ago — see
+ * `lib/backup.ts`, which is the sole caller of `migrateStore`.
+ */
 
-function normalizeActivity(raw: unknown): Activity {
-  const activity = { ...(raw as Record<string, unknown>) } as Partial<Activity> & Record<string, unknown>;
-  if (typeof activity.icon === 'string') {
-    // If it is a legacy Material Icon ligature, remap it
-    if (!Object.keys(ACTIVITY_ICONS).includes(activity.icon)) {
-      activity.icon = mapLegacyIcon(activity.icon);
-    }
-  }
-  if (!activity.workoutTypes) activity.workoutTypes = [];
-  if (!activity.links) activity.links = [];
-  // Legacy imports predate the `instance` rename, so their raw metric is still `times`.
-  if ((activity.metric as string) === 'times') {
-    activity.metric = 'instance';
-    activity.unit = 'sessions';
-  }
-  if (activity.metric === 'duration') activity.unit = 'mins';
-  return ActivitySchema.parse(activity);
-}
-
-function normalizeEvent(raw: unknown, weekStarts: [string, string]): ScheduledEvent {
-  const event = { ...(raw as Record<string, unknown>) } as Record<string, unknown>;
-  // Legacy events carried a relative slot (week 1 or 2); anchor it to a real date.
-  if (typeof event.weekStart !== 'string') {
-    event.weekStart = event.week === 2 ? weekStarts[1] : weekStarts[0];
-  }
-  delete event.week;
-  return ScheduledEventSchema.parse(event);
-}
+/** The shape `migrateStore` migrates *to*, and what a fresh backup is stamped with. */
+export const CURRENT_STATE_VERSION = 11;
 
 /** Rekey notes from the legacy `${day}-${week}` form to `${weekStart}-${day}`. */
 function migrateNotes(
@@ -54,95 +31,6 @@ function migrateNotes(
     }
   });
   return migrated;
-}
-
-export function importLegacy(): Partial<PlannerState> | null {
-  if (typeof window === 'undefined') return null;
-
-  const raw = {
-    types:   localStorage.getItem('workout_week_types'),
-    events:   localStorage.getItem('workout_week_calendar'),
-    notes:   localStorage.getItem('workout_week_notes'),
-    links:   localStorage.getItem('workout_week_links'),
-    history: localStorage.getItem('workout_week_history'),
-    monday:  localStorage.getItem('workout_week_last_viewed_monday'),
-  };
-
-  if (Object.values(raw).every(v => v == null)) return null;
-
-  // Legacy data is relative to whichever week it was last edited in; anchor
-  // week 1 to the week the import happens in.
-  const currentWeekStart = getWeekStartKey(new Date(), 1);
-  const weekStarts: [string, string] = [currentWeekStart, addWeeks(currentWeekStart, 1)];
-
-  let activities = DEFAULT_ACTIVITIES;
-  if (raw.types) {
-    try {
-      const parsed = JSON.parse(raw.types);
-      activities = parsed.map(normalizeActivity);
-    } catch (e) {
-      console.error('Failed to parse legacy types', e);
-    }
-  }
-
-  let events = getDefaultEvents(currentWeekStart);
-  if (raw.events) {
-    try {
-      const parsed = JSON.parse(raw.events);
-      events = parsed.map((i: unknown) => normalizeEvent(i, weekStarts));
-    } catch (e) {
-      console.error('Failed to parse legacy events', e);
-    }
-  }
-
-  // enforce value=1 for instance metric
-  events = events.map(event => {
-    const activity = activities.find(g => g.id === event.typeId);
-    if (activity && activity.metric === 'instance') {
-      return { ...event, value: 1 };
-    }
-    return event;
-  });
-
-  let notes: Record<string, string> = {};
-  if (raw.notes) {
-    try { notes = migrateNotes(JSON.parse(raw.notes), weekStarts); } catch {}
-  }
-
-  let links = DEFAULT_LINKS;
-  if (raw.links) {
-    try { 
-      const parsed = JSON.parse(raw.links);
-      links = parsed.map((l: unknown) => HelpfulLinkSchema.parse(l));
-    } catch {}
-  }
-
-  let history = [];
-  if (raw.history) {
-    try {
-      const parsed = JSON.parse(raw.history);
-      history = parsed.map((h: unknown) => HistoryEntrySchema.parse(h));
-    } catch {}
-  }
-
-  const newState: Partial<PlannerState> = {
-    activities,
-    events,
-    notes,
-    links,
-    history,
-    lastViewedMonday: raw.monday || null
-  };
-
-  // cleanup
-  localStorage.removeItem('workout_week_types');
-  localStorage.removeItem('workout_week_calendar');
-  localStorage.removeItem('workout_week_notes');
-  localStorage.removeItem('workout_week_links');
-  localStorage.removeItem('workout_week_history');
-  localStorage.removeItem('workout_week_last_viewed_monday');
-
-  return newState;
 }
 
 /**
@@ -480,6 +368,45 @@ function migrateV9toV10(state: Record<string, unknown>): Record<string, unknown>
   return { ...state, activities, weekActivities };
 }
 
+/**
+ * Day notes became notes on the workouts themselves.
+ *
+ * A note was keyed `${weekStart}-${day}` and belonged to a column, which meant
+ * it stayed behind when the workout it was about was dragged to another day —
+ * and, more to the point, that it had nowhere to live once the browser stopped
+ * caching the plan. On the event it travels with the workout and goes to Google
+ * Calendar with it.
+ *
+ * A day's note goes to the first workout on that day, which is the only reading
+ * that can be made without asking: a day with two workouts had one note between
+ * them, and a day with none had a note about a rest day that no workout can
+ * carry. Those are dropped rather than invented onto a neighbouring day.
+ */
+function migrateV10toV11(state: Record<string, unknown>): Record<string, unknown> {
+  const notes = state.notes;
+  const rest = { ...state };
+  delete rest.notes;
+  // Nothing to move. The key still goes, since the shape no longer has it.
+  if (!notes || typeof notes !== 'object' || !Array.isArray(state.events)) return rest;
+
+  const claimed = new Set<string>();
+  const events = state.events.map((raw) => {
+    const event = raw as Record<string, unknown>;
+    const key = `${event.weekStart}-${event.day}`;
+    // Already has one of its own, or its day's note has gone to an earlier
+    // workout on the same day.
+    if (event.note || claimed.has(key)) return event;
+
+    const note = (notes as Record<string, unknown>)[key];
+    if (typeof note !== 'string' || !note.trim()) return event;
+
+    claimed.add(key);
+    return { ...event, note: note.trim().slice(0, MAX_EVENT_NOTE_LENGTH) };
+  });
+
+  return { ...rest, events };
+}
+
 export function migrateStore(persistedState: unknown, version: number): unknown {
   if (!persistedState || typeof persistedState !== 'object') return persistedState;
 
@@ -493,5 +420,6 @@ export function migrateStore(persistedState: unknown, version: number): unknown 
   if (version < 8) state = migrateV7toV8(state);
   if (version < 9) state = migrateV8toV9(state);
   if (version < 10) state = migrateV9toV10(state);
+  if (version < 11) state = migrateV10toV11(state);
   return state;
 }

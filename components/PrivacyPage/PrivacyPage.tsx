@@ -3,29 +3,36 @@ import { LegalPage } from '@/components/LegalPage/LegalPage';
 
 /** The privacy policy, rendered by `app/privacy/page.tsx`. */
 export const PrivacyPage: React.FC = () => (
-  <LegalPage title="Privacy policy" lastUpdated="15 August 2026">
+  <LegalPage title="Privacy policy" lastUpdated="24 August 2026">
     <p>
       7 Train is a personal workout planner built to hold as little of your data as possible.
-      There is no application database: your plan lives in your own browser and, if you ask for
-      it, in your own Google account.
+      Your scheduled workouts live in a calendar inside your own Google account; your activities
+      and display settings live in the app&apos;s database, tied to that account. The app keeps
+      nothing in your browser between visits.
     </p>
 
     <h2>What the app stores</h2>
     <ul>
-      <li>
-        <strong>In your browser.</strong> Your activities, weekly targets and scheduled events
-        are saved to this browser&apos;s local storage, along with display settings such as your
-        units. Clearing site data removes them.
-      </li>
       <li>
         <strong>In your Google account.</strong> If you connect Google Calendar, the app creates
         a calendar it owns inside your account and writes your scheduled events and weekly
         targets there. If you export to Google Sheets, it creates one spreadsheet in your Drive.
       </li>
       <li>
+        <strong>In the app&apos;s database.</strong> Your activities and display settings — units,
+        clock, which day your week starts on — along with your Google account id, email address
+        and name, and the id of the calendar and spreadsheet the app made for you. This is what
+        lets a second device show the same plan.
+      </li>
+      <li>
         <strong>In a sign-in cookie.</strong> When you sign in, an encrypted session cookie in
         your browser holds your name, email address, profile picture URL and Google access
-        tokens. Nothing about your account is stored on a server.
+        tokens. Those tokens are never written to the database.
+      </li>
+      <li>
+        <strong>Not in your browser.</strong> Your plan is not cached locally. It is fetched
+        when you open the app and dropped when you sign out or close the tab, so signing out
+        leaves nothing of your plan on the machine.
       </li>
     </ul>
 
@@ -83,10 +90,13 @@ export const PrivacyPage: React.FC = () => (
 
     <h2>Deleting your data</h2>
     <ul>
-      <li>Clear this site&apos;s data in your browser to remove the local plan and settings.</li>
-      <li>Sign out to drop the session cookie and its tokens.</li>
+      <li>Sign out to drop the session cookie, its tokens, and the plan on screen.</li>
       <li>Delete the app&apos;s calendar or exported spreadsheet from your Google account.</li>
       <li>Revoke the app&apos;s access from your Google account permissions page.</li>
+      <li>
+        Email the address below to have your activities and settings deleted from the
+        app&apos;s database.
+      </li>
     </ul>
 
     <h2>Children</h2>

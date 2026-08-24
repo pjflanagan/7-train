@@ -42,6 +42,15 @@ export const COPY = {
     logoTitle: '7 train',
   },
 
+  /** The locked door a signed-out browser gets instead of an empty planner. */
+  signIn: {
+    title: 'Sign in to plan your week',
+    blurb:
+      'Your plan lives in your own Google Calendar, so it follows you between devices. Signing in is how the app finds it.',
+    notConfiguredMessage:
+      'This deployment has no Google credentials, so there is nothing to sign in to yet.',
+  },
+
   account: {
     menuLabel: 'Account',
     signIn: 'Sign in with Google',
@@ -147,7 +156,7 @@ export const COPY = {
     /** Shown on the Strava tab when there is no connection yet. */
     stravaNotConnected: 'Not connected',
     signInBlurb:
-      'Sign in to keep your plan in Google Calendar, so it follows you between devices. Your plan stays on this device either way.',
+      'Sign in to keep your plan in Google Calendar, so it follows you between devices.',
     reauth: 'Google access expired. Sign in again to restore it.',
     reconnect: 'Reconnect',
     connect: 'Connect',
@@ -184,9 +193,8 @@ export const COPY = {
     progress: 'Week progress',
     fill: 'Fill week',
     clear: 'Clear week',
-    clearMessage: 'This will remove all events and notes from this week. Are you sure?',
+    clearMessage: 'This will remove every workout on this week, and the notes on them. Are you sure?',
     confirm: 'Confirm',
-    notesPlaceholder: 'Notes…',
     showEarlier: 'Show more past weeks',
     showLater: 'Show more upcoming weeks',
     jumpToToday: 'Jump to today',
@@ -196,8 +204,7 @@ export const COPY = {
       default: MY_ACTIVITIES,
     },
     copyActivities: 'Activities and targets',
-    copySchedule: 'Schedule',
-    copyNotes: 'Notes',
+    copySchedule: 'Schedule and notes',
   },
 
   events: {
@@ -221,14 +228,19 @@ export const COPY = {
     length: 'Length',
     noType: 'No type',
     done: 'Done',
+    /** The line at the bottom of a card: what this workout is meant to be. */
+    note: 'Note',
+    notePlaceholder: 'Add a note…',
   },
 
   links: {
     modalTitle: 'Links',
     titlePlaceholder: 'Link title',
     urlPlaceholder: 'URL',
-    delete: 'Delete link',
     bookmarks: 'Bookmarks',
+    /** The list gathers what the activities carry, so it is empty until they do. */
+    emptyMessage:
+      'No links yet. Add them to an activity in "My activities" and they show up here.',
   },
 
   settings: {

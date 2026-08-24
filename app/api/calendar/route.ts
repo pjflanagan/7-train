@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getGoogleAccessToken } from '@/lib/googleServer';
 import { GOOGLE_INTEGRATIONS } from '@/lib/google';
 import { ActivitySchema, ActivitySnapshotSchema } from '@/lib/types';
+import { MAX_EVENT_NOTE_LENGTH } from '@/lib/constants';
 import {
   createEvent,
   createTargetsEvent,
@@ -58,6 +59,12 @@ const DraftSchema = z.object({
   weekStart: z.string(),
   /** Set once a Strava recording has been matched to this workout. */
   stravaActivityId: z.number().nullable().optional(),
+  /**
+   * The note on the workout. Capped here as well as in the store — the cap is
+   * what keeps it inside the property it is written to, and a client is not the
+   * place that guarantee can live.
+   */
+  note: z.string().max(MAX_EVENT_NOTE_LENGTH).optional(),
 });
 
 const TargetsSchema = z.object({

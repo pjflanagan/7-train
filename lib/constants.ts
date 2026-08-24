@@ -10,6 +10,18 @@
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
 /**
+ * How long a workout's note may be.
+ *
+ * A note rides to Google in one of the event's private properties, and Google
+ * caps those at 1024 **bytes**, silently truncating rather than failing. 500
+ * characters of anything ordinary fits inside that with room to spare; a note
+ * that manages not to — 500 emoji — is trimmed to fit on the way out, the same
+ * bargain the activity snapshot makes. The field is for a line about the
+ * workout, not an essay.
+ */
+export const MAX_EVENT_NOTE_LENGTH = 500;
+
+/**
  * Activity colors. Held around the same lightness so no chip reads as louder than
  * its neighbours, and mid-toned enough to stay legible on both themes.
  */

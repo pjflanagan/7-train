@@ -5,33 +5,31 @@ import { activitiesForWeek, WeekActivities } from './progress';
 import { buildActivitySnapshot, resolveEventActivity } from './activitySnapshot';
 
 /**
- * Flatten scheduled events and day notes into dated rows.
+ * Flatten scheduled events into dated rows.
  *
  * Weeks are stored against real dates and kept indefinitely, so the schedule
  * itself is the record — `history` only holds rows imported from the old
  * archive-on-rollover format.
+ *
+ * A note is a column of the workout it belongs to, since that is where notes
+ * live. The day-note rows this used to emit — a dated row with no workout on
+ * it, carrying the note for a rest day — have nothing to stand for any more.
  */
 export function entriesFromSchedule(
   events: ScheduledEvent[],
-  notes: Record<string, string>,
   weekStartsOn: WeekStartsOn = 1,
   weekActivities?: WeekActivities
 ): HistoryEntry[] {
   const entries: HistoryEntry[] = [];
   const weekStarts = new Set(events.map(i => i.weekStart));
-  Object.keys(notes).forEach(key => {
-    const weekStart = key.slice(0, 10);
-    if (weekStart) weekStarts.add(weekStart);
-  });
 
   weekStarts.forEach(weekStart => {
     DAYS.forEach(day => {
       const date = formatDateLocal(dateForDay(weekStart, day, weekStartsOn));
-      const note = notes[`${weekStart}-${day}`] || null;
-      const dayEvents = events.filter(i => i.weekStart === weekStart && i.day === day);
 
-      if (dayEvents.length > 0) {
-        dayEvents.forEach(event => {
+      events
+        .filter(i => i.weekStart === weekStart && i.day === day)
+        .forEach(event => {
           entries.push({
             id: `sched-${event.id}`,
             date,
@@ -39,7 +37,7 @@ export function entriesFromSchedule(
             typeId: event.typeId,
             workoutType: event.workoutType || null,
             value: event.value,
-            notes: note,
+            notes: event.note || null,
             // Each week names its activities itself, so a row carries what its
             // own week called it rather than trusting a shared lookup later.
             activitySnapshot:
@@ -53,17 +51,6 @@ export function entriesFromSchedule(
               })()
           });
         });
-      } else if (note) {
-        entries.push({
-          id: `sched-note-${weekStart}-${day}`,
-          date,
-          day,
-          typeId: null,
-          workoutType: null,
-          value: null,
-          notes: note
-        });
-      }
     });
   });
 

@@ -95,9 +95,9 @@ export const useCalendarSyncStore = create<CalendarSyncState>((set) => ({
  * coming.
  *
  * Strava is read against this. Google Calendar owns what was *planned*, so a
- * read that beats the pull matches recordings against whatever happened to be
- * in `localStorage` and adds duplicates for the workouts the pull was about to
- * bring in.
+ * read that beats the pull matches recordings against a schedule that has not
+ * arrived — now an empty one — and adds duplicates for every workout the pull
+ * was about to bring in.
  *
  * The previous gate — `status === 'off' || status === 'synced'` — was true on
  * the very first render, because `off` is the store's initial value. It let

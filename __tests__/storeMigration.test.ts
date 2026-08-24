@@ -5,8 +5,8 @@ import { getWeekStartKey, addWeeks } from '@/lib/dates';
 const thisWeek = getWeekStartKey(new Date(), 1);
 const nextWeek = addWeeks(thisWeek, 1);
 
-type MigratedEvent = { id: string; weekStart?: string; week?: number };
-type Migrated = { events: MigratedEvent[]; notes: Record<string, string>; weekStartsOn: number };
+type MigratedEvent = { id: string; weekStart?: string; week?: number; note?: string };
+type Migrated = { events: MigratedEvent[]; notes?: Record<string, string>; weekStartsOn: number };
 
 // v1 and v2 wrote the schedule under `items` and the activities under `goals`;
 // the v3 rename is what turns those into `events` and `activities`.
@@ -34,12 +34,16 @@ describe('migrateStore v1 -> v2', () => {
     result.events.forEach(event => expect(event.week).toBeUndefined());
   });
 
-  it('rekeys notes from day-week to weekStart-day', () => {
+  it("rekeys notes far enough to reach the day's workout", () => {
+    // v1 keyed a note `${day}-${week}` against a relative week. v2 rekeys it to
+    // a real date and v11 hands it to the workout on that day, so a note
+    // written in the very first shape still ends up somewhere.
     const result = migrateStore(v1, 1) as Migrated;
+    const byId = Object.fromEntries(result.events.map(i => [i.id, i]));
 
-    expect(result.notes[`${thisWeek}-monday`]).toBe('first');
-    expect(result.notes[`${nextWeek}-tuesday`]).toBe('second');
-    expect(result.notes['monday-1']).toBeUndefined();
+    expect(byId['1'].note).toBe('first');   // monday of this week
+    expect(byId['2'].note).toBe('second');  // tuesday of next week
+    expect(result.notes).toBeUndefined();
   });
 
   it('defaults the week start to Monday', () => {
@@ -69,7 +73,6 @@ describe('migrateStore v2 -> v3', () => {
   it('carries everything else across untouched', () => {
     const result = migrateStore(v2, 2) as Record<string, unknown>;
 
-    expect(result.notes).toEqual(v2.notes);
     // The v2 target survives as the week's own copy of the activity, aiming
     // at the same number.
     expect(result.weeklyTargets).toBeUndefined();
@@ -86,7 +89,6 @@ describe('migrateStore v2 -> v3', () => {
     const result = migrateStore(v3, 3) as Record<string, unknown>;
     expect(result.activities).toEqual(v3.activities);
     expect(result.events).toMatchObject(v3.events);
-    expect(result.notes).toEqual(v3.notes);
   });
 });
 
@@ -252,5 +254,61 @@ describe('migrateStore v9 -> v10', () => {
       'TrailRun',
       'VirtualRun',
     ]);
+  });
+});
+
+describe('migrateStore v10 -> v11', () => {
+  // Day notes became notes on the workouts. Only a backup taken before the
+  // move can still be carrying the old shape, and this is what happens to it.
+  const monday = { id: '1', typeId: 'a', day: 'monday', weekStart: '2026-08-24', value: 4 };
+  const alsoMonday = { id: '2', typeId: 'a', day: 'monday', weekStart: '2026-08-24', value: 2 };
+  const tuesday = { id: '3', typeId: 'a', day: 'tuesday', weekStart: '2026-08-24', value: 1 };
+
+  const migrate = (state: Record<string, unknown>) =>
+    migrateStore(state, 10) as { events: MigratedEvent[]; notes?: unknown };
+
+  it("hands a day's note to the workout on that day", () => {
+    const result = migrate({
+      events: [monday, tuesday],
+      notes: { '2026-08-24-monday': 'felt strong' },
+    });
+    expect(result.events[0].note).toBe('felt strong');
+    expect(result.events[1].note).toBeUndefined();
+  });
+
+  it('gives it to the first workout when the day has several', () => {
+    // One note, two workouts: there is no reading that splits it, and copying
+    // it onto both would invent a note nobody wrote.
+    const result = migrate({
+      events: [monday, alsoMonday],
+      notes: { '2026-08-24-monday': 'felt strong' },
+    });
+    expect(result.events[0].note).toBe('felt strong');
+    expect(result.events[1].note).toBeUndefined();
+  });
+
+  it('drops a note about a day nothing was scheduled on', () => {
+    // A rest-day note has no workout to belong to. Putting it on a neighbouring
+    // day would be worse than losing it.
+    const result = migrate({
+      events: [tuesday],
+      notes: { '2026-08-24-monday': 'rest' },
+    });
+    expect(result.events[0].note).toBeUndefined();
+    expect(result.notes).toBeUndefined();
+  });
+
+  it('leaves a note the workout already has', () => {
+    const result = migrate({
+      events: [{ ...monday, note: 'its own' }],
+      notes: { '2026-08-24-monday': 'the day\'s' },
+    });
+    expect(result.events[0].note).toBe('its own');
+  });
+
+  it('takes the key away even when there is nothing to move', () => {
+    const result = migrate({ events: [monday] });
+    expect(result.notes).toBeUndefined();
+    expect(result.events[0].note).toBeUndefined();
   });
 });

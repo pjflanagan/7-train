@@ -38,7 +38,6 @@ export function CopyActivitiesCard({ weekStart, from }: CopyActivitiesCardProps)
       onClick={() =>
         copyWeek(isDefault ? null : addWeeks(weekStart, -1), weekStart, {
           schedule: false,
-          notes: false,
           activities: true,
         })
       }

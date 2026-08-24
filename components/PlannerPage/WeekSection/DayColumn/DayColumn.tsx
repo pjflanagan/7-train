@@ -7,7 +7,6 @@ import { DAYS } from '@/lib/constants';
 import { useDayEvents } from '@/hooks/usePlannerSelectors';
 import { AddEventZone } from '@/components/PlannerPage/AddEventZone/AddEventZone';
 import { DayHeader } from './DayHeader/DayHeader';
-import { DayNotes } from './DayNotes/DayNotes';
 import { EventCard } from './EventCard/EventCard';
 import styles from './DayColumn.module.scss';
 
@@ -44,7 +43,6 @@ export function DayColumn({ day, weekStart, date, isToday }: DayColumnProps) {
         ))}
         <AddEventZone day={day} weekStart={weekStart} />
       </div>
-      <DayNotes day={day} weekStart={weekStart} />
     </div>
   );
 }

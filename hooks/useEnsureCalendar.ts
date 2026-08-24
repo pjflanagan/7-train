@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
-import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { useUserSettled } from '@/hooks/useUserSync';
@@ -39,13 +38,12 @@ import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
  * already full, and adopting it is not the same as filling it.
  */
 export function useEnsureCalendar(): void {
-  const { scopes, isSignedIn } = useGoogleAccount();
-  const isHydrated = usePlannerHydrated();
+  const { scopes, isSignedIn, isLoading } = useGoogleAccount();
   const isUserSettled = useUserSettled();
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
 
   const isConnected =
-    isHydrated && isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
+    isSignedIn && isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
 
   /**
    * One attempt per connected session. Deliberately *not* cleared when the
@@ -60,9 +58,9 @@ export function useEnsureCalendar(): void {
   useEffect(() => {
     if (!isConnected) {
       hasAttemptedRef.current = false;
-      // Not hydrated yet is "we do not know"; anything else here means the
-      // account is not getting a calendar, which is an answer.
-      setHasResolvedCalendar(isHydrated);
+      // A session still loading is "we do not know"; anything else here means
+      // the account is not getting a calendar, which is an answer.
+      setHasResolvedCalendar(!isLoading);
       return;
     }
     // The settings pull may be about to hand us one. Anything else is a guess.
@@ -122,5 +120,5 @@ export function useEnsureCalendar(): void {
     return () => {
       cancelled = true;
     };
-  }, [isConnected, isHydrated, isUserSettled, calendarId, setHasResolvedCalendar]);
+  }, [isConnected, isLoading, isUserSettled, calendarId, setHasResolvedCalendar]);
 }

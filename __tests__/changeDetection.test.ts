@@ -67,8 +67,8 @@ describe('isSameValue', () => {
 
 /**
  * Everything downstream of the store treats a new object as an edit — React,
- * `persist`, and both sync loops. So an action that changes nothing has to
- * leave the state it holds exactly where it is, reference and all.
+ * and both sync loops. So an action that changes nothing has to leave the state
+ * it holds exactly where it is, reference and all.
  */
 describe('a save that saves nothing', () => {
   beforeEach(() => {
@@ -77,7 +77,6 @@ describe('a save that saves nothing', () => {
       activities: [activity],
       events: [event],
       weekActivities: { [weekActivityKey(weekStart, activity.id)]: { ...activity } },
-      notes: { [`${weekStart}-monday`]: 'easy week' },
     });
   });
 
@@ -152,18 +151,24 @@ describe('a save that saves nothing', () => {
     expect(state().events[0].durationMinutes).toBe(90);
   });
 
-  it('leaves the note alone when the box was blurred unchanged', () => {
-    const before = state().notes;
-    state().setNote('monday', weekStart, 'easy week');
-    expect(state().notes).toBe(before);
-    state().setNote('monday', weekStart, 'hard week');
-    expect(state().notes).not.toBe(before);
+  it("leaves the workout alone when its note box was blurred unchanged", () => {
+    state().setEventNote(event.id, 'easy week');
+    const before = state().events;
+    state().setEventNote(event.id, 'easy week');
+    expect(state().events).toBe(before);
+    // Trailing whitespace is not an edit either — the box commits on a pause,
+    // and a space typed and deleted must not restamp the workout.
+    state().setEventNote(event.id, 'easy week  ');
+    expect(state().events).toBe(before);
+
+    state().setEventNote(event.id, 'hard week');
+    expect(state().events).not.toBe(before);
   });
 
-  it('leaves an empty note empty', () => {
-    const before = state().notes;
-    state().setNote('tuesday', weekStart, '');
-    expect(state().notes).toBe(before);
+  it('reads an empty note and an absent one as the same absence', () => {
+    const before = state().events;
+    state().setEventNote(event.id, '');
+    expect(state().events).toBe(before);
   });
 
   it('keeps the schedule a pull agreed with, both halves of it', () => {

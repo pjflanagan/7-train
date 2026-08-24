@@ -35,7 +35,7 @@ describe('entriesFromSchedule', () => {
   ];
 
   it('dates each event from its week and day', () => {
-    const entries = entriesFromSchedule(events, {}, 1);
+    const entries = entriesFromSchedule(events, 1);
     const dates = entries.map(e => e.date);
 
     expect(dates).toContain('2023-10-16'); // Monday of that week
@@ -43,32 +43,33 @@ describe('entriesFromSchedule', () => {
   });
 
   it('returns rows in date order across weeks', () => {
-    const entries = entriesFromSchedule(events, {}, 1);
+    const entries = entriesFromSchedule(events, 1);
     expect(entries.map(e => e.date)).toEqual(['2023-10-15', '2023-10-16']);
   });
 
-  it('attaches the day note to that day rows', () => {
-    const entries = entriesFromSchedule(events, { '2023-10-16-monday': 'felt strong' }, 1);
-    const monday = entries.find(e => e.date === '2023-10-16');
-    expect(monday?.notes).toBe('felt strong');
+  it("carries each workout's own note", () => {
+    // A note belongs to the workout now, not to the day, so it lands on that
+    // workout's row and on no other.
+    const noted: ScheduledEvent[] = [
+      { ...events[0], note: 'felt strong' },
+      events[1],
+    ];
+    const entries = entriesFromSchedule(noted, 1);
+    expect(entries.find(e => e.date === '2023-10-16')?.notes).toBe('felt strong');
+    expect(entries.find(e => e.date === '2023-10-15')?.notes).toBeNull();
   });
 
-  it('emits a note-only row for a day with no events', () => {
-    const entries = entriesFromSchedule([], { '2023-10-16-tuesday': 'rest day' }, 1);
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({
-      date: '2023-10-17',
-      typeId: null,
-      value: null,
-      notes: 'rest day',
-    });
+  it('has nothing to say about a day with no workouts on it', () => {
+    // There used to be a note-only row here, standing for a day note on a rest
+    // day. Nothing carries such a note any more, so nothing invents a row.
+    expect(entriesFromSchedule([], 1)).toEqual([]);
   });
 
   it('shifts dates when the week starts on Sunday', () => {
     const sundayWeek: ScheduledEvent[] = [
       { id: 'i1', typeId: 'a', day: 'monday', weekStart: '2023-10-15', value: 1 },
     ];
-    const entries = entriesFromSchedule(sundayWeek, {}, 0);
+    const entries = entriesFromSchedule(sundayWeek, 0);
     expect(entries[0].date).toBe('2023-10-16');
   });
 });

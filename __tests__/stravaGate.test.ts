@@ -8,7 +8,7 @@ import { useUserSyncStore } from '@/hooks/useUserSync';
  *
  * Every case here is really the same question — "could the calendar still
  * change the schedule?" — and the answer decides whether a Strava read matches
- * recordings against the real plan or against whatever was in `localStorage`.
+ * recordings against the real plan or against a schedule that has not landed.
  */
 
 const account = {

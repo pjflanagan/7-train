@@ -1,1 +1,0 @@
- when a user logs out, they should not see thier data anymore. maybe we need to fully get rid of local storage

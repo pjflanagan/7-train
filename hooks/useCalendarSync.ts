@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { COPY } from '@/lib/copy';
 import { usePlannerStore } from '@/lib/store';
-import { usePlannerHydrated } from '@/hooks/usePlannerHydrated';
 import { useGoogleAccount } from '@/hooks/useAuth';
 import { SYNC_DEBOUNCE_MS, useCalendarSyncStore } from '@/hooks/useCalendarSyncStatus';
 import { GOOGLE_INTEGRATIONS, isIntegrationConnected } from '@/lib/google';
@@ -94,6 +93,9 @@ function eventSignature(event: ScheduledEvent, activity: Activity | undefined): 
     // puts the link on the calendar entry, and what tells another device the
     // workout is already accounted for.
     event.stravaActivityId ?? '',
+    // The note is part of the workout and goes up with it. Notes had no store
+    // at all before they moved onto the event; this line is that store.
+    event.note ?? '',
   ].join('|');
 }
 
@@ -122,6 +124,7 @@ interface EventDraftPayload {
   activityFrozen?: boolean;
   weekStart: string;
   stravaActivityId?: number | null;
+  note?: string;
 }
 
 function draftFor(
@@ -151,6 +154,7 @@ function draftFor(
     activityFrozen: event.activityFrozen,
     weekStart: event.weekStart,
     stravaActivityId: event.stravaActivityId ?? null,
+    note: event.note,
   };
 }
 
@@ -196,6 +200,7 @@ function eventFromGoogle(
     activitySnapshot: event.activitySnapshot,
     activityFrozen: event.activityFrozen,
     stravaActivityId: event.stravaActivityId ?? null,
+    note: event.note,
   };
 }
 
@@ -388,16 +393,17 @@ async function pushLocalEvents(
  */
 export function useCalendarSync(): void {
   const { scopes, isSignedIn } = useGoogleAccount();
-  // Nothing may touch Google until the persisted plan is actually in the store.
-  // Before that `getState()` answers with the seeded defaults, and adopting
-  // those would upload a sample week and mark the real plan as handed over.
-  const isHydrated = usePlannerHydrated();
   // Until the account has a calendar there is nowhere to sync to. It is not a
   // decision any more — `useEnsureCalendar` makes one — but it is still a thing
   // that has to have happened, and it is asynchronous.
+  //
+  // It is also the gate that used to be spelled `usePlannerHydrated()`. An id
+  // only ever arrives from the settings pull or from the create that follows
+  // it, so having one *is* the proof that the account's own state has landed —
+  // and adoption, which uploads whatever is in the store, must not run against
+  // a plan that has not been read yet.
   const calendarId = usePlannerStore((state) => state.googleCalendarId);
   const isConnected =
-    isHydrated &&
     isSignedIn &&
     Boolean(calendarId) &&
     isIntegrationConnected(scopes, GOOGLE_INTEGRATIONS.calendar);
@@ -528,8 +534,8 @@ export function useCalendarSync(): void {
       }
 
       // Only the pulled window is replaced. Weeks outside it are in Google too
-      // — adoption sent them — they were simply not asked for, so the local
-      // copy stays as the cache of them.
+      // — adoption sent them — they were simply not asked for, so whatever this
+      // load has already been told about them stays.
       const fromKey = formatDateLocal(from);
       const toKey = formatDateLocal(to);
       const outsideWindow = store.events.filter(
@@ -598,7 +604,7 @@ export function useCalendarSync(): void {
 
   // Push: every local change is mirrored, one debounced batch at a time. The
   // store is written immediately and this follows, so editing never waits on
-  // the network — it is the cache in front of Google doing its job.
+  // the network.
   useEffect(() => {
     if (!isConnected) return;
 

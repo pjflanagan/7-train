@@ -17,7 +17,7 @@ interface CopyWeekModalProps {
   sources: CopySource[];
   onCopy: (
     source: CopySource,
-    parts: { schedule: boolean; notes: boolean; activities: boolean }
+    parts: { schedule: boolean; activities: boolean }
   ) => void;
 }
 
@@ -32,7 +32,6 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
   const [source, setSource] = useState<CopySource>(sources[0] ?? 'current');
   const [activities, setActivities] = useState(true);
   const [schedule, setSchedule] = useState(true);
-  const [notes, setNotes] = useState(false);
 
   // Reopening starts fresh rather than resuming whatever was half-picked last time.
   useEffect(() => {
@@ -40,27 +39,21 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
       setSource(sources[0] ?? 'current');
       setActivities(true);
       setSchedule(true);
-      setNotes(false);
     }
   }, [isOpen, sources]);
 
-  const nothingSelected = !schedule && !notes && !activities;
+  const nothingSelected = !schedule && !activities;
   const isDefault = source === 'default';
 
-  // The template has no schedule or notes to bring along, so those
-  // options are moot there.
+  // The template has no schedule to bring along, so that option is moot there.
   useEffect(() => {
-    if (isDefault) {
-      setSchedule(false);
-      setNotes(false);
-    }
+    if (isDefault) setSchedule(false);
   }, [isDefault]);
 
   const handleCopy = () => {
     if (nothingSelected) return;
     onCopy(source, {
       schedule: isDefault ? false : schedule,
-      notes: isDefault ? false : notes,
       activities,
     });
     onClose();
@@ -101,17 +94,13 @@ export function CopyWeekModal({ isOpen, onClose, sources, onCopy }: CopyWeekModa
             checked={activities}
             onChange={(e) => setActivities(e.target.checked)}
           />
+          {/* A workout's note is part of the workout, so it is copied with the
+              schedule rather than being a choice of its own. */}
           <Checkbox
             label={COPY.week.copySchedule}
             checked={schedule && !isDefault}
             disabled={isDefault}
             onChange={(e) => setSchedule(e.target.checked)}
-          />
-          <Checkbox
-            label={COPY.week.copyNotes}
-            checked={notes && !isDefault}
-            disabled={isDefault}
-            onChange={(e) => setNotes(e.target.checked)}
           />
         </fieldset>
 

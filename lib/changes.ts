@@ -2,8 +2,8 @@
  * Whether an edit is really an edit.
  *
  * Everything downstream of the store treats a new object as a change: React
- * re-renders on it, `persist` writes it to `localStorage`, and both sync loops
- * watch for it and start a countdown to a write. So a save that saves nothing —
+ * re-renders on it, and both sync loops watch for it and start a countdown to a
+ * write. So a save that saves nothing —
  * closing the activity form without touching a field, blurring a number input
  * on the number that was already there, a pull that brings back exactly what we
  * sent — is not free. It costs a write, a wire message, and a header that
