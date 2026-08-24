@@ -19,7 +19,16 @@ vi.mock('@/hooks/useAuth', () => ({
   useGoogleAccount: () => account,
 }));
 
-const link = { id: 'link-1', title: 'Pool', url: 'https://example.com' };
+const activity = {
+  id: 'type-swim',
+  name: 'Swim',
+  icon: 'swim' as const,
+  metric: 'distance' as const,
+  unit: 'yards',
+  target: 4000,
+  color: '#00A2C7',
+  workoutTypes: [],
+};
 
 describe('useSignedOutReset', () => {
   beforeEach(() => {
@@ -29,13 +38,13 @@ describe('useSignedOutReset', () => {
 
   it('empties the plan when the account goes away', () => {
     const { rerender } = renderHook(() => useSignedOutReset());
-    usePlannerStore.getState().addLink(link);
+    usePlannerStore.getState().addActivity(activity);
     usePlannerStore.getState().setGoogleCalendarId('abc@group.calendar.google.com');
 
     account.isSignedIn = false;
     rerender();
 
-    expect(usePlannerStore.getState().links).toEqual([]);
+    expect(usePlannerStore.getState().activities).toEqual([]);
     expect(usePlannerStore.getState().googleCalendarId).toBeNull();
   });
 
@@ -44,18 +53,18 @@ describe('useSignedOutReset', () => {
     // would wipe a backup someone had just imported.
     account.isSignedIn = false;
     const { rerender } = renderHook(() => useSignedOutReset());
-    usePlannerStore.getState().addLink(link);
+    usePlannerStore.getState().addActivity(activity);
     rerender();
 
-    expect(usePlannerStore.getState().links).toEqual([link]);
+    expect(usePlannerStore.getState().activities).toEqual([activity]);
   });
 
   it('leaves the plan alone while the user stays signed in', () => {
     const { rerender } = renderHook(() => useSignedOutReset());
-    usePlannerStore.getState().addLink(link);
+    usePlannerStore.getState().addActivity(activity);
     rerender();
     rerender();
 
-    expect(usePlannerStore.getState().links).toEqual([link]);
+    expect(usePlannerStore.getState().activities).toEqual([activity]);
   });
 });

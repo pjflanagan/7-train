@@ -48,7 +48,28 @@ the first time the server says `isNew`, and pushes it up as the account's first
 revision. `buildSeededState()` in `lib/store.ts` is the same data "full reset"
 puts back.
 
-## Notes are on the workouts
+## Notes are on the workouts, links are on the activities
+
+Two things used to sit beside the plan with nothing behind them, and both were
+moved onto what they are actually about rather than given a store of their own.
+
+### Links
+
+`state.links` was a standalone bookmark list with its own add form and its own
+delete — a second thing to curate, unrelated to the activities beside it, and
+the only part of the plan with no store at all. It is gone. A link is about an
+activity ("how to swim", the pool timetable), so it is written on the activity,
+where it already rides to Postgres with "My activities" and to Google Calendar
+with the week's targets.
+
+The header's bookmark button now opens a **read-only** compilation:
+`useAllActivityLinks()` walks "My activities" and then every week's copies,
+groups the links under the activity they are on, and drops duplicates — a week
+holds its own copy of an activity, so the same link arrives once per week.
+Links on an activity the template has since dropped are still listed; the week
+aiming at it is still in the plan.
+
+### Notes
 
 A note used to belong to a day, keyed `${weekStart}-${day}`, and lived only in
 `localStorage`. Both halves of that were wrong once the cache went: it had no
@@ -102,12 +123,9 @@ would create a second source of truth to reconcile, for no gain.
   meaningfully larger security surface than the current design, where the server
   holds no third-party credentials at rest. Open question in
   `_todo/database.md`; not settled.
-- **Helpful links** — the standalone bookmark list has no backend, and with no
-  cache in front of it, it lives in memory for as long as the tab is open. Week
-  targets are fine — Google Calendar holds those alongside the events — and
-  `history` is a dead field nothing writes any more.
-
-Notes used to be on this list. They are not any more: see below.
+- **Nothing, now.** Week targets ride with the events in Google Calendar,
+  notes and links are on the things they describe (see below), and `history`
+  is a dead field nothing writes any more.
 
 ## Backend-first, precisely
 
@@ -187,5 +205,7 @@ token that works.
   old day note ends up and when it is dropped.
 - `__tests__/calendarWire.test.ts` — that a note round-trips through Google and
   is trimmed to fit rather than cut mid-character.
+- `__tests__/activityLinks.test.ts` — what the links list gathers, and that a
+  link is said once however many weeks are aiming at it.
 - `__tests__/userSettings.test.ts` — the first-pull merge, including that a
   remote `googleCalendarId` never loses to a local one.

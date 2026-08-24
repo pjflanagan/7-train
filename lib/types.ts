@@ -168,7 +168,6 @@ export const PlannerStateSchema = z.object({
    * or any other week moving. A week holds nothing until it is filled.
    */
   weekActivities: z.record(z.string(), ActivitySchema).optional().default({}),
-  links: z.array(HelpfulLinkSchema),
   history: z.array(HistoryEntrySchema),
   lastViewedMonday: z.string().nullable(),
   tempUnit: z.enum(['C', 'F']).optional().default('F'),

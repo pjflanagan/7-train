@@ -237,8 +237,10 @@ export const COPY = {
     modalTitle: 'Links',
     titlePlaceholder: 'Link title',
     urlPlaceholder: 'URL',
-    delete: 'Delete link',
     bookmarks: 'Bookmarks',
+    /** The list gathers what the activities carry, so it is empty until they do. */
+    emptyMessage:
+      'No links yet. Add them to an activity in "My activities" and they show up here.',
   },
 
   settings: {

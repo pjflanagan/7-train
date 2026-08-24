@@ -62,9 +62,8 @@ the UI knows on its first render rather than after a round trip:
 ## What a signed-in user can still not do
 
 - Choose or change which calendar the plan lives in.
-- Keep a standalone bookmark list. It has no backend, and with the browser
-  cache gone it lasts only as long as the tab; see [storage.md](storage.md).
-  Week targets and workout notes are fine — Google Calendar holds both.
+- Keep a standalone bookmark list. Links belong to an activity now, and the
+  links modal is a reading of those; see [storage.md](storage.md).
 - Have anything sync while no browser is open.
 
 ## How this is enforced

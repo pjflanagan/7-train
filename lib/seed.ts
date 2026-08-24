@@ -1,4 +1,4 @@
-import { Activity, ScheduledEvent, HelpfulLink } from './types';
+import { Activity, ScheduledEvent } from './types';
 import { buildActivitySnapshot } from './activitySnapshot';
 
 /**
@@ -9,14 +9,6 @@ import { buildActivitySnapshot } from './activitySnapshot';
  * which nearly everything imports — do not drag activities, events and the
  * snapshot builder in behind them.
  */
-
-export const DEFAULT_LINKS: HelpfulLink[] = [
-  {
-    id: 'link-1',
-    title: 'Gym pool schedule',
-    url: 'https://www.google.com'
-  }
-];
 
 export const DEFAULT_ACTIVITIES: Activity[] = [
   {

@@ -23,7 +23,6 @@ describe('the store keeps nothing in the browser', () => {
     expect(state.activities).toEqual([]);
     expect(state.events).toEqual([]);
     expect(state.weekActivities).toEqual({});
-    expect(state.links).toEqual([]);
     expect(state.googleCalendarId).toBeNull();
   });
 
@@ -69,12 +68,21 @@ describe('the store keeps nothing in the browser', () => {
   it('takes the account with it when the user signs out', () => {
     const store = usePlannerStore.getState();
     store.setGoogleCalendarId('abc@group.calendar.google.com');
-    store.addLink({ id: 'link-1', title: 'Pool', url: 'https://example.com' });
+    store.addActivity({
+      id: 'type-run',
+      name: 'Run',
+      icon: 'run',
+      metric: 'distance',
+      unit: 'miles',
+      target: 12,
+      color: '#E5484D',
+      workoutTypes: [],
+    });
 
     usePlannerStore.getState().clearForSignOut();
 
     const after = usePlannerStore.getState();
-    expect(after.links).toEqual([]);
+    expect(after.activities).toEqual([]);
     // Unlike the two danger-zone wipes, which keep it so the next sync reuses
     // the same calendar rather than making a second one.
     expect(after.googleCalendarId).toBeNull();

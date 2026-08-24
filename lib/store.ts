@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent, HelpfulLink } from './types';
-import { DEFAULT_ACTIVITIES, getDefaultEvents, DEFAULT_LINKS } from './seed';
+import { PlannerState, Activity, ActivitySnapshot, ScheduledEvent } from './types';
+import { DEFAULT_ACTIVITIES, getDefaultEvents } from './seed';
 import { DAYS, MAX_EVENT_NOTE_LENGTH } from './constants';
 import { getWeekStartKey, WeekStartsOn } from './dates';
 import { weekActivityKey, activitiesForWeek, WeekActivities } from './progress';
@@ -141,9 +141,6 @@ type PlannerStore = PlannerState & {
   ) => void;
   clearWeek: (weekStart: string) => void;
 
-  addLink: (link: HelpfulLink) => void;
-  removeLink: (id: string) => void;
-
   setTempUnit: (unit: 'C' | 'F') => void;
   setUse24HourClock: (use24Hour: boolean) => void;
   setWeekStartsOn: (weekStartsOn: WeekStartsOn) => void;
@@ -178,7 +175,6 @@ function buildBlankState(): PlannerState {
     activities: [],
     events: [],
     weekActivities: {},
-    links: [],
     history: [],
     lastViewedMonday: null,
     tempUnit: 'F',
@@ -216,7 +212,6 @@ export function buildSeededState(): PlannerState {
         { ...activity }
       ])
     ),
-    links: DEFAULT_LINKS,
   };
 }
 
@@ -631,9 +626,6 @@ export const usePlannerStore = create<PlannerStore>()((set, get) => ({
       weekActivities
     };
   }),
-
-  addLink: (link) => set((state) => ({ links: [...state.links, link] })),
-  removeLink: (id) => set((state) => ({ links: state.links.filter(l => l.id !== id) })),
 
   // Settings arrive from the server as well as from the settings modal, so
   // "set it to what it already is" is routine here too.
