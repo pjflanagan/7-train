@@ -90,7 +90,7 @@ export const ActivityRow: React.FC<ActivityRowProps> = ({ activity }) => {
       <ConfirmDialog
         isOpen={isDeleteOpen}
         title={COPY.activities.deleteActivity}
-        message={`Are you sure you want to delete ${activity.name}? This will also remove all related calendar events.`}
+        message={COPY.activities.deleteActivityConfirm(activity.name)}
         isDestructive
         confirmLabel={COPY.activities.delete}
         onConfirm={() => {

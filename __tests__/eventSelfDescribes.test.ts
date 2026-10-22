@@ -119,3 +119,26 @@ describe('an event describes itself', () => {
     expect(resolve(event.id)?.name).toBe('Swimming');
   });
 });
+
+describe('deleting from my activities', () => {
+  beforeEach(() => {
+    usePlannerStore.getState().clearAll();
+  });
+
+  // "My activities" is a typical week, not the plan. Taking an activity out
+  // of it changes what new weeks start from, and nothing already planned.
+  it('keeps the weeks and events built from it', () => {
+    const store = usePlannerStore.getState();
+    store.addActivity(swim);
+    store.addWeekActivity(weekStart, swim);
+    store.addEvent({ typeId: swim.id, day: 'monday', weekStart, value: 1500 });
+
+    usePlannerStore.getState().deleteActivity(swim.id);
+
+    const state = usePlannerStore.getState();
+    expect(state.activities).toEqual([]);
+    expect(state.weekActivities[weekActivityKey(weekStart, swim.id)]).toEqual(swim);
+    expect(state.events).toHaveLength(1);
+    expect(resolve(state.events[0].id)?.name).toBe('Swimming');
+  });
+});

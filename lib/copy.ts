@@ -175,6 +175,10 @@ export const COPY = {
     edit: 'Edit',
     delete: 'Delete',
     deleteActivity: 'Delete activity',
+    /** "My activities" is a typical week, not the plan: deleting one leaves every
+     * week and calendar event that was built from it as it is. */
+    deleteActivityConfirm: (name: string) =>
+      `Delete ${name} from my activities? Weeks and calendar events already planned with it stay as they are.`,
   },
 
   targets: {
