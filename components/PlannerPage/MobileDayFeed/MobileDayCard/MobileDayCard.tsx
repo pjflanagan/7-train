@@ -128,6 +128,7 @@ export function MobileDayCard({ dateKey, todayKey }: MobileDayCardProps) {
         weekStart={weekStart}
         className={styles.addEvent}
         label={COPY.events.addLabel}
+        fillFromDefault
       />
 
       <EditEventModal eventId={editingId} onClose={() => setEditingId(null)} />

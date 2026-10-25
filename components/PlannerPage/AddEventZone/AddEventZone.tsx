@@ -25,6 +25,12 @@ export interface AddEventZoneProps {
    */
   className?: string;
   label?: string;
+  /**
+   * When the week has no targets yet, offer "My activities" instead of an
+   * empty picker, and picking one sets the week to them. The day feed wants
+   * this: a phone has no target strip to set the week up from first.
+   */
+  fillFromDefault?: boolean;
 }
 
 /**
@@ -38,11 +44,16 @@ export interface AddEventZoneProps {
  * than the list, and both the week board and the day feed clip their own
  * overflow.
  */
-export function AddEventZone({ day, weekStart, className, label }: AddEventZoneProps) {
+export function AddEventZone({ day, weekStart, className, label, fillFromDefault }: AddEventZoneProps) {
   // Only what this week is aiming at: scheduling is planning against the
-  // week's own activities, not against the "My activities" template.
-  const activities = useWeekActivities(weekStart);
+  // week's own activities, not against the "My activities" template — unless
+  // the week has none and the caller asked to fall back to the template.
+  const weekActivities = useWeekActivities(weekStart);
+  const defaultActivities = usePlannerStore((state) => state.activities);
+  const usesDefault = fillFromDefault === true && weekActivities.length === 0;
+  const activities = usesDefault ? defaultActivities : weekActivities;
   const addEvent = usePlannerStore((state) => state.addEvent);
+  const copyWeek = usePlannerStore((state) => state.copyWeek);
   const [anchor, setAnchor] = useState<{ top: number; left: number; width: number } | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -132,6 +143,11 @@ export function AddEventZone({ day, weekStart, className, label }: AddEventZoneP
                 role="menuitem"
                 className={styles.option}
                 onClick={() => {
+                  // Set the week to the defaults first, so the new event
+                  // snapshots the week's own copy of the activity.
+                  if (usesDefault) {
+                    copyWeek(null, weekStart, { schedule: false, activities: true });
+                  }
                   addEvent({
                     typeId: activity.id,
                     day,
